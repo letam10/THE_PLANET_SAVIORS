@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEditor;
 using System.IO;
 
-public class FolderSetupTool : MonoBehaviour
+public static class FolderSetupTool
 {
     [MenuItem("Tools/Setup TPS Folder Structure")]
     public static void SetupFolders()
@@ -73,7 +73,6 @@ public class FolderSetupTool : MonoBehaviour
             "Assets/_TPS/Localization",
             "Assets/_TPS/Docs"
         };
-
         foreach (string folder in folders)
         {
             if (!Directory.Exists(folder))
@@ -81,7 +80,6 @@ public class FolderSetupTool : MonoBehaviour
                 Directory.CreateDirectory(folder);
             }
         }
-
         AssetDatabase.Refresh();
         Debug.Log("TPS Folder Structure created successfully!");
     }
