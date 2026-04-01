@@ -41,7 +41,7 @@ namespace TPS.Runtime.Time
                 return;
             }
 
-            _minuteAccumulator += Time.deltaTime * _worldMinutesPerRealSecond;
+            _minuteAccumulator += UnityEngine.Time.deltaTime * _worldMinutesPerRealSecond;
 
             while (_minuteAccumulator >= 1f)
             {
