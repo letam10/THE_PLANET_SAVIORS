@@ -5,6 +5,7 @@ using TPS.Data.Config;
 using TPS.Runtime.Core;
 using TPS.Runtime.Time;
 using TPS.Runtime.Weather;
+using TPS.Runtime.Spawn;
 
 namespace TPS.Runtime.Bootstrap
 {
@@ -20,8 +21,10 @@ namespace TPS.Runtime.Bootstrap
                 yield break;
             }
 
+            // 1. Load Core scene (contains all singletons)
             yield return EnsureCoreSceneLoaded(_gameConfig.CoreSceneName);
 
+            // 2. Validate all core services
             if (SceneLoader.Instance == null)
             {
                 Debug.LogError("GameBootstrap: SceneLoader not found in Core scene.");
@@ -40,6 +43,13 @@ namespace TPS.Runtime.Bootstrap
                 yield break;
             }
 
+            if (PlayerSpawnSystem.Instance == null)
+            {
+                Debug.LogError("GameBootstrap: PlayerSpawnSystem not found in Core scene.");
+                yield break;
+            }
+
+            // 3. Initialize services
             WorldClock.Instance.Initialize(
                 _gameConfig.StartDay,
                 _gameConfig.StartHour,
@@ -49,6 +59,10 @@ namespace TPS.Runtime.Bootstrap
 
             WeatherSystem.Instance.Initialize(_gameConfig.StartingWeather);
 
+            PlayerSpawnSystem.Instance.Initialize(_gameConfig);
+
+            // 4. Load first content scene
+            // PlayerSpawnSystem will react to sceneLoaded and spawn/teleport the player
             string firstScene = _gameConfig.BootToMainMenu
                 ? _gameConfig.MainMenuSceneName
                 : _gameConfig.StartingWorldSceneName;

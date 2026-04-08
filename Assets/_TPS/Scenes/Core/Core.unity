@@ -131,6 +131,8 @@ GameObject:
   - component: {fileID: 177854905}
   - component: {fileID: 177854904}
   - component: {fileID: 177854903}
+  - component: {fileID: 177854908}
+  - component: {fileID: 177854907}
   m_Layer: 0
   m_Name: CoreServices
   m_TagString: Untagged
@@ -196,6 +198,30 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &177854907
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 177854902}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0cb420a353282b649a7f58eb248e9683, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TPS.Runtime.Debugging.DebugWorldHUD
+--- !u!114 &177854908
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 177854902}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 29014766c588d6c44a116cd284fd6f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TPS.Runtime.Spawn.PlayerSpawnSystem
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

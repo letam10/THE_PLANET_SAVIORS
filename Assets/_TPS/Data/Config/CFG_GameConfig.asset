@@ -16,6 +16,8 @@ MonoBehaviour:
   _coreSceneName: Core
   _mainMenuSceneName: MainMenu
   _startingWorldSceneName: ZN_Town_AsterHarbor
+  _playerPrefab: {fileID: 4947845225926460612, guid: 2c4a293086a01994f8d87fe16e2fe6a7, type: 3}
+  _defaultSpawnId: Default
   _startDay: 1
   _startHour: 8
   _startMinute: 0

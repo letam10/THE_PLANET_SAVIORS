@@ -122,6 +122,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3363036371326959117}
   - component: {fileID: 8403151209461612575}
+  - component: {fileID: 8467282031348596585}
   m_Layer: 0
   m_Name: PF_Door_Test_A
   m_TagString: Untagged
@@ -166,8 +167,23 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 2, y: 2.5, z: 2}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Size: {x: 2, y: 2, z: 2}
+  m_Center: {x: 0, y: 1, z: 0}
+--- !u!114 &8467282031348596585
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3343283163335915933}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c1ca64a1e7cbb0e4e96bdedfe5fd0ae3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TPS.Runtime.Interaction.DoorPrototype
+  _doorHinge: {fileID: 7460736590553830701}
+  _openAngle: 90
+  _openSpeed: 3
 --- !u!1 &5373434093458671871
 GameObject:
   m_ObjectHideFlags: 0

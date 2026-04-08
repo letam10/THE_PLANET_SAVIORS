@@ -12,6 +12,10 @@ namespace TPS.Data.Config
         [SerializeField] private string _mainMenuSceneName = "MainMenu";
         [SerializeField] private string _startingWorldSceneName = "ZN_Town_AsterHarbor";
 
+        [Header("Player")]
+        [SerializeField] private GameObject _playerPrefab;
+        [SerializeField] private string _defaultSpawnId = "Default";
+
         [Header("World Time")]
         [Min(1)][SerializeField] private int _startDay = 1;
         [Range(0, 23)][SerializeField] private int _startHour = 8;
@@ -25,6 +29,9 @@ namespace TPS.Data.Config
         public string CoreSceneName => _coreSceneName;
         public string MainMenuSceneName => _mainMenuSceneName;
         public string StartingWorldSceneName => _startingWorldSceneName;
+
+        public GameObject PlayerPrefab => _playerPrefab;
+        public string DefaultSpawnId => _defaultSpawnId;
 
         public int StartDay => _startDay;
         public int StartHour => _startHour;
