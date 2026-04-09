@@ -45,6 +45,7 @@ namespace TPS.Runtime.Weather
 
             _currentWeather = weatherType;
             WeatherChanged?.Invoke(_currentWeather);
+            TPS.Runtime.Core.GameEventBus.PublishWeatherChanged(_currentWeather);
             Debug.Log($"Weather changed to: {_currentWeather}");
         }
     }

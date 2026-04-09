@@ -48,19 +48,22 @@ namespace TPS.Runtime.Interaction
             _currentTarget = null;
             _currentPrompt = null;
 
-            // Determine ray origin — prefer explicit reference, fallback to Camera.main
-            Transform origin = _rayOrigin;
-            if (origin == null)
-            {
-                Camera cam = Camera.main;
-                if (cam != null) origin = cam.transform;
-            }
+            // Origin at player's chest level
+            Vector3 startPos = transform.position + Vector3.up * 1.0f;
+            Vector3 direction = transform.forward;
+            float radius = 0.5f;
 
-            if (origin == null) return;
+            // We use SphereCastAll to have a thick "forgiving" raycast that ignores missing exact aims.
+            RaycastHit[] hits = Physics.SphereCastAll(startPos, radius, direction, _interactionDistance, _interactionMask, QueryTriggerInteraction.Collide);
+            
+            // Sort by distance to find the closest object first
+            System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
 
-            Ray ray = new Ray(origin.position, origin.forward);
-            if (Physics.Raycast(ray, out RaycastHit hit, _interactionDistance, _interactionMask, QueryTriggerInteraction.Collide))
+            foreach (RaycastHit hit in hits)
             {
+                // Ignore the player's own colliders
+                if (hit.collider.transform.root == this.transform.root) continue;
+
                 // Check hit object first, then parents
                 IInteractable interactable = hit.collider.GetComponent<IInteractable>();
                 if (interactable == null)
@@ -72,6 +75,7 @@ namespace TPS.Runtime.Interaction
                 {
                     _currentTarget = interactable;
                     _currentPrompt = interactable.GetInteractionPrompt();
+                    return; // Found the closest valid interactable
                 }
             }
         }

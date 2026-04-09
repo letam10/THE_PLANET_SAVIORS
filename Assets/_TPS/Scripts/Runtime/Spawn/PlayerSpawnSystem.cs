@@ -114,5 +114,31 @@ namespace TPS.Runtime.Spawn
 
             if (cc != null) cc.enabled = true;
         }
+
+        public void TeleportPlayerExact(Vector3 position, Quaternion rotation)
+        {
+            if (_playerInstance == null) return;
+
+            CharacterController cc = _playerInstance.GetComponent<CharacterController>();
+            if (cc != null) cc.enabled = false;
+
+            _playerInstance.transform.position = position;
+            _playerInstance.transform.rotation = rotation;
+
+            if (cc != null) cc.enabled = true;
+        }
+
+        public bool TryGetPlayerTransform(out Vector3 position, out Quaternion rotation)
+        {
+            if (_playerInstance != null)
+            {
+                position = _playerInstance.transform.position;
+                rotation = _playerInstance.transform.rotation;
+                return true;
+            }
+            position = Vector3.zero;
+            rotation = Quaternion.identity;
+            return false;
+        }
     }
 }

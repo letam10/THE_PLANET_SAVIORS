@@ -1,4 +1,5 @@
 using System;
+using TPS.Runtime.Core;
 using UnityEngine;
 
 namespace TPS.Runtime.Time
@@ -94,6 +95,7 @@ namespace TPS.Runtime.Time
                 {
                     _currentHour = 0;
                     _currentDay++;
+                    GameEventBus.PublishDayChanged(_currentDay);
                 }
             }
 
@@ -102,6 +104,7 @@ namespace TPS.Runtime.Time
             if (_currentHour != previousHour)
             {
                 HourChanged?.Invoke(_currentHour);
+                GameEventBus.PublishHourChanged(_currentDay, _currentHour);
             }
         }
     }

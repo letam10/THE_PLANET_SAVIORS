@@ -133,6 +133,8 @@ GameObject:
   - component: {fileID: 177854903}
   - component: {fileID: 177854908}
   - component: {fileID: 177854907}
+  - component: {fileID: 177854910}
+  - component: {fileID: 177854909}
   m_Layer: 0
   m_Name: CoreServices
   m_TagString: Untagged
@@ -222,6 +224,30 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 29014766c588d6c44a116cd284fd6f28, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TPS.Runtime.Spawn.PlayerSpawnSystem
+--- !u!114 &177854909
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 177854902}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9728f4ba44499946bf06a841db9c0d1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TPS.Runtime.SaveLoad.SaveLoadManager
+--- !u!114 &177854910
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 177854902}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ab29bb8d0cdc4314e9b9894bca5e24eb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TPS.Runtime.Core.GameStateManager
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

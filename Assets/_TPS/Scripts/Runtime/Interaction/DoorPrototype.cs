@@ -29,7 +29,7 @@ namespace TPS.Runtime.Interaction
 
         public string GetInteractionPrompt()
         {
-            return _isOpen ? "Press [E] to Close" : "Press [E] to Open";
+            return _isOpen ? "Bấm [E] để Đóng" : "Bấm [E] để Mở";
         }
 
         public void Interact(GameObject interactor)
