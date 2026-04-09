@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ff51a1243b099934cb236b0bf1c491e7, type: 3}
+  m_Name: ENM_RainMite
+  m_EditorClassIdentifier: Assembly-CSharp::TPS.Runtime.Combat.EnemyDefinition
+  _enemyId: enemy_rain_mite
+  _displayName: Rain Mite
+  _stats:
+    MaxHP: 28
+    MaxMP: 12
+    Attack: 5
+    Magic: 7
+    Defense: 4
+    Resistance: 5
+    Speed: 5
+  _resistanceProfile:
+    Physical: 1
+    Fire: 1
+    Ice: 1
+    Lightning: 1
+  _skills:
+  - {fileID: 11400000, guid: ee86dfeb9c8a2d44cac281a2b4630c17, type: 2}

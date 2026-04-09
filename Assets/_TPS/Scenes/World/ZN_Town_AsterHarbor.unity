@@ -171,11 +171,43 @@ PrefabInstance:
       propertyPath: m_Name
       value: PF_EncounterTrigger_Test
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 7835007649549195733, guid: 15230e04dbfcb3d489ea876818331cbc, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 8766240447638392353, guid: 15230e04dbfcb3d489ea876818331cbc, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 49915428}
   m_SourcePrefab: {fileID: 100100000, guid: 15230e04dbfcb3d489ea876818331cbc, type: 3}
+--- !u!1 &49915427 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8766240447638392353, guid: 15230e04dbfcb3d489ea876818331cbc, type: 3}
+  m_PrefabInstance: {fileID: 49915426}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &49915428
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 49915427}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 54aafecf24de2294189ce94965ebd44b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TPS.Runtime.World.EncounterAnchor
+  _anchorId: aster_patrol_anchor
+  _zoneId: aster_harbor
+  _directEncounter: {fileID: 0}
+  _useZoneEncounterTable: 1
+  _triggerOnEnter: 1
+  _triggerOnce: 0
+  _hideWhenCleared: 0
+  _availabilityConditions:
+    Mode: 0
+    Conditions: []
+    _sharedDefinition: {fileID: 0}
 --- !u!1001 &333438188
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -382,6 +414,7 @@ GameObject:
   - component: {fileID: 686567327}
   - component: {fileID: 686567326}
   - component: {fileID: 686567325}
+  - component: {fileID: 686567328}
   m_Layer: 0
   m_Name: BLD_Shop_Block
   m_TagString: Untagged
@@ -482,6 +515,20 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 686567323}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &686567328
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 686567323}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d8a281a96c69f754582475e413fbb155, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TPS.Runtime.World.MerchantAnchor
+  _merchantId: harbor_general_store
+  _shopDefinition: {fileID: 11400000, guid: 471fe2a6041df2041b5cb80cc67fed2c, type: 2}
 --- !u!1 &760922054
 GameObject:
   m_ObjectHideFlags: 0
@@ -564,6 +611,7 @@ Transform:
   - {fileID: 2007509330}
   - {fileID: 1829963912}
   - {fileID: 1454609348}
+  - {fileID: 2085103981}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1138810353
@@ -826,12 +874,23 @@ MonoBehaviour:
   _resolver:
     Mode: 0
     Conditions:
-    - Type: 0
+    - Type: 5
       StartHour: 8
       EndHour: 12
       StateKey: 
-      ExpectedBool: 0
+      ExpectedBool: 1
       ExpectedWeather: 0
+      QuestId: 
+      ExpectedQuestStatus: 1
+      DialogueFlagId: 
+      EncounterId: enc_harbor_captain
+      InventoryDefinitionId: 
+      MinimumCount: 1
+      PartyMemberId: 
+      ZoneId: 
+      ZoneFactId: 
+      MinimumCurrency: 0
+    _sharedDefinition: {fileID: 0}
   _targetMode: 0
   _targetGameObject: {fileID: 0}
   _targetRenderer: {fileID: 0}
@@ -1020,8 +1079,110 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 6883357396216721959, guid: e74bd9bdf13578b41bcb15c9064b5093, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1604557714}
+    - targetCorrespondingSourceObject: {fileID: 6883357396216721959, guid: e74bd9bdf13578b41bcb15c9064b5093, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1604557713}
   m_SourcePrefab: {fileID: 100100000, guid: e74bd9bdf13578b41bcb15c9064b5093, type: 3}
+--- !u!1 &1604557712 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6883357396216721959, guid: e74bd9bdf13578b41bcb15c9064b5093, type: 3}
+  m_PrefabInstance: {fileID: 1604557711}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1604557713
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1604557712}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 397e6771b56ab2c48a70073230774aab, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TPS.Runtime.Dialogue.DialogueAnchor
+  _anchorId: harbor_captain
+  _dialogueDefinition: {fileID: 11400000, guid: 31e91a5fae566d44792a15542a7d92d4, type: 2}
+  _interactionLabel: talk
+--- !u!114 &1604557714
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1604557712}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: db5f3625f04467a4ca21276eda358e9d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TPS.Runtime.NPC.NPCSchedule
+  _npcId: harbor_captain
+  _npcModelRoot: {fileID: 0}
+  _slots:
+  - SlotName: square_morning
+    StartHour: 7
+    EndHour: 12
+    ExtraConditions:
+      Mode: 0
+      Conditions:
+      - Type: 2
+        StartHour: 0
+        EndHour: 0
+        StateKey: 
+        ExpectedBool: 0
+        ExpectedWeather: 0
+        QuestId: 
+        ExpectedQuestStatus: 0
+        DialogueFlagId: 
+        EncounterId: 
+        InventoryDefinitionId: 
+        MinimumCount: 0
+        PartyMemberId: 
+        ZoneId: 
+        ZoneFactId: 
+        MinimumCurrency: 0
+      _sharedDefinition: {fileID: 0}
+    TargetMarker: {fileID: 2007509330}
+    Visible: 1
+  - SlotName: tavern_rain
+    StartHour: 7
+    EndHour: 12
+    ExtraConditions:
+      Mode: 0
+      Conditions:
+      - Type: 2
+        StartHour: 0
+        EndHour: 0
+        StateKey: 
+        ExpectedBool: 0
+        ExpectedWeather: 1
+        QuestId: 
+        ExpectedQuestStatus: 0
+        DialogueFlagId: 
+        EncounterId: 
+        InventoryDefinitionId: 
+        MinimumCount: 0
+        PartyMemberId: 
+        ZoneId: 
+        ZoneFactId: 
+        MinimumCurrency: 0
+      _sharedDefinition: {fileID: 0}
+    TargetMarker: {fileID: 1454609348}
+    Visible: 1
+  - SlotName: tavern_evening
+    StartHour: 13
+    EndHour: 23
+    ExtraConditions:
+      Mode: 0
+      Conditions: []
+      _sharedDefinition: {fileID: 0}
+    TargetMarker: {fileID: 1454609348}
+    Visible: 1
+  _hideIfNoSlotMatched: 1
+  _fallbackMarker: {fileID: 0}
 --- !u!1001 &1608014862
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1091,6 +1252,7 @@ GameObject:
   - component: {fileID: 1613783187}
   - component: {fileID: 1613783186}
   - component: {fileID: 1613783185}
+  - component: {fileID: 1613783188}
   m_Layer: 0
   m_Name: BLD_Tavern_Block
   m_TagString: Untagged
@@ -1191,6 +1353,20 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1613783183}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &1613783188
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1613783183}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 614169d5ad45f764f8fa2bd5a4c21171, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TPS.Runtime.World.InnAnchor
+  _wakeHour: 7
+  _wakeMinute: 0
 --- !u!1 &1829963911
 GameObject:
   m_ObjectHideFlags: 0
@@ -1380,6 +1556,158 @@ Transform:
   m_Children: []
   m_Father: {fileID: 787975282}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &2085103980
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2085103981}
+  - component: {fileID: 2085103985}
+  - component: {fileID: 2085103984}
+  - component: {fileID: 2085103983}
+  - component: {fileID: 2085103982}
+  m_Layer: 0
+  m_Name: ENC_SubBoss_Anchor
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2085103981
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2085103980}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 2, z: -4}
+  m_LocalScale: {x: 2, y: 2, z: 2}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 787975282}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2085103982
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2085103980}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 54aafecf24de2294189ce94965ebd44b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TPS.Runtime.World.EncounterAnchor
+  _anchorId: harbor_captain_anchor
+  _zoneId: aster_harbor
+  _directEncounter: {fileID: 11400000, guid: f124319b9721f0f4f963791604278430, type: 2}
+  _useZoneEncounterTable: 0
+  _triggerOnEnter: 1
+  _triggerOnce: 1
+  _hideWhenCleared: 1
+  _availabilityConditions:
+    Mode: 0
+    Conditions:
+    - Type: 3
+      StartHour: 0
+      EndHour: 0
+      StateKey: 
+      ExpectedBool: 0
+      ExpectedWeather: 0
+      QuestId: quest_clear_harbor_threat
+      ExpectedQuestStatus: 1
+      DialogueFlagId: 
+      EncounterId: 
+      InventoryDefinitionId: 
+      MinimumCount: 0
+      PartyMemberId: 
+      ZoneId: 
+      ZoneFactId: 
+      MinimumCurrency: 0
+    _sharedDefinition: {fileID: 0}
+--- !u!23 &2085103983
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2085103980}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 1
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_MaskInteraction: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!65 &2085103984
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2085103980}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 1, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!33 &2085103985
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2085103980}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

@@ -14,7 +14,7 @@ namespace TPS.Runtime.Conditions
     /// Utility component to toggle a GameObject or its components based on global conditions.
     /// Connects the ConditionResolver to tangible scene results.
     /// </summary>
-    public sealed class ConditionalActivator : MonoBehaviour
+    public sealed class ConditionalActivator : MonoBehaviour, IStateResolvable
     {
         [Tooltip("The conditions to evaluate. Empty means always true.")]
         [SerializeField] private ConditionResolver _resolver = new ConditionResolver();
@@ -37,6 +37,11 @@ namespace TPS.Runtime.Conditions
             GameEventBus.OnGameStateChanged += OnEvent_StateChanged;
             GameEventBus.OnGameLoaded += OnEvent_GameLoaded;
 
+            if (StateResolver.Instance != null)
+            {
+                StateResolver.Instance.Register(this);
+            }
+
             // Optional: Evaluate immediately on enable if you don't wait for load.
             // But usually we wait for OnGameLoaded or invoke it manually.
             // Safe to evaluate on awake/enable, but systems might not be initialized.
@@ -48,6 +53,11 @@ namespace TPS.Runtime.Conditions
             GameEventBus.OnWeatherChanged -= OnEvent_Weather;
             GameEventBus.OnGameStateChanged -= OnEvent_StateChanged;
             GameEventBus.OnGameLoaded -= OnEvent_GameLoaded;
+
+            if (StateResolver.Instance != null)
+            {
+                StateResolver.Instance.Unregister(this);
+            }
         }
 
         private void Start()
@@ -60,6 +70,7 @@ namespace TPS.Runtime.Conditions
         private void OnEvent_Weather(TPS.Runtime.Weather.WeatherType wt) => EvaluateAndApply();
         private void OnEvent_StateChanged(string key) => EvaluateAndApply();
         private void OnEvent_GameLoaded() => EvaluateAndApply();
+        public void ResolveState() => EvaluateAndApply();
 
         [ContextMenu("Evaluate Now")]
         public void EvaluateAndApply()

@@ -1,19 +1,34 @@
 using System;
 using System.Collections.Generic;
-using UnityEngine;
+using TPS.Runtime.Combat;
 using TPS.Runtime.Core;
+using TPS.Runtime.Dialogue;
+using TPS.Runtime.Quest;
 using TPS.Runtime.Time;
 using TPS.Runtime.Weather;
+using TPS.Runtime.World;
+using UnityEngine;
 
 namespace TPS.Runtime.Conditions
 {
-    public enum ConditionGroupMode { All, Any }
-    
-    public enum ConditionType 
-    { 
-        TimeRange, 
-        StateEquals, 
-        WeatherEquals 
+    public enum ConditionGroupMode
+    {
+        All,
+        Any
+    }
+
+    public enum ConditionType
+    {
+        TimeRange,
+        StateEquals,
+        WeatherEquals,
+        QuestState,
+        DialogueFlag,
+        EncounterCleared,
+        InventoryCountAtLeast,
+        PartyMemberRecruited,
+        ZoneFactBoolEquals,
+        CurrencyAtLeast
     }
 
     [Serializable]
@@ -21,74 +36,167 @@ namespace TPS.Runtime.Conditions
     {
         public ConditionType Type;
 
-        [Header("Time Range (Same day 24h, overnight not supported yet)")]
-        [Range(0, 24)] public int StartHour;
-        [Range(0, 24)] public int EndHour;
+        [Header("Time Range")]
+        [Range(0, 23)] public int StartHour;
+        [Range(0, 23)] public int EndHour;
 
-        [Header("State Check (Bool)")]
+        [Header("Legacy GameState Bool")]
         public string StateKey;
         public bool ExpectedBool = true;
 
-        [Header("Weather Check")]
+        [Header("Weather")]
         public WeatherType ExpectedWeather = WeatherType.Sunny;
 
-        /// <summary>
-        /// Evaluates if this specific condition is met based on the global state.
-        /// </summary>
+        [Header("Quest")]
+        public string QuestId;
+        public QuestStatus ExpectedQuestStatus = QuestStatus.Active;
+
+        [Header("Dialogue")]
+        public string DialogueFlagId;
+
+        [Header("Encounter")]
+        public string EncounterId;
+
+        [Header("Inventory")]
+        public string InventoryDefinitionId;
+        [Min(0)] public int MinimumCount = 1;
+
+        [Header("Party")]
+        public string PartyMemberId;
+
+        [Header("Zone Fact")]
+        public string ZoneId;
+        public string ZoneFactId;
+
+        [Header("Economy")]
+        [Min(0)] public int MinimumCurrency = 0;
+
         public bool Evaluate()
         {
             switch (Type)
             {
                 case ConditionType.TimeRange:
-                    if (WorldClock.Instance == null) return false;
-                    int h = WorldClock.Instance.CurrentHour;
-                    // Strict same-day range check. E.g. Start 8, End 12 -> returns true if 8 <= h < 12 (or 8 <= h <= 12, depending on design. Let's do inclusive).
-                    return h >= StartHour && h <= EndHour;
+                    return EvaluateTimeRange();
 
                 case ConditionType.StateEquals:
-                    if (GameStateManager.Instance == null) return false;
-                    bool currentState = GameStateManager.Instance.GetBool(StateKey, false);
-                    return currentState == ExpectedBool;
+                    return GameStateManager.Instance != null && GameStateManager.Instance.GetBool(StateKey, false) == ExpectedBool;
 
                 case ConditionType.WeatherEquals:
-                    if (WeatherSystem.Instance == null) return false;
-                    return WeatherSystem.Instance.CurrentWeather == ExpectedWeather;
+                    return WeatherSystem.Instance != null && WeatherSystem.Instance.CurrentWeather == ExpectedWeather;
+
+                case ConditionType.QuestState:
+                    return QuestService.Instance != null && QuestService.Instance.GetQuestStatus(QuestId) == ExpectedQuestStatus;
+
+                case ConditionType.DialogueFlag:
+                    return DialogueStateService.Instance != null && DialogueStateService.Instance.HasFlag(DialogueFlagId) == ExpectedBool;
+
+                case ConditionType.EncounterCleared:
+                    return EncounterService.Instance != null && EncounterService.Instance.IsEncounterCleared(EncounterId) == ExpectedBool;
+
+                case ConditionType.InventoryCountAtLeast:
+                    return InventoryService.Instance != null &&
+                           (InventoryService.Instance.GetItemCount(InventoryDefinitionId) + InventoryService.Instance.GetEquipmentCount(InventoryDefinitionId)) >= MinimumCount;
+
+                case ConditionType.PartyMemberRecruited:
+                    return PartyService.Instance != null && PartyService.Instance.IsMemberRecruited(PartyMemberId) == ExpectedBool;
+
+                case ConditionType.ZoneFactBoolEquals:
+                    return ZoneStateService.Instance != null && ZoneStateService.Instance.GetBoolFact(ZoneId, ZoneFactId, false) == ExpectedBool;
+
+                case ConditionType.CurrencyAtLeast:
+                    return EconomyService.Instance != null && EconomyService.Instance.Currency >= MinimumCurrency;
 
                 default:
                     return false;
             }
         }
+
+        private bool EvaluateTimeRange()
+        {
+            if (WorldClock.Instance == null)
+            {
+                return false;
+            }
+
+            int currentHour = WorldClock.Instance.CurrentHour;
+            if (StartHour <= EndHour)
+            {
+                return currentHour >= StartHour && currentHour <= EndHour;
+            }
+
+            return currentHour >= StartHour || currentHour <= EndHour;
+        }
     }
 
-    /// <summary>
-    /// Utility class/static helper to evaluate lists of Conditions.
-    /// </summary>
+    [Serializable]
+    public class ConditionGroup
+    {
+        public ConditionGroupMode Mode = ConditionGroupMode.All;
+        public List<GameCondition> Conditions = new List<GameCondition>();
+
+        public bool Evaluate()
+        {
+            if (Conditions == null || Conditions.Count == 0)
+            {
+                return true;
+            }
+
+            if (Mode == ConditionGroupMode.All)
+            {
+                for (int i = 0; i < Conditions.Count; i++)
+                {
+                    GameCondition condition = Conditions[i];
+                    if (condition != null && !condition.Evaluate())
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
+            for (int i = 0; i < Conditions.Count; i++)
+            {
+                GameCondition condition = Conditions[i];
+                if (condition != null && condition.Evaluate())
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+    }
+
+    [CreateAssetMenu(fileName = "COND_NewCondition", menuName = "TPS/RPG/Condition Definition")]
+    public sealed class ConditionDefinition : ScriptableObject
+    {
+        [SerializeField] private ConditionGroup _conditions = new ConditionGroup();
+
+        public ConditionGroup Conditions => _conditions;
+    }
+
     [Serializable]
     public class ConditionResolver
     {
         public ConditionGroupMode Mode = ConditionGroupMode.All;
         public List<GameCondition> Conditions = new List<GameCondition>();
+        [SerializeField] private ConditionDefinition _sharedDefinition;
 
         public bool EvaluateAll()
         {
-            if (Conditions == null || Conditions.Count == 0) return true; // Empty means always true
+            if (_sharedDefinition != null && _sharedDefinition.Conditions != null)
+            {
+                return _sharedDefinition.Conditions.Evaluate();
+            }
 
-            if (Mode == ConditionGroupMode.All)
+            var inlineGroup = new ConditionGroup
             {
-                foreach (var c in Conditions)
-                {
-                    if (!c.Evaluate()) return false;
-                }
-                return true;
-            }
-            else // Any
-            {
-                foreach (var c in Conditions)
-                {
-                    if (c.Evaluate()) return true;
-                }
-                return false;
-            }
+                Mode = Mode,
+                Conditions = Conditions
+            };
+
+            return inlineGroup.Evaluate();
         }
     }
 }

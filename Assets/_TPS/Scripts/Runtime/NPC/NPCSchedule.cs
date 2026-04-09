@@ -4,6 +4,7 @@ using UnityEngine;
 using TPS.Runtime.Core;
 using TPS.Runtime.Conditions;
 using TPS.Runtime.Time;
+using UnityEngine.AI;
 
 namespace TPS.Runtime.NPC
 {
@@ -35,8 +36,9 @@ namespace TPS.Runtime.NPC
     /// Evaluates list of slots and teleports/enables the NPC.
     /// Does not use NavMesh interpolation for Phase 1.
     /// </summary>
-    public sealed class NPCSchedule : MonoBehaviour
+    public sealed class NPCSchedule : MonoBehaviour, IStateResolvable
     {
+        [SerializeField] private string _npcId = "npc";
         [SerializeField] private GameObject _npcModelRoot;
         [SerializeField] private List<NPCScheduleSlot> _slots = new List<NPCScheduleSlot>();
 
@@ -52,6 +54,11 @@ namespace TPS.Runtime.NPC
             GameEventBus.OnGameLoaded += OnEvent_Generic;
             GameEventBus.OnGameStateChanged += OnEvent_State;
             GameEventBus.OnWeatherChanged += OnEvent_Weather;
+
+            if (StateResolver.Instance != null)
+            {
+                StateResolver.Instance.Register(this);
+            }
         }
 
         private void OnDisable()
@@ -60,6 +67,11 @@ namespace TPS.Runtime.NPC
             GameEventBus.OnGameLoaded -= OnEvent_Generic;
             GameEventBus.OnGameStateChanged -= OnEvent_State;
             GameEventBus.OnWeatherChanged -= OnEvent_Weather;
+
+            if (StateResolver.Instance != null)
+            {
+                StateResolver.Instance.Unregister(this);
+            }
         }
 
         private void Start()
@@ -71,6 +83,7 @@ namespace TPS.Runtime.NPC
         private void OnEvent_Generic() => EvaluateSchedule();
         private void OnEvent_State(string key) => EvaluateSchedule();
         private void OnEvent_Weather(TPS.Runtime.Weather.WeatherType wt) => EvaluateSchedule();
+        public void ResolveState() => EvaluateSchedule();
 
         [ContextMenu("Evaluate Schedule")]
         public void EvaluateSchedule()
@@ -92,10 +105,12 @@ namespace TPS.Runtime.NPC
             if (matchedSlot != null)
             {
                 ApplySlot(matchedSlot.TargetMarker, matchedSlot.Visible);
+                MirrorDerivedState(matchedSlot.TargetMarker != null ? matchedSlot.TargetMarker.name : "slot", matchedSlot.Visible);
             }
             else
             {
                 ApplyFallback();
+                MirrorDerivedState(_fallbackMarker != null ? _fallbackMarker.name : "hidden", !_hideIfNoSlotMatched);
             }
         }
 
@@ -132,7 +147,40 @@ namespace TPS.Runtime.NPC
             if (_npcModelRoot != null && _npcModelRoot.activeSelf != visible)
             {
                 _npcModelRoot.SetActive(visible);
+                return;
             }
+
+            if (_npcModelRoot == null)
+            {
+                Renderer[] renderers = GetComponentsInChildren<Renderer>(true);
+                for (int i = 0; i < renderers.Length; i++)
+                {
+                    renderers[i].enabled = visible;
+                }
+
+                Collider[] colliders = GetComponentsInChildren<Collider>(true);
+                for (int i = 0; i < colliders.Length; i++)
+                {
+                    colliders[i].enabled = visible;
+                }
+
+                NavMeshAgent agent = GetComponent<NavMeshAgent>();
+                if (agent != null)
+                {
+                    agent.enabled = visible;
+                }
+            }
+        }
+
+        private void MirrorDerivedState(string locationId, bool visible)
+        {
+            if (GameStateManager.Instance == null || string.IsNullOrWhiteSpace(_npcId))
+            {
+                return;
+            }
+
+            GameStateManager.Instance.SetBool($"npc.{_npcId}.visible", visible);
+            GameStateManager.Instance.SetString($"npc.{_npcId}.location", locationId);
         }
     }
 }

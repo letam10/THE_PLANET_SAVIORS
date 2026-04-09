@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b8687cc9eea36744bb3bf08f4bbe2efb, type: 3}
+  m_Name: ENC_PostBossPatrol
+  m_EditorClassIdentifier: Assembly-CSharp::TPS.Runtime.Combat.EncounterDefinition
+  _encounterId: enc_post_boss_patrol
+  _displayName: Post-Boss Patrol
+  _zoneId: aster_harbor
+  _battleSceneName: BTL_Standard
+  _countsAsClear: 0
+  _enemies:
+  - {fileID: 11400000, guid: 93c2cee8b6f12ac43a501ee00d48218d, type: 2}
+  - {fileID: 11400000, guid: b03bf8445de4f9145a5b148320fa7471, type: 2}
+  _rewardTable: {fileID: 11400000, guid: 23b30c39f5f43c74babad466b93350ff, type: 2}

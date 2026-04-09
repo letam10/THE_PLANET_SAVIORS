@@ -62,6 +62,25 @@ namespace TPS.Runtime.Time
             TimeChanged?.Invoke(_currentDay, _currentHour, _currentMinute);
         }
 
+        public void SetDateTime(int day, int hour, int minute)
+        {
+            _currentDay = Mathf.Max(1, day);
+            _currentHour = Mathf.Clamp(hour, 0, 23);
+            _currentMinute = Mathf.Clamp(minute, 0, 59);
+            _minuteAccumulator = 0f;
+            TimeChanged?.Invoke(_currentDay, _currentHour, _currentMinute);
+            HourChanged?.Invoke(_currentHour);
+            GameEventBus.PublishHourChanged(_currentDay, _currentHour);
+        }
+
+        public void SleepUntilNextDay(int wakeHour, int wakeMinute)
+        {
+            int nextDay = _currentDay + 1;
+            SetDateTime(nextDay, wakeHour, wakeMinute);
+            GameEventBus.PublishDayChanged(nextDay);
+            GameEventBus.PublishSleepAdvanced(nextDay);
+        }
+
         public void SetRunning(bool isRunning)
         {
             _isRunning = isRunning;

@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b8687cc9eea36744bb3bf08f4bbe2efb, type: 3}
+  m_Name: ENC_HarborCaptain
+  m_EditorClassIdentifier: Assembly-CSharp::TPS.Runtime.Combat.EncounterDefinition
+  _encounterId: enc_harbor_captain
+  _displayName: Raider Captain
+  _zoneId: aster_harbor
+  _battleSceneName: BTL_Standard
+  _countsAsClear: 1
+  _enemies:
+  - {fileID: 11400000, guid: baa2d74359b00434892ea55bccf3c240, type: 2}
+  - {fileID: 11400000, guid: 93c2cee8b6f12ac43a501ee00d48218d, type: 2}
+  _rewardTable: {fileID: 11400000, guid: 844f475c5bb103a42823f392df3e43c6, type: 2}

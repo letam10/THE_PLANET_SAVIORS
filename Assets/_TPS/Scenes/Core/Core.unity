@@ -135,6 +135,17 @@ GameObject:
   - component: {fileID: 177854907}
   - component: {fileID: 177854910}
   - component: {fileID: 177854909}
+  - component: {fileID: 177854921}
+  - component: {fileID: 177854920}
+  - component: {fileID: 177854919}
+  - component: {fileID: 177854918}
+  - component: {fileID: 177854917}
+  - component: {fileID: 177854916}
+  - component: {fileID: 177854915}
+  - component: {fileID: 177854914}
+  - component: {fileID: 177854913}
+  - component: {fileID: 177854912}
+  - component: {fileID: 177854911}
   m_Layer: 0
   m_Name: CoreServices
   m_TagString: Untagged
@@ -248,6 +259,157 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ab29bb8d0cdc4314e9b9894bca5e24eb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TPS.Runtime.Core.GameStateManager
+--- !u!114 &177854911
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 177854902}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4151dc0a3a0e5e945aeb0125fe1de28f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TPS.Runtime.Core.StateResolver
+--- !u!114 &177854912
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 177854902}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 49acf3e1f8053104aba96246f8bfbc02, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TPS.Runtime.Combat.RewardService
+--- !u!114 &177854913
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 177854902}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 35d7475e00255884abe990398658e24c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TPS.Runtime.World.ZoneStateService
+--- !u!114 &177854914
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 177854902}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bd4d8f2961e49864b9e45e8b6c93091f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TPS.Runtime.Combat.InventoryService
+  _startingItems:
+  - Item: {fileID: 11400000, guid: 7d3398e37df7d854586782dfa2772139, type: 2}
+    Amount: 2
+  - Item: {fileID: 11400000, guid: f496c42b575249f4c919cfff33cf9382, type: 2}
+    Amount: 1
+  _startingEquipment:
+  - Equipment: {fileID: 11400000, guid: b3161e70441fc7f448eafedce6f24468, type: 2}
+    Amount: 1
+  - Equipment: {fileID: 11400000, guid: 92eec9af3170c2645862eeb6e645a154, type: 2}
+    Amount: 1
+  - Equipment: {fileID: 11400000, guid: b6c3171ff72c18d4f8dcff0b06f79929, type: 2}
+    Amount: 1
+--- !u!114 &177854915
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 177854902}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ee274181f9410ba4cb7d4d2ffa01f87a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TPS.Runtime.UI.Phase1RuntimeHUD
+  _contentCatalog: {fileID: 11400000, guid: 6223ac84ac8a0704d961686f3f098254, type: 2}
+--- !u!114 &177854916
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 177854902}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56ec3257750575248b2af607ebf48303, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TPS.Runtime.World.EncounterService
+  _contentCatalog: {fileID: 11400000, guid: 6223ac84ac8a0704d961686f3f098254, type: 2}
+--- !u!114 &177854917
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 177854902}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 63e0cc5757ca78a488bf39d94f069b23, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TPS.Runtime.Combat.EconomyService
+  _contentCatalog: {fileID: 11400000, guid: 6223ac84ac8a0704d961686f3f098254, type: 2}
+--- !u!114 &177854918
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 177854902}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ac306a3ba5ab40645ac7f695a550153f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TPS.Runtime.Combat.ProgressionService
+  _contentCatalog: {fileID: 11400000, guid: 6223ac84ac8a0704d961686f3f098254, type: 2}
+--- !u!114 &177854919
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 177854902}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 41dc8202ca45a5a4dbbe0a481bc5c8f0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TPS.Runtime.Combat.PartyService
+  _contentCatalog: {fileID: 11400000, guid: 6223ac84ac8a0704d961686f3f098254, type: 2}
+--- !u!114 &177854920
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 177854902}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a4194cac70fefb140b0b99c99a988ccc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TPS.Runtime.Dialogue.DialogueStateService
+  _contentCatalog: {fileID: 11400000, guid: 6223ac84ac8a0704d961686f3f098254, type: 2}
+--- !u!114 &177854921
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 177854902}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8d8b171071ef9f74989578c9d0828139, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TPS.Runtime.Quest.QuestService
+  _contentCatalog: {fileID: 11400000, guid: 6223ac84ac8a0704d961686f3f098254, type: 2}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
