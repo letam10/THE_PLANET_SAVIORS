@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using TPS.Runtime.UI;
 
 namespace TPS.Runtime.Player
 {
@@ -33,8 +34,7 @@ namespace TPS.Runtime.Player
         private void OnEnable()
         {
             _lookAction = _playerInput.actions["Look"];
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
+            RuntimeUiInputState.SetUiFocused(false);
         }
 
         private void OnDisable()
@@ -45,7 +45,7 @@ namespace TPS.Runtime.Player
 
         private void LateUpdate()
         {
-            if (_lookAction == null) return;
+            if (_lookAction == null || RuntimeUiInputState.IsUiFocused) return;
 
             Vector2 look = _lookAction.ReadValue<Vector2>();
 

@@ -8,6 +8,7 @@ using TPS.Runtime.Time;
 using TPS.Runtime.Weather;
 using TPS.Runtime.World;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 
 namespace TPS.Runtime.UI
@@ -34,6 +35,45 @@ namespace TPS.Runtime.UI
             DontDestroyOnLoad(gameObject);
         }
 
+        private void OnEnable()
+        {
+            RuntimeUiInputState.SetUiFocused(false);
+        }
+
+        private void OnDisable()
+        {
+            if (Instance == this)
+            {
+                RuntimeUiInputState.SetUiFocused(false);
+            }
+        }
+
+        private void Update()
+        {
+            Keyboard keyboard = Keyboard.current;
+            if (keyboard == null)
+            {
+                return;
+            }
+
+            if (keyboard.tabKey.wasPressedThisFrame)
+            {
+                ToggleUiFocus();
+            }
+            else if (keyboard.escapeKey.wasPressedThisFrame)
+            {
+                if (_activeMerchant != null)
+                {
+                    CloseShop();
+                }
+                else if (RuntimeUiInputState.IsUiFocused)
+                {
+                    RuntimeUiInputState.SetUiFocused(false);
+                    ShowMessage("Closed UI focus.");
+                }
+            }
+        }
+
         public void ShowMessage(string message, float duration = 4f)
         {
             _lastMessage = message;
@@ -43,11 +83,13 @@ namespace TPS.Runtime.UI
         public void ToggleShop(MerchantAnchor merchantAnchor)
         {
             _activeMerchant = _activeMerchant == merchantAnchor ? null : merchantAnchor;
+            RuntimeUiInputState.SetUiFocused(_activeMerchant != null);
         }
 
         public void CloseShop()
         {
             _activeMerchant = null;
+            RuntimeUiInputState.SetUiFocused(false);
         }
 
         public ItemDefinition FindFirstUsableConsumable()
@@ -90,6 +132,19 @@ namespace TPS.Runtime.UI
             {
                 GUI.Box(new Rect((Screen.width - 420f) * 0.5f, Screen.height - 90f, 420f, 50f), _lastMessage);
             }
+        }
+
+        private void ToggleUiFocus()
+        {
+            RuntimeUiInputState.ToggleUiFocused();
+            if (!RuntimeUiInputState.IsUiFocused)
+            {
+                _activeMerchant = null;
+            }
+
+            ShowMessage(RuntimeUiInputState.IsUiFocused
+                ? "UI focus enabled. Cursor unlocked for HUD buttons."
+                : "Gameplay focus restored. Cursor locked for camera.");
         }
 
         private void DrawStatusPanel(bool inBattle)
@@ -142,6 +197,9 @@ namespace TPS.Runtime.UI
                 if (GUI.Button(new Rect(90f, y, 60f, 24f), "Load") && SaveLoadManager.Instance != null) SaveLoadManager.Instance.LoadGame();
                 if (GUI.Button(new Rect(160f, y, 50f, 24f), "Sun") && WeatherSystem.Instance != null) WeatherSystem.Instance.SetWeather(WeatherType.Sunny);
                 if (GUI.Button(new Rect(220f, y, 50f, 24f), "Rain") && WeatherSystem.Instance != null) WeatherSystem.Instance.SetWeather(WeatherType.Rain);
+                y += 30f;
+                string focusLabel = RuntimeUiInputState.IsUiFocused ? "UI focus ON (Tab/Esc to close)" : "Press Tab to unlock cursor for HUD";
+                GUI.Label(new Rect(20f, y, width - 20f, 18f), focusLabel);
             }
         }
 
