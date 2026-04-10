@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: RWD_Scout
   m_EditorClassIdentifier: Assembly-CSharp::TPS.Runtime.Combat.RewardTableDefinition
   _rewardId: reward_scout
-  _currencyReward: 24
-  _expReward: 18
+  _currencyReward: 28
+  _expReward: 22
   _guaranteedItems:
   - Item: {fileID: 11400000, guid: 7d3398e37df7d854586782dfa2772139, type: 2}
     Amount: 1

@@ -90,16 +90,16 @@ namespace TPS.Editor
             assets.ScoutReward = Phase1InstallerShared.LoadOrCreateAsset<RewardTableDefinition>("Assets/_TPS/Data/Phase1/Combat/RWD_Scout.asset");
             assets.CaptainReward = Phase1InstallerShared.LoadOrCreateAsset<RewardTableDefinition>("Assets/_TPS/Data/Phase1/Combat/RWD_Captain.asset");
             assets.QuestReward = Phase1InstallerShared.LoadOrCreateAsset<RewardTableDefinition>("Assets/_TPS/Data/Phase1/Combat/RWD_Quest.asset");
-            ConfigureReward(assets.ScoutReward, "reward_scout", 24, 18, assets.Potion, 1);
-            ConfigureReward(assets.CaptainReward, "reward_captain", 60, 40, assets.Ether, 1, null, null, assets.IronPike, 1);
-            ConfigureReward(assets.QuestReward, "reward_harbor_quest", 80, 32, assets.Ether, 1);
+            ConfigureReward(assets.ScoutReward, "reward_scout", 28, 22, assets.Potion, 1);
+            ConfigureReward(assets.CaptainReward, "reward_captain", 90, 55, assets.Ether, 1, null, null, assets.IronPike, 1);
+            ConfigureReward(assets.QuestReward, "reward_harbor_quest", 120, 45, assets.Ether, 1);
 
             assets.HarborScoutEncounter = Phase1InstallerShared.LoadOrCreateAsset<EncounterDefinition>("Assets/_TPS/Data/Phase1/World/ENC_HarborScout.asset");
             assets.HarborCaptainEncounter = Phase1InstallerShared.LoadOrCreateAsset<EncounterDefinition>("Assets/_TPS/Data/Phase1/World/ENC_HarborCaptain.asset");
             assets.PostBossEncounter = Phase1InstallerShared.LoadOrCreateAsset<EncounterDefinition>("Assets/_TPS/Data/Phase1/World/ENC_PostBossPatrol.asset");
             ConfigureEncounter(assets.HarborScoutEncounter, "enc_harbor_scout", "Harbor Scout Patrol", "aster_harbor", false, assets.ScoutReward, assets.RaiderScout);
             ConfigureEncounter(assets.HarborCaptainEncounter, "enc_harbor_captain", "Raider Captain", "aster_harbor", true, assets.CaptainReward, assets.RaiderCaptain, assets.RainMite);
-            ConfigureEncounter(assets.PostBossEncounter, "enc_post_boss_patrol", "Post-Boss Patrol", "aster_harbor", false, assets.ScoutReward, assets.RainMite, assets.RaiderScout);
+            ConfigureEncounter(assets.PostBossEncounter, "enc_post_boss_patrol", "Rain Mite Sweep", "aster_harbor", false, assets.ScoutReward, assets.RainMite, assets.RaiderScout);
 
             assets.PreBossTable = Phase1InstallerShared.LoadOrCreateAsset<EncounterTableDefinition>("Assets/_TPS/Data/Phase1/World/ECT_AsterHarbor_PreBoss.asset");
             assets.PostBossTable = Phase1InstallerShared.LoadOrCreateAsset<EncounterTableDefinition>("Assets/_TPS/Data/Phase1/World/ECT_AsterHarbor_PostBoss.asset");
@@ -110,7 +110,7 @@ namespace TPS.Editor
             ConfigureZone(assets.AsterHarborZone, "aster_harbor", "Aster Harbor", assets.PreBossTable, assets.PostBossTable, assets.HarborCaptainEncounter.EncounterId);
 
             assets.HarborQuest = Phase1InstallerShared.LoadOrCreateAsset<QuestDefinition>("Assets/_TPS/Data/Phase1/Quests/QST_ClearHarborThreat.asset");
-            ConfigureQuest(assets.HarborQuest, "quest_clear_harbor_threat", "Clear Harbor Threat", "Defeat the raider captain near the gate.", assets.QuestReward, assets.Lina, assets.HarborCaptainEncounter.EncounterId);
+            ConfigureQuest(assets.HarborQuest, "quest_clear_harbor_threat", "Clear Harbor Threat", "Defeat the raider captain at the gate so the harbor patrol and town support can recover.", assets.QuestReward, assets.Lina, assets.HarborCaptainEncounter.EncounterId);
 
             assets.HarborCaptainDialogue = Phase1InstallerShared.LoadOrCreateAsset<DialogueDefinition>("Assets/_TPS/Data/Phase1/Dialogue/DLG_HarborCaptain.asset");
             ConfigureDialogue(assets.HarborCaptainDialogue, assets.HarborQuest);
@@ -358,10 +358,10 @@ namespace TPS.Editor
             so.FindProperty("_dialogueId").stringValue = "dialogue_harbor_captain";
             SerializedProperty variants = so.FindProperty("_variants");
             variants.arraySize = 4;
-            ConfigureDialogueVariant(variants.GetArrayElementAtIndex(0), "completed", "Captain Rhea", "Aster Harbor is steady again. Lina will fight beside you now.", ConditionType.QuestState, questDefinition.QuestId, QuestStatus.Completed, DialogueActionType.SetFlag, questDefinition, "dialogue.harbor.completed");
-            ConfigureDialogueVariant(variants.GetArrayElementAtIndex(1), "turn_in", "Captain Rhea", "You took down the raider captain. Come, collect your reward and take Lina with you.", ConditionType.QuestState, questDefinition.QuestId, QuestStatus.ReadyToTurnIn, DialogueActionType.TryCompleteQuest, questDefinition, null);
-            ConfigureDialogueVariant(variants.GetArrayElementAtIndex(2), "active", "Captain Rhea", "The raider captain is still at the gate. Move quickly.", ConditionType.QuestState, questDefinition.QuestId, QuestStatus.Active, DialogueActionType.SetFlag, null, "dialogue.harbor.quest_active");
-            ConfigureDialogueVariant(variants.GetArrayElementAtIndex(3), "start", "Captain Rhea", "A raider captain has locked down the harbor gate. Help us and I'll open the town's support to you.", null, questDefinition.QuestId, QuestStatus.NotStarted, DialogueActionType.AcceptQuest, questDefinition, null);
+            ConfigureDialogueVariant(variants.GetArrayElementAtIndex(0), "completed", "Captain Rhea", "The gate is clear, patrol routes are back online, and Lina is free to join your party. Aster Harbor remembers this.", ConditionType.QuestState, questDefinition.QuestId, QuestStatus.Completed, DialogueActionType.SetFlag, questDefinition, "dialogue.harbor.completed");
+            ConfigureDialogueVariant(variants.GetArrayElementAtIndex(1), "turn_in", "Captain Rhea", "You broke the raider line. Take this pay, then bring Lina with you while we reset the harbor watch.", ConditionType.QuestState, questDefinition.QuestId, QuestStatus.ReadyToTurnIn, DialogueActionType.TryCompleteQuest, questDefinition, null);
+            ConfigureDialogueVariant(variants.GetArrayElementAtIndex(2), "active", "Captain Rhea", "The raider captain still holds the gate. Once he falls, the harbor encounter routes will shift immediately.", ConditionType.QuestState, questDefinition.QuestId, QuestStatus.Active, DialogueActionType.SetFlag, null, "dialogue.harbor.quest_active");
+            ConfigureDialogueVariant(variants.GetArrayElementAtIndex(3), "start", "Captain Rhea", "I stand in the square from 07:00 to 12:00, but when rain hits I move into the tavern. First, help us break the raider captain at the gate.", null, questDefinition.QuestId, QuestStatus.NotStarted, DialogueActionType.AcceptQuest, questDefinition, null);
             so.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(asset);
         }
@@ -373,8 +373,8 @@ namespace TPS.Editor
             so.FindProperty("_displayName").stringValue = displayName;
             SerializedProperty entries = so.FindProperty("_entries");
             entries.arraySize = 3;
-            ConfigureShopEntry(entries.GetArrayElementAtIndex(0), potion, null, 3, potion.BuyPrice);
-            ConfigureShopEntry(entries.GetArrayElementAtIndex(1), ether, null, 2, ether.BuyPrice);
+            ConfigureShopEntry(entries.GetArrayElementAtIndex(0), potion, null, 4, potion.BuyPrice);
+            ConfigureShopEntry(entries.GetArrayElementAtIndex(1), ether, null, 3, ether.BuyPrice);
             ConfigureShopEntry(entries.GetArrayElementAtIndex(2), null, ironPike, 1, ironPike.BuyPrice);
             so.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(asset);
@@ -384,7 +384,7 @@ namespace TPS.Editor
         {
             SerializedObject so = new SerializedObject(assets.Catalog);
             so.FindProperty("_progressionCurve").objectReferenceValue = assets.ProgressionCurve;
-            so.FindProperty("_startingCurrency").intValue = 120;
+            so.FindProperty("_startingCurrency").intValue = 100;
             Phase1InstallerShared.AssignObjectArray(so.FindProperty("_startingPartyMembers"), assets.Ari, assets.Noa);
             Phase1InstallerShared.AssignObjectArray(so.FindProperty("_characters"), assets.Ari, assets.Noa, assets.Lina);
             Phase1InstallerShared.AssignObjectArray(so.FindProperty("_enemies"), assets.RaiderScout, assets.RaiderCaptain, assets.RainMite);

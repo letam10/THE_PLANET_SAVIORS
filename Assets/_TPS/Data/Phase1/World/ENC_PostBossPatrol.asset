@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: ENC_PostBossPatrol
   m_EditorClassIdentifier: Assembly-CSharp::TPS.Runtime.Combat.EncounterDefinition
   _encounterId: enc_post_boss_patrol
-  _displayName: Post-Boss Patrol
+  _displayName: Rain Mite Sweep
   _zoneId: aster_harbor
   _battleSceneName: BTL_Standard
   _countsAsClear: 0

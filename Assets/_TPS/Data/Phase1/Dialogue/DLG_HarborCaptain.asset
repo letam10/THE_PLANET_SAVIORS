@@ -16,7 +16,8 @@ MonoBehaviour:
   _variants:
   - VariantId: completed
     SpeakerName: Captain Rhea
-    Body: Aster Harbor is steady again. Lina will fight beside you now.
+    Body: The gate is clear, patrol routes are back online, and Lina is free to join
+      your party. Aster Harbor remembers this.
     Conditions:
       Mode: 0
       Conditions:
@@ -53,8 +54,8 @@ MonoBehaviour:
     Choices: []
   - VariantId: turn_in
     SpeakerName: Captain Rhea
-    Body: You took down the raider captain. Come, collect your reward and take Lina
-      with you.
+    Body: You broke the raider line. Take this pay, then bring Lina with you while
+      we reset the harbor watch.
     Conditions:
       Mode: 0
       Conditions:
@@ -91,7 +92,8 @@ MonoBehaviour:
     Choices: []
   - VariantId: active
     SpeakerName: Captain Rhea
-    Body: The raider captain is still at the gate. Move quickly.
+    Body: The raider captain still holds the gate. Once he falls, the harbor encounter
+      routes will shift immediately.
     Conditions:
       Mode: 0
       Conditions:
@@ -128,8 +130,8 @@ MonoBehaviour:
     Choices: []
   - VariantId: start
     SpeakerName: Captain Rhea
-    Body: A raider captain has locked down the harbor gate. Help us and I'll open
-      the town's support to you.
+    Body: I stand in the square from 07:00 to 12:00, but when rain hits I move into
+      the tavern. First, help us break the raider captain at the gate.
     Conditions:
       Mode: 0
       Conditions: []

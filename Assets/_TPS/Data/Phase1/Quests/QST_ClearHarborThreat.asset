@@ -14,7 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TPS.Runtime.Quest.QuestDefinition
   _questId: quest_clear_harbor_threat
   _title: Clear Harbor Threat
-  _summary: Defeat the raider captain near the gate.
+  _summary: Defeat the raider captain at the gate so the harbor patrol and town support
+    can recover.
   _objectives:
   - ObjectiveId: defeat_raider_captain
     Description: Defeat the raider captain near the gate.

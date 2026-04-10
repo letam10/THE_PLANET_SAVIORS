@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: CAT_Phase1Content
   m_EditorClassIdentifier: Assembly-CSharp::TPS.Runtime.Core.Phase1ContentCatalog
   _progressionCurve: {fileID: 11400000, guid: fe0b6f606c0f46a4ebbbfde45aeb8e17, type: 2}
-  _startingCurrency: 120
+  _startingCurrency: 100
   _startingPartyMembers:
   - {fileID: 11400000, guid: c4992c6ddfc5d42439cc152f24ebc265, type: 2}
   - {fileID: 11400000, guid: df475d5647e1d9548a9e46a362ca0359, type: 2}

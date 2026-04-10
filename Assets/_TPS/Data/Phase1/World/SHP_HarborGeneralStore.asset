@@ -21,11 +21,11 @@ MonoBehaviour:
   _entries:
   - Item: {fileID: 11400000, guid: 7d3398e37df7d854586782dfa2772139, type: 2}
     Equipment: {fileID: 0}
-    Stock: 3
+    Stock: 4
     PriceOverride: 30
   - Item: {fileID: 11400000, guid: f496c42b575249f4c919cfff33cf9382, type: 2}
     Equipment: {fileID: 0}
-    Stock: 2
+    Stock: 3
     PriceOverride: 45
   - Item: {fileID: 0}
     Equipment: {fileID: 11400000, guid: 55fa98194390a7d49b5ed04350bd3698, type: 2}

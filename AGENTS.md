@@ -5,6 +5,25 @@
 - The plan must include: Goal, Files to change, Risks, Validation steps, Commit message.
 - After producing the plan, stop and wait for explicit user approval.
 - Do not edit files until the user replies exactly: APPROVE PLAN.
+- Always work on the current worktree branch, never on main.
+- Break work into small checkpoints.
+- A checkpoint should usually be one coherent step, roughly 1 to 5 related files or one completed subtask.
+- After each checkpoint:
+  1. review the current git diff
+  2. stage only the files for that checkpoint
+  3. create one checkpoint commit
+  4. continue to the next checkpoint
+
+## Commit policy
+- Do not wait until the very end to make a single giant commit.
+- Prefer small conventional commits.
+- Suggested prefixes: feat:, fix:, refactor:, docs:, test:, chore:
+- If a diff is too broad, split it before committing.
+
+## Validation before each commit
+- If code changed, run the smallest relevant validation before each checkpoint commit.
+- For Unity tasks, prefer narrow validation first, not full project rebuild every time.
+- If validation fails, fix or revert before committing.
 
 ## Execution rules after approval
 - Work only on the current worktree / branch.

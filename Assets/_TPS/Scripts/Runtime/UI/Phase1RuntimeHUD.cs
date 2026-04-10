@@ -74,6 +74,7 @@ namespace TPS.Runtime.UI
             bool inBattle = SceneLoader.Instance != null && SceneLoader.Instance.CurrentContentScene == "BTL_Standard";
 
             DrawStatusPanel(inBattle);
+            DrawSmokePanel(inBattle);
             if (!inBattle)
             {
                 DrawInventoryPanel();
@@ -115,6 +116,48 @@ namespace TPS.Runtime.UI
                 if (GUI.Button(new Rect(90f, y, 60f, 24f), "Load") && SaveLoadManager.Instance != null) SaveLoadManager.Instance.LoadGame();
                 if (GUI.Button(new Rect(160f, y, 50f, 24f), "Sun") && WeatherSystem.Instance != null) WeatherSystem.Instance.SetWeather(WeatherType.Sunny);
                 if (GUI.Button(new Rect(220f, y, 50f, 24f), "Rain") && WeatherSystem.Instance != null) WeatherSystem.Instance.SetWeather(WeatherType.Rain);
+            }
+        }
+
+        private void DrawSmokePanel(bool inBattle)
+        {
+            if (Phase1SmokeRunner.Instance == null)
+            {
+                return;
+            }
+
+            float width = 500f;
+            float height = inBattle ? 220f : 270f;
+            GUI.Box(new Rect(10f, 10f, width, height), "Phase 1 Smoke");
+
+            float rowY = 35f;
+            string[] statusLines = Phase1SmokeRunner.Instance.BuildStatusLines();
+            for (int i = 0; i < statusLines.Length; i++)
+            {
+                GUI.Label(new Rect(20f, rowY, width - 30f, 18f), statusLines[i]);
+                rowY += 18f;
+            }
+
+            if (GUI.Button(new Rect(20f, rowY + 4f, 110f, 24f), "Log Snapshot"))
+            {
+                Phase1SmokeRunner.Instance.LogManualSnapshot();
+            }
+
+            if (GUI.Button(new Rect(140f, rowY + 4f, 110f, 24f), "Reset Smoke"))
+            {
+                Phase1SmokeRunner.Instance.ResetTelemetry();
+            }
+
+            rowY += 36f;
+            GUI.Label(new Rect(20f, rowY, width - 30f, 18f), "Recent smoke events");
+            rowY += 18f;
+
+            IReadOnlyList<string> events = Phase1SmokeRunner.Instance.Timeline;
+            int start = Mathf.Max(0, events.Count - (inBattle ? 5 : 7));
+            for (int i = start; i < events.Count; i++)
+            {
+                GUI.Label(new Rect(20f, rowY, width - 30f, 18f), events[i]);
+                rowY += 18f;
             }
         }
 

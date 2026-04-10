@@ -146,6 +146,7 @@ GameObject:
   - component: {fileID: 177854913}
   - component: {fileID: 177854912}
   - component: {fileID: 177854911}
+  - component: {fileID: 177854922}
   m_Layer: 0
   m_Name: CoreServices
   m_TagString: Untagged
@@ -410,6 +411,25 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TPS.Runtime.Quest.QuestService
   _contentCatalog: {fileID: 11400000, guid: 6223ac84ac8a0704d961686f3f098254, type: 2}
+--- !u!114 &177854922
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 177854902}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b9f73fb1d1cb4798a55c90a5f11b7c21, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: TPS.Runtime::TPS.Runtime.Core.Phase1SmokeRunner
+  _contentCatalog: {fileID: 11400000, guid: 6223ac84ac8a0704d961686f3f098254, type: 2}
+  _questId: quest_clear_harbor_threat
+  _zoneId: aster_harbor
+  _npcId: harbor_captain
+  _dialogueAnchorId: harbor_captain
+  _merchantId: harbor_general_store
+  _bossEncounterId: enc_harbor_captain
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
