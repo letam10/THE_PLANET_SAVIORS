@@ -49,6 +49,7 @@ namespace TPS.Editor
                 AddAndConfigureCatalogComponent<EncounterService>(root, assets.Catalog);
                 AddAndConfigureCatalogComponent<Phase1RuntimeHUD>(root, assets.Catalog);
                 AddAndConfigureCatalogComponent<Phase1SmokeRunner>(root, assets.Catalog);
+                AddAndConfigureCatalogComponent<Phase1AutomationDriver>(root, assets.Catalog);
                 AddComponentIfMissing<InventoryService>(root);
                 AddComponentIfMissing<ZoneStateService>(root);
                 AddComponentIfMissing<RewardService>(root);

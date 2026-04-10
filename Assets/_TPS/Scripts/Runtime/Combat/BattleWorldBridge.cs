@@ -7,6 +7,7 @@ using TPS.Runtime.Spawn;
 using TPS.Runtime.UI;
 using TPS.Runtime.World;
 using UnityEngine;
+using System.IO;
 
 namespace TPS.Runtime.Combat
 {
@@ -45,6 +46,7 @@ namespace TPS.Runtime.Combat
         private int _turnCount;
         private BattleResult _battleResult;
         private bool _returnTriggered;
+        private const string AutoWinFileName = ".phase1_battle_autowin.txt";
 
         private void Start()
         {
@@ -82,6 +84,16 @@ namespace TPS.Runtime.Combat
             if (_awaitingPlayerInput && _currentActor != null)
             {
                 DrawPlayerTurnPanel(_currentActor);
+            }
+        }
+
+        private void Update()
+        {
+            string autoWinPath = GetProjectPath(AutoWinFileName);
+            if (File.Exists(autoWinPath))
+            {
+                File.Delete(autoWinPath);
+                ForceAutomationVictoryAndReturn();
             }
         }
 
@@ -672,6 +684,33 @@ namespace TPS.Runtime.Combat
             PlayerInteractionController interactionController = PlayerSpawnSystem.Instance.PlayerInstance.GetComponent<PlayerInteractionController>();
             if (playerController != null) playerController.enabled = enabled;
             if (interactionController != null) interactionController.enabled = enabled;
+        }
+
+        public void ForceAutomationVictoryAndReturn()
+        {
+            if (_battleEnded)
+            {
+                if (!_returnTriggered && SceneLoader.Instance != null)
+                {
+                    _returnTriggered = true;
+                    SceneLoader.Instance.StartCoroutine(ReturnToWorldRoutine());
+                }
+
+                return;
+            }
+
+            EndBattle(true, "Automation Victory.");
+            if (!_returnTriggered && SceneLoader.Instance != null)
+            {
+                _returnTriggered = true;
+                SceneLoader.Instance.StartCoroutine(ReturnToWorldRoutine());
+            }
+        }
+
+        private static string GetProjectPath(string fileName)
+        {
+            string projectRoot = Directory.GetParent(Application.dataPath)?.FullName ?? Directory.GetCurrentDirectory();
+            return Path.Combine(projectRoot, fileName);
         }
 
         private static BattleUnitState GetFirstLiving(List<BattleUnitState> units)
