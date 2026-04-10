@@ -36,6 +36,20 @@ MonoBehaviour:
     Ice: 1
     Lightning: 1
   _skillUnlocks:
-  - Skill: {fileID: 11400000, guid: 5dac330cb39c9904f90a9c3034940a6c, type: 2}
+  - UnlockId: unlock_ranger_shock_shot
+    Skill: {fileID: 11400000, guid: 5dac330cb39c9904f90a9c3034940a6c, type: 2}
     RequiredLevel: 2
     RequiredWeaponFamily: 3
+    PassiveStatModifier:
+      MaxHP: 0
+      MaxMP: 0
+      Attack: 1
+      Magic: 0
+      Defense: 0
+      Resistance: 0
+      Speed: 2
+    PassiveResistanceModifier:
+      Physical: 1
+      Fire: 1
+      Ice: 1
+      Lightning: 1

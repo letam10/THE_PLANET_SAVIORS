@@ -84,6 +84,11 @@ namespace TPS.Runtime.Combat
                 return false;
             }
 
+            if (!CanRemoveEquipment(equipmentDefinition.EquipmentId, amount))
+            {
+                return false;
+            }
+
             bool removed = RemoveFromStack(_equipmentCounts, equipmentDefinition.EquipmentId, amount);
             if (removed)
             {
@@ -205,6 +210,18 @@ namespace TPS.Runtime.Combat
             }
 
             return true;
+        }
+
+        private bool CanRemoveEquipment(string equipmentId, int amount)
+        {
+            int currentCount = GetEquipmentCount(equipmentId);
+            if (currentCount < amount)
+            {
+                return false;
+            }
+
+            int equippedCount = PartyService.Instance != null ? PartyService.Instance.GetEquippedWeaponCount(equipmentId) : 0;
+            return currentCount - amount >= equippedCount;
         }
     }
 }

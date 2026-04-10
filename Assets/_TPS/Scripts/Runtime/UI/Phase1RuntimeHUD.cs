@@ -93,8 +93,8 @@ namespace TPS.Runtime.UI
 
         private void DrawStatusPanel(bool inBattle)
         {
-            float width = 280f;
-            float height = inBattle ? 120f : 200f;
+            float width = 340f;
+            float height = inBattle ? 180f : 260f;
             GUI.Box(new Rect(10f, Screen.height - height - 10f, width, height), "Phase 1 Runtime");
 
             float y = Screen.height - height + 20f;
@@ -109,6 +109,25 @@ namespace TPS.Runtime.UI
             string currencyText = EconomyService.Instance != null ? $"Currency: {EconomyService.Instance.Currency}" : "Currency: --";
             GUI.Label(new Rect(20f, y, width - 20f, 20f), currencyText);
             y += 24f;
+
+            if (PartyService.Instance != null)
+            {
+                List<string> activeMembers = PartyService.Instance.GetActiveMemberIds();
+                for (int i = 0; i < activeMembers.Count && y < Screen.height - 55f; i++)
+                {
+                    CharacterStatSnapshot snapshot = PartyService.Instance.GetMemberSnapshot(activeMembers[i]);
+                    if (snapshot == null)
+                    {
+                        continue;
+                    }
+
+                    string weaponName = snapshot.EquippedWeapon != null ? snapshot.EquippedWeapon.DisplayName : "No Weapon";
+                    GUI.Label(new Rect(20f, y, width - 20f, 18f), $"{snapshot.DisplayName} Lv{snapshot.Level} | {weaponName}");
+                    y += 18f;
+                    GUI.Label(new Rect(20f, y, width - 20f, 18f), $"HP {PartyService.Instance.GetCurrentHP(snapshot.CharacterId)}/{snapshot.Stats.MaxHP} MP {PartyService.Instance.GetCurrentMP(snapshot.CharacterId)}/{snapshot.Stats.MaxMP} | ATK {snapshot.Stats.Attack} MAG {snapshot.Stats.Magic} DEF {snapshot.Stats.Defense} RES {snapshot.Stats.Resistance} SPD {snapshot.Stats.Speed}");
+                    y += 20f;
+                }
+            }
 
             if (!inBattle)
             {
@@ -229,6 +248,15 @@ namespace TPS.Runtime.UI
                     {
                         ShowMessage($"{targetMember} equipped {item.DisplayName}.");
                     }
+
+                    EquipmentDefinition equippedWeapon = PartyService.Instance.GetEquippedWeapon(targetMember);
+                    if (equippedWeapon == item && GUI.Button(new Rect(x + 170f, rowY + 22f, 70f, 24f), $"Unequip"))
+                    {
+                        if (PartyService.Instance.UnequipWeapon(targetMember))
+                        {
+                            ShowMessage($"{targetMember} unequipped {item.DisplayName}.");
+                        }
+                    }
                 }
                 if (GUI.Button(new Rect(x + 250f, rowY - 2f, 50f, 24f), "Sell"))
                 {
@@ -236,8 +264,12 @@ namespace TPS.Runtime.UI
                     {
                         ShowMessage($"Sold {item.DisplayName}.");
                     }
+                    else
+                    {
+                        ShowMessage($"Could not sell {item.DisplayName}.");
+                    }
                 }
-                rowY += 24f;
+                rowY += 48f;
             }
         }
 
@@ -322,11 +354,6 @@ namespace TPS.Runtime.UI
                 return;
             }
 
-            if (!InventoryService.Instance.RemoveItem(item, 1))
-            {
-                return;
-            }
-
             List<string> activeMembers = PartyService.Instance.GetActiveMemberIds();
             string targetMember = activeMembers.Count > 0 ? activeMembers[0] : null;
             if (targetMember == null)
@@ -334,16 +361,10 @@ namespace TPS.Runtime.UI
                 return;
             }
 
-            CharacterDefinition definition = PartyService.Instance.GetCharacterDefinition(targetMember);
-            EquipmentDefinition weapon = PartyService.Instance.GetEquippedWeapon(targetMember);
-            StatBlock maxStats = definition != null && ProgressionService.Instance != null
-                ? ProgressionService.Instance.BuildFinalStats(definition, weapon)
-                : new StatBlock();
-
-            int hp = Mathf.Clamp(PartyService.Instance.GetCurrentHP(targetMember) + item.RestoreHP, 0, maxStats.MaxHP);
-            int mp = Mathf.Clamp(PartyService.Instance.GetCurrentMP(targetMember) + item.RestoreMP, 0, maxStats.MaxMP);
-            PartyService.Instance.SetCurrentResources(targetMember, hp, mp, false);
-            ShowMessage($"Used {item.DisplayName} on {targetMember}.");
+            if (PartyService.Instance.TryUseConsumable(targetMember, item))
+            {
+                ShowMessage($"Used {item.DisplayName} on {targetMember}.");
+            }
         }
     }
 }

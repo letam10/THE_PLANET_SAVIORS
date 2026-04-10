@@ -142,6 +142,18 @@ namespace TPS.Runtime.Combat
     }
 
     [Serializable]
+    public sealed class StatModifier
+    {
+        public int MaxHP = 0;
+        public int MaxMP = 0;
+        public int Attack = 0;
+        public int Magic = 0;
+        public int Defense = 0;
+        public int Resistance = 0;
+        public int Speed = 0;
+    }
+
+    [Serializable]
     public sealed class ResistanceProfile
     {
         [Min(0f)] public float Physical = 1f;
@@ -228,9 +240,12 @@ namespace TPS.Runtime.Combat
     [Serializable]
     public sealed class SkillUnlockDefinition
     {
+        public string UnlockId = "unlock_new";
         public SkillDefinition Skill;
         [Min(1)] public int RequiredLevel = 1;
         public WeaponFamilyType RequiredWeaponFamily = WeaponFamilyType.None;
+        public StatModifier PassiveStatModifier = new StatModifier();
+        public ResistanceProfile PassiveResistanceModifier = new ResistanceProfile();
     }
 
     [Serializable]

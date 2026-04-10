@@ -49,10 +49,12 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 23b30c39f5f43c74babad466b93350ff, type: 2}
   - {fileID: 11400000, guid: 844f475c5bb103a42823f392df3e43c6, type: 2}
   - {fileID: 11400000, guid: 0f6e16cbd44707746bb07a4c1b9246e1, type: 2}
+  - {fileID: 11400000, guid: 741b797063c34fe42ab984f2ee1500b6, type: 2}
   _encounters:
   - {fileID: 11400000, guid: 96b2b2baf6056ee43996eda3f6d9c595, type: 2}
   - {fileID: 11400000, guid: f124319b9721f0f4f963791604278430, type: 2}
   - {fileID: 11400000, guid: bc73b8672ce2a064a95db46172f48667, type: 2}
+  - {fileID: 11400000, guid: 24913e63c8f0ad944adcfb14d686758c, type: 2}
   _encounterTables:
   - {fileID: 11400000, guid: 5a8dfac5c57b8f7468be44751248615c, type: 2}
   - {fileID: 11400000, guid: 9d0fa19041b473242a54ef6d5370de2d, type: 2}
@@ -62,5 +64,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 471fe2a6041df2041b5cb80cc67fed2c, type: 2}
   _dialogues:
   - {fileID: 11400000, guid: 31e91a5fae566d44792a15542a7d92d4, type: 2}
+  - {fileID: 11400000, guid: 0e13ff6ee62c4364bbe1622422fba8bf, type: 2}
   _quests:
   - {fileID: 11400000, guid: ed03189c868dd10478cf0ce034d20894, type: 2}
+  - {fileID: 11400000, guid: 9b1e44a2702c29b42a9dd4c8725f6b36, type: 2}

@@ -85,6 +85,9 @@ namespace TPS.Editor
                 ConfigureZoneEncounterAnchor(triggerPrototype, "aster_patrol_anchor", "aster_harbor");
                 ConfigureBossAnchor(worldRoot, gateBlock.transform.position + new Vector3(0f, 0.5f, 4f), assets.HarborCaptainEncounter);
                 ConfigureAmbientCube(cube, assets.HarborCaptainEncounter.EncounterId);
+                ConfigureSideQuestNpc(worldRoot, shopBlock.transform.position + new Vector3(4f, 0f, -2f), assets.DockworkerDialogue);
+                ConfigureSideQuestEncounterAnchor(worldRoot, shopBlock.transform.position + new Vector3(8f, 0.5f, -5f), assets.SideQuestEncounter);
+                ConfigureSideQuestBanner(worldRoot, shopBlock.transform.position + new Vector3(6f, 1.25f, -1f));
 
                 EditorSceneManager.MarkSceneDirty(scene);
                 EditorSceneManager.SaveScene(scene);
@@ -235,6 +238,111 @@ namespace TPS.Editor
             so.FindProperty("_targetMode").enumValueIndex = 0;
             so.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(cube);
+        }
+
+        private static void ConfigureSideQuestNpc(GameObject worldRoot, Vector3 position, DialogueDefinition dialogueDefinition)
+        {
+            GameObject npcObject = FindChild(worldRoot, "NPC_DockQuartermaster");
+            if (npcObject == null)
+            {
+                npcObject = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+                npcObject.name = "NPC_DockQuartermaster";
+                npcObject.transform.SetParent(worldRoot.transform);
+            }
+
+            npcObject.transform.position = position;
+            npcObject.transform.localScale = new Vector3(0.9f, 1.3f, 0.9f);
+            NPCSchedule schedule = AddComponentIfMissing<NPCSchedule>(npcObject);
+            SerializedObject scheduleSo = new SerializedObject(schedule);
+            scheduleSo.FindProperty("_npcId").stringValue = "dock_quartermaster";
+            scheduleSo.FindProperty("_hideIfNoSlotMatched").boolValue = true;
+            SerializedProperty slots = scheduleSo.FindProperty("_slots");
+            slots.arraySize = 1;
+            ConfigureSlot(slots.GetArrayElementAtIndex(0), "dock_shift", 7, 18, null, true, null, TPS.Runtime.Weather.WeatherType.Sunny);
+            scheduleSo.ApplyModifiedPropertiesWithoutUndo();
+
+            DialogueAnchor dialogueAnchor = AddComponentIfMissing<DialogueAnchor>(npcObject);
+            SerializedObject dialogueSo = new SerializedObject(dialogueAnchor);
+            dialogueSo.FindProperty("_anchorId").stringValue = "dock_quartermaster";
+            dialogueSo.FindProperty("_dialogueDefinition").objectReferenceValue = dialogueDefinition;
+            dialogueSo.FindProperty("_interactionLabel").stringValue = "check supplies";
+            dialogueSo.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(npcObject);
+        }
+
+        private static void ConfigureSideQuestEncounterAnchor(GameObject worldRoot, Vector3 position, EncounterDefinition encounterDefinition)
+        {
+            GameObject anchorObject = FindChild(worldRoot, "ENC_DockRainMites_Anchor");
+            if (anchorObject == null)
+            {
+                anchorObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                anchorObject.name = "ENC_DockRainMites_Anchor";
+                anchorObject.transform.SetParent(worldRoot.transform);
+            }
+
+            anchorObject.transform.position = position;
+            anchorObject.transform.localScale = new Vector3(1.8f, 1.8f, 1.8f);
+            BoxCollider collider = anchorObject.GetComponent<BoxCollider>();
+            collider.isTrigger = true;
+            EncounterAnchor anchor = AddComponentIfMissing<EncounterAnchor>(anchorObject);
+            SerializedObject so = new SerializedObject(anchor);
+            so.FindProperty("_anchorId").stringValue = "dock_rain_mites_anchor";
+            so.FindProperty("_zoneId").stringValue = "aster_harbor";
+            so.FindProperty("_directEncounter").objectReferenceValue = encounterDefinition;
+            so.FindProperty("_useZoneEncounterTable").boolValue = false;
+            so.FindProperty("_triggerOnEnter").boolValue = true;
+            so.FindProperty("_triggerOnce").boolValue = true;
+            so.FindProperty("_hideWhenCleared").boolValue = true;
+            SerializedProperty conditions = so.FindProperty("_availabilityConditions");
+            conditions.FindPropertyRelative("Mode").enumValueIndex = (int)ConditionGroupMode.All;
+            SerializedProperty conditionList = conditions.FindPropertyRelative("Conditions");
+            conditionList.arraySize = 1;
+            SerializedProperty condition = conditionList.GetArrayElementAtIndex(0);
+            condition.FindPropertyRelative("Type").enumValueIndex = (int)ConditionType.QuestState;
+            condition.FindPropertyRelative("QuestId").stringValue = "quest_secure_dock_supplies";
+            condition.FindPropertyRelative("ExpectedQuestStatus").enumValueIndex = (int)QuestStatus.Active;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(anchorObject);
+        }
+
+        private static void ConfigureSideQuestBanner(GameObject worldRoot, Vector3 position)
+        {
+            GameObject controller = FindChild(worldRoot, "PRP_DockSupplyBanner_Controller");
+            if (controller == null)
+            {
+                controller = new GameObject("PRP_DockSupplyBanner_Controller");
+                controller.transform.SetParent(worldRoot.transform);
+            }
+
+            controller.transform.position = position;
+            GameObject visual = FindChild(controller, "PRP_DockSupplyBanner_Visual");
+            if (visual == null)
+            {
+                visual = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                visual.name = "PRP_DockSupplyBanner_Visual";
+                visual.transform.SetParent(controller.transform);
+            }
+
+            visual.transform.localPosition = Vector3.zero;
+            visual.transform.localRotation = Quaternion.identity;
+            visual.transform.localScale = new Vector3(0.5f, 2.5f, 0.2f);
+            ConditionalActivator activator = AddComponentIfMissing<ConditionalActivator>(controller);
+            SerializedObject so = new SerializedObject(activator);
+            SerializedProperty resolver = so.FindProperty("_resolver");
+            resolver.FindPropertyRelative("Mode").enumValueIndex = (int)ConditionGroupMode.All;
+            SerializedProperty conditions = resolver.FindPropertyRelative("Conditions");
+            conditions.arraySize = 1;
+            SerializedProperty condition = conditions.GetArrayElementAtIndex(0);
+            condition.FindPropertyRelative("Type").enumValueIndex = (int)ConditionType.ZoneFactBoolEquals;
+            condition.FindPropertyRelative("ZoneId").stringValue = "aster_harbor";
+            condition.FindPropertyRelative("ZoneFactId").stringValue = "dock_supplies_secured";
+            condition.FindPropertyRelative("ExpectedBool").boolValue = true;
+            so.FindProperty("_targetMode").enumValueIndex = (int)ActivatorTargetMode.GameObjectSetActive;
+            so.FindProperty("_targetGameObject").objectReferenceValue = visual;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            visual.SetActive(false);
+            EditorUtility.SetDirty(controller);
+            EditorUtility.SetDirty(visual);
         }
 
         private static void ConfigureSlot(SerializedProperty slot, string slotName, int startHour, int endHour, Transform targetMarker, bool visible, ConditionType? conditionType, TPS.Runtime.Weather.WeatherType weatherType)

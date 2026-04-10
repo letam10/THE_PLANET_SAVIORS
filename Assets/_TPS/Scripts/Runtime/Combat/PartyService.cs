@@ -38,6 +38,16 @@ namespace TPS.Runtime.Combat
             EnsureDefaults();
         }
 
+        private void OnEnable()
+        {
+            GameEventBus.OnProgressionChanged += OnProgressionChanged;
+        }
+
+        private void OnDisable()
+        {
+            GameEventBus.OnProgressionChanged -= OnProgressionChanged;
+        }
+
         public void EnsureDefaults()
         {
             if (_defaultsInitialized)
@@ -135,6 +145,41 @@ namespace TPS.Runtime.Combat
             return _contentCatalog.GetEquipment(state.EquippedWeaponId);
         }
 
+        public CharacterStatSnapshot GetMemberSnapshot(string characterId)
+        {
+            if (!_members.TryGetValue(characterId, out PartyMemberRuntimeState state) || state.Definition == null || ProgressionService.Instance == null)
+            {
+                return null;
+            }
+
+            return ProgressionService.Instance.BuildCharacterSnapshot(state.Definition, GetEquippedWeapon(characterId));
+        }
+
+        public int GetEquippedWeaponCount(string equipmentId, string excludeCharacterId = null)
+        {
+            if (string.IsNullOrWhiteSpace(equipmentId))
+            {
+                return 0;
+            }
+
+            int count = 0;
+            foreach (var pair in _members)
+            {
+                if (!string.IsNullOrWhiteSpace(excludeCharacterId) && pair.Key == excludeCharacterId)
+                {
+                    continue;
+                }
+
+                PartyMemberRuntimeState state = pair.Value;
+                if (state != null && state.Recruited && state.EquippedWeaponId == equipmentId)
+                {
+                    count++;
+                }
+            }
+
+            return count;
+        }
+
         public bool EquipWeapon(string characterId, EquipmentDefinition equipmentDefinition)
         {
             if (equipmentDefinition == null || equipmentDefinition.SlotType != EquipmentSlotType.Weapon || InventoryService.Instance == null)
@@ -147,13 +192,44 @@ namespace TPS.Runtime.Combat
                 return false;
             }
 
-            if (InventoryService.Instance.GetEquipmentCount(equipmentDefinition.EquipmentId) <= 0)
+            int ownedCopies = InventoryService.Instance.GetEquipmentCount(equipmentDefinition.EquipmentId);
+            int equippedByOthers = GetEquippedWeaponCount(equipmentDefinition.EquipmentId, characterId);
+            if (ownedCopies <= equippedByOthers)
             {
                 return false;
             }
 
             state.EquippedWeaponId = equipmentDefinition.EquipmentId;
-            ClampResourcesToMax(state);
+            if (ProgressionService.Instance != null)
+            {
+                ProgressionService.Instance.RefreshDerivedProgression(characterId);
+            }
+            else
+            {
+                ClampResourcesToMax(state);
+            }
+
+            GameEventBus.PublishPartyChanged(characterId);
+            return true;
+        }
+
+        public bool UnequipWeapon(string characterId)
+        {
+            if (!_members.TryGetValue(characterId, out PartyMemberRuntimeState state) || !state.Recruited || string.IsNullOrWhiteSpace(state.EquippedWeaponId))
+            {
+                return false;
+            }
+
+            state.EquippedWeaponId = string.Empty;
+            if (ProgressionService.Instance != null)
+            {
+                ProgressionService.Instance.RefreshDerivedProgression(characterId);
+            }
+            else
+            {
+                ClampResourcesToMax(state);
+            }
+
             GameEventBus.PublishPartyChanged(characterId);
             return true;
         }
@@ -182,6 +258,30 @@ namespace TPS.Runtime.Combat
             GameEventBus.PublishPartyChanged(characterId);
         }
 
+        public bool TryUseConsumable(string characterId, ItemDefinition itemDefinition)
+        {
+            if (string.IsNullOrWhiteSpace(characterId) || itemDefinition == null || InventoryService.Instance == null || !_members.TryGetValue(characterId, out PartyMemberRuntimeState state))
+            {
+                return false;
+            }
+
+            if (!InventoryService.Instance.RemoveItem(itemDefinition, 1))
+            {
+                return false;
+            }
+
+            CharacterStatSnapshot snapshot = GetMemberSnapshot(characterId);
+            if (snapshot == null)
+            {
+                return false;
+            }
+
+            int nextHP = Mathf.Clamp(state.CurrentHP + itemDefinition.RestoreHP, 0, snapshot.Stats.MaxHP);
+            int nextMP = Mathf.Clamp(state.CurrentMP + itemDefinition.RestoreMP, 0, snapshot.Stats.MaxMP);
+            SetCurrentResources(characterId, nextHP, nextMP, false);
+            return true;
+        }
+
         public void RestorePartyAfterSleep()
         {
             foreach (var pair in _members)
@@ -194,6 +294,17 @@ namespace TPS.Runtime.Combat
             }
 
             GameEventBus.PublishPartyChanged("sleep_restore");
+        }
+
+        public void ClampResourcesForMember(string characterId)
+        {
+            if (!_members.TryGetValue(characterId, out PartyMemberRuntimeState state))
+            {
+                return;
+            }
+
+            ClampResourcesToMax(state);
+            GameEventBus.PublishPartyChanged(characterId);
         }
 
         public PartyStateData CaptureState()
@@ -293,22 +404,43 @@ namespace TPS.Runtime.Combat
 
         private void RestoreToFull(PartyMemberRuntimeState state)
         {
-            EquipmentDefinition weapon = GetEquippedWeapon(state.Definition.CharacterId) ?? state.Definition.StartingWeapon;
-            StatBlock stats = ProgressionService.Instance != null ? ProgressionService.Instance.BuildFinalStats(state.Definition, weapon) : new StatBlock();
-            state.CurrentHP = stats.MaxHP;
-            state.CurrentMP = stats.MaxMP;
+            CharacterStatSnapshot snapshot = ProgressionService.Instance != null
+                ? ProgressionService.Instance.BuildCharacterSnapshot(state.Definition, GetEquippedWeapon(state.Definition.CharacterId) ?? state.Definition.StartingWeapon)
+                : null;
+            state.CurrentHP = snapshot != null ? snapshot.Stats.MaxHP : 1;
+            state.CurrentMP = snapshot != null ? snapshot.Stats.MaxMP : 0;
             state.IsKnockedOut = false;
         }
 
         private void ClampResourcesToMax(PartyMemberRuntimeState state)
         {
-            EquipmentDefinition weapon = GetEquippedWeapon(state.Definition.CharacterId);
-            StatBlock stats = ProgressionService.Instance != null ? ProgressionService.Instance.BuildFinalStats(state.Definition, weapon) : new StatBlock();
-            state.CurrentHP = Mathf.Clamp(state.CurrentHP, 0, stats.MaxHP);
-            state.CurrentMP = Mathf.Clamp(state.CurrentMP, 0, stats.MaxMP);
+            CharacterStatSnapshot snapshot = ProgressionService.Instance != null
+                ? ProgressionService.Instance.BuildCharacterSnapshot(state.Definition, GetEquippedWeapon(state.Definition.CharacterId))
+                : null;
+            int maxHP = snapshot != null ? snapshot.Stats.MaxHP : 1;
+            int maxMP = snapshot != null ? snapshot.Stats.MaxMP : 0;
+            state.CurrentHP = Mathf.Clamp(state.CurrentHP, 0, maxHP);
+            state.CurrentMP = Mathf.Clamp(state.CurrentMP, 0, maxMP);
             if (state.CurrentHP <= 0)
             {
                 state.IsKnockedOut = true;
+            }
+            else if (state.IsKnockedOut)
+            {
+                state.IsKnockedOut = false;
+            }
+        }
+
+        private void OnProgressionChanged(string memberId)
+        {
+            if (string.IsNullOrWhiteSpace(memberId))
+            {
+                return;
+            }
+
+            if (_members.TryGetValue(memberId, out PartyMemberRuntimeState state))
+            {
+                ClampResourcesToMax(state);
             }
         }
     }

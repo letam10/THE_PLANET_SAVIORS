@@ -40,15 +40,20 @@ namespace TPS.Editor
         public RewardTableDefinition ScoutReward;
         public RewardTableDefinition CaptainReward;
         public RewardTableDefinition QuestReward;
+        public RewardTableDefinition SideQuestReward;
         public EncounterDefinition HarborScoutEncounter;
         public EncounterDefinition HarborCaptainEncounter;
         public EncounterDefinition PostBossEncounter;
+        public EncounterDefinition SideQuestEncounter;
         public EncounterTableDefinition PreBossTable;
         public EncounterTableDefinition PostBossTable;
         public ZoneDefinition AsterHarborZone;
         public QuestDefinition HarborQuest;
+        public QuestDefinition SideQuest;
         public DialogueDefinition HarborCaptainDialogue;
+        public DialogueDefinition DockworkerDialogue;
         public ShopDefinition GeneralShop;
+        public CharacterDefinition DockworkerNpc;
     }
 
     internal static class Phase1InstallerShared
@@ -106,6 +111,25 @@ namespace TPS.Editor
             property.FindPropertyRelative("Defense").intValue = def;
             property.FindPropertyRelative("Resistance").intValue = res;
             property.FindPropertyRelative("Speed").intValue = speed;
+        }
+
+        public static void SetModifier(SerializedProperty property, int hp, int mp, int atk, int mag, int def, int res, int speed)
+        {
+            property.FindPropertyRelative("MaxHP").intValue = hp;
+            property.FindPropertyRelative("MaxMP").intValue = mp;
+            property.FindPropertyRelative("Attack").intValue = atk;
+            property.FindPropertyRelative("Magic").intValue = mag;
+            property.FindPropertyRelative("Defense").intValue = def;
+            property.FindPropertyRelative("Resistance").intValue = res;
+            property.FindPropertyRelative("Speed").intValue = speed;
+        }
+
+        public static void SetResistance(SerializedProperty property, float physical, float fire, float ice, float lightning)
+        {
+            property.FindPropertyRelative("Physical").floatValue = physical;
+            property.FindPropertyRelative("Fire").floatValue = fire;
+            property.FindPropertyRelative("Ice").floatValue = ice;
+            property.FindPropertyRelative("Lightning").floatValue = lightning;
         }
     }
 }

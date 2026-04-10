@@ -36,6 +36,20 @@ MonoBehaviour:
     Ice: 1
     Lightning: 1
   _skillUnlocks:
-  - Skill: {fileID: 11400000, guid: b5ee5775d803ee2438b3bb4def222ca7, type: 2}
+  - UnlockId: unlock_vanguard_guard_break
+    Skill: {fileID: 11400000, guid: b5ee5775d803ee2438b3bb4def222ca7, type: 2}
     RequiredLevel: 2
     RequiredWeaponFamily: 1
+    PassiveStatModifier:
+      MaxHP: 6
+      MaxMP: 0
+      Attack: 1
+      Magic: 0
+      Defense: 1
+      Resistance: 0
+      Speed: 0
+    PassiveResistanceModifier:
+      Physical: 1
+      Fire: 1
+      Ice: 1
+      Lightning: 1

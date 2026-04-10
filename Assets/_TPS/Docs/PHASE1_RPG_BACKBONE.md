@@ -22,6 +22,7 @@
 - Save data serializes owner state only.
 - Time and weather are serialized from `WorldClock` and `WeatherSystem`; no duplicate owner exists in save data.
 - Unsupported save versions are rejected before runtime state mutation.
+- Resource state is clamped against the latest computed max values after `load`, `equip/unequip`, `level up`, and passive/unlock changes. `CurrentHP` and `CurrentMP` must never exceed recomputed max or fall below zero.
 
 ## Vertical Slice Wiring
 - `Bootstrap` remains the main entry scene through the Windows Build Profile.
@@ -33,3 +34,8 @@
 - Project compiles clean.
 - `Tools/TPS/Install Phase1 Vertical Slice` seeds data and scene wiring idempotently.
 - EditMode suite `TPS.Editor.Tests.Phase1EditModeTests` covers overnight schedule, wet/lightning-vs-fire combat math, progression growth, economy buy/sell, and save schema version.
+
+## Catalog Note
+- `Phase1ContentCatalog` is still the shared content registry for the current branch.
+- It is treated as a temporary neutral runtime catalog despite the legacy name.
+- Gameplay ownership does not live in the catalog; it remains in the owner services.

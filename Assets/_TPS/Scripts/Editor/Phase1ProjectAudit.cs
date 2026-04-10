@@ -7,6 +7,7 @@ using TPS.Runtime.NPC;
 using TPS.Runtime.Quest;
 using TPS.Runtime.UI;
 using TPS.Runtime.World;
+using TPS.Runtime.Conditions;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -73,6 +74,7 @@ namespace TPS.Editor
 
             var report = new AuditReport();
             ValidateBuildProfile(report);
+            ValidateContentCatalog(report);
             ValidateScene("Assets/_TPS/Scenes/Core/Core.unity", ValidateCoreScene, report);
             ValidateScene("Assets/_TPS/Scenes/World/ZN_Town_AsterHarbor.unity", ValidateWorldScene, report);
             ValidateScene("Assets/_TPS/Scenes/Battle/BTL_Standard.unity", ValidateBattleScene, report);
@@ -129,6 +131,28 @@ namespace TPS.Editor
             finally
             {
                 EditorSceneManager.CloseScene(scene, true);
+            }
+        }
+
+        private static void ValidateContentCatalog(AuditReport report)
+        {
+            const string catalogPath = "Assets/_TPS/Data/Phase1/Core/CAT_Phase1Content.asset";
+            Phase1ContentCatalog catalog = AssetDatabase.LoadAssetAtPath<Phase1ContentCatalog>(catalogPath);
+            report.Expect(catalog != null, "Phase1 content catalog loaded", $"Missing content catalog at {catalogPath}");
+            if (catalog == null)
+            {
+                return;
+            }
+
+            ContentValidationResult validation = PhaseContentValidator.ValidateCatalog(catalog);
+            for (int i = 0; i < validation.Errors.Count; i++)
+            {
+                report.Error(validation.Errors[i]);
+            }
+
+            for (int i = 0; i < validation.Warnings.Count; i++)
+            {
+                report.Warning(validation.Warnings[i]);
             }
         }
 
@@ -211,6 +235,30 @@ namespace TPS.Editor
             {
                 ValidateSingleComponent<EncounterAnchor>(bossAnchor, report, bossAnchor.name);
                 ValidateObjectReference(bossAnchor.GetComponent<EncounterAnchor>(), "_directEncounter", report, "Sub-boss EncounterAnchor");
+            }
+
+            GameObject dockNpc = FindDeep(scene, "NPC_DockQuartermaster");
+            report.Expect(dockNpc != null, "Dock quartermaster found", "NPC_DockQuartermaster missing from world scene.");
+            if (dockNpc != null)
+            {
+                ValidateSingleComponent<NPCSchedule>(dockNpc, report, dockNpc.name);
+                ValidateSingleComponent<DialogueAnchor>(dockNpc, report, dockNpc.name);
+                ValidateObjectReference(dockNpc.GetComponent<DialogueAnchor>(), "_dialogueDefinition", report, "Dock quartermaster DialogueAnchor");
+            }
+
+            GameObject dockEncounter = FindDeep(scene, "ENC_DockRainMites_Anchor");
+            report.Expect(dockEncounter != null, "Dock encounter anchor found", "ENC_DockRainMites_Anchor missing from world scene.");
+            if (dockEncounter != null)
+            {
+                ValidateSingleComponent<EncounterAnchor>(dockEncounter, report, dockEncounter.name);
+                ValidateObjectReference(dockEncounter.GetComponent<EncounterAnchor>(), "_directEncounter", report, "Dock encounter anchor");
+            }
+
+            GameObject dockBannerController = FindDeep(scene, "PRP_DockSupplyBanner_Controller");
+            report.Expect(dockBannerController != null, "Dock banner controller found", "PRP_DockSupplyBanner_Controller missing from world scene.");
+            if (dockBannerController != null)
+            {
+                ValidateSingleComponent<ConditionalActivator>(dockBannerController, report, dockBannerController.name);
             }
         }
 

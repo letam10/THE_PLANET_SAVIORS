@@ -36,6 +36,20 @@ MonoBehaviour:
     Ice: 1
     Lightning: 1
   _skillUnlocks:
-  - Skill: {fileID: 11400000, guid: cc656dce457f70d48b600bafd33e76b9, type: 2}
+  - UnlockId: unlock_mystic_healing_wave
+    Skill: {fileID: 11400000, guid: cc656dce457f70d48b600bafd33e76b9, type: 2}
     RequiredLevel: 2
     RequiredWeaponFamily: 4
+    PassiveStatModifier:
+      MaxHP: 0
+      MaxMP: 6
+      Attack: 0
+      Magic: 2
+      Defense: 0
+      Resistance: 1
+      Speed: 0
+    PassiveResistanceModifier:
+      Physical: 1
+      Fire: 1
+      Ice: 1
+      Lightning: 1

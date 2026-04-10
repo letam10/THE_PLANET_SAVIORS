@@ -52,6 +52,20 @@ namespace TPS.Runtime.Combat
             return _memberStates.TryGetValue(characterId, out MemberProgressState state) ? state.CurrentExp : 0;
         }
 
+        public CharacterStatSnapshot GetCharacterSnapshot(string characterId)
+        {
+            if (!_memberStates.TryGetValue(characterId, out MemberProgressState state) || state.Definition == null)
+            {
+                return null;
+            }
+
+            EquipmentDefinition equippedWeapon = PartyService.Instance != null
+                ? PartyService.Instance.GetEquippedWeapon(characterId)
+                : state.Definition.StartingWeapon;
+
+            return BuildCharacterSnapshot(state.Definition, equippedWeapon);
+        }
+
         public void AddExpToParty(int amount, IReadOnlyList<string> characterIds)
         {
             if (amount <= 0 || characterIds == null)
@@ -79,12 +93,19 @@ namespace TPS.Runtime.Combat
             }
 
             state.CurrentExp += amount;
+            bool leveledUp = false;
             while (state.CurrentExp >= curve.GetRequiredExpForLevel(state.Level))
             {
                 state.CurrentExp -= curve.GetRequiredExpForLevel(state.Level);
                 state.Level++;
-                RefreshUnlockedSkills(state);
+                leveledUp = true;
                 GameEventBus.PublishLevelUp(characterId, state.Level);
+            }
+
+            RefreshUnlockedSkills(state);
+            if (leveledUp && PartyService.Instance != null)
+            {
+                PartyService.Instance.ClampResourcesForMember(characterId);
             }
 
             GameEventBus.PublishProgressionChanged(characterId);
@@ -97,95 +118,108 @@ namespace TPS.Runtime.Combat
                 : (IReadOnlyCollection<string>)System.Array.Empty<string>();
         }
 
-        public StatBlock BuildFinalStats(CharacterDefinition characterDefinition, EquipmentDefinition equippedWeapon)
+        public void RefreshDerivedProgression(string characterId)
         {
-            MemberProgressState state = GetOrCreateState(characterDefinition);
-            StatBlock finalStats = characterDefinition.Archetype != null ? characterDefinition.Archetype.BaseStats.Clone() : new StatBlock();
-            StatBlock growthStats = characterDefinition.Archetype != null ? characterDefinition.Archetype.GrowthStats : null;
-            int levelOffset = Mathf.Max(0, state.Level - 1);
-
-            if (growthStats != null)
+            if (!_memberStates.TryGetValue(characterId, out MemberProgressState state))
             {
-                finalStats.MaxHP += growthStats.MaxHP * levelOffset;
-                finalStats.MaxMP += growthStats.MaxMP * levelOffset;
-                finalStats.Attack += growthStats.Attack * levelOffset;
-                finalStats.Magic += growthStats.Magic * levelOffset;
-                finalStats.Defense += growthStats.Defense * levelOffset;
-                finalStats.Resistance += growthStats.Resistance * levelOffset;
-                finalStats.Speed += growthStats.Speed * levelOffset;
+                return;
+            }
+
+            RefreshUnlockedSkills(state);
+            if (PartyService.Instance != null)
+            {
+                PartyService.Instance.ClampResourcesForMember(characterId);
+            }
+
+            GameEventBus.PublishProgressionChanged(characterId);
+        }
+
+        public CharacterStatSnapshot BuildCharacterSnapshot(CharacterDefinition characterDefinition, EquipmentDefinition equippedWeapon)
+        {
+            if (characterDefinition == null)
+            {
+                return null;
+            }
+
+            MemberProgressState state = GetOrCreateState(characterDefinition);
+            var snapshot = new CharacterStatSnapshot
+            {
+                CharacterId = characterDefinition.CharacterId,
+                DisplayName = characterDefinition.DisplayName,
+                Level = state.Level,
+                EquippedWeapon = equippedWeapon,
+                Stats = ComputedStats.FromBase(characterDefinition.Archetype != null ? characterDefinition.Archetype.BaseStats : null),
+                ResistanceProfile = characterDefinition.Archetype != null ? characterDefinition.Archetype.BaseResistance.Clone() : new ResistanceProfile()
+            };
+
+            ApplyGrowth(snapshot.Stats, characterDefinition, state.Level);
+            if (equippedWeapon != null)
+            {
+                snapshot.Stats.ApplyStatBlock(equippedWeapon.StatBonus);
+            }
+
+            if (characterDefinition.ResistanceModifier != null)
+            {
+                snapshot.ResistanceProfile.Add(characterDefinition.ResistanceModifier);
             }
 
             if (equippedWeapon != null)
             {
-                finalStats.Add(equippedWeapon.StatBonus);
+                snapshot.ResistanceProfile.Add(equippedWeapon.ResistanceModifier);
             }
 
-            finalStats.MaxHP = Mathf.Max(1, finalStats.MaxHP);
-            finalStats.MaxMP = Mathf.Max(0, finalStats.MaxMP);
-            return finalStats;
+            AddSkills(snapshot.Skills, characterDefinition.StartingSkills);
+
+            IReadOnlyList<SkillUnlockDefinition> unlocks = characterDefinition.Archetype != null
+                ? characterDefinition.Archetype.SkillUnlocks
+                : System.Array.Empty<SkillUnlockDefinition>();
+            for (int i = 0; i < unlocks.Count; i++)
+            {
+                SkillUnlockDefinition unlock = unlocks[i];
+                if (!IsUnlockActive(state, unlock, equippedWeapon))
+                {
+                    continue;
+                }
+
+                string unlockId = GetUnlockId(unlock, i, characterDefinition.CharacterId);
+                snapshot.ActiveUnlockIds.Add(unlockId);
+                snapshot.Stats.ApplyModifier(unlock.PassiveStatModifier);
+                if (unlock.PassiveResistanceModifier != null)
+                {
+                    snapshot.ResistanceProfile.Add(unlock.PassiveResistanceModifier);
+                }
+
+                if (unlock.Skill != null)
+                {
+                    AddSkill(snapshot.Skills, unlock.Skill);
+                }
+            }
+
+            if (equippedWeapon != null)
+            {
+                AddSkills(snapshot.Skills, equippedWeapon.GrantedSkills);
+            }
+
+            snapshot.Stats.Clamp();
+            return snapshot;
+        }
+
+        public StatBlock BuildFinalStats(CharacterDefinition characterDefinition, EquipmentDefinition equippedWeapon)
+        {
+            CharacterStatSnapshot snapshot = BuildCharacterSnapshot(characterDefinition, equippedWeapon);
+            return snapshot != null ? snapshot.Stats.ToStatBlock() : new StatBlock();
         }
 
         public ResistanceProfile BuildResistanceProfile(CharacterDefinition characterDefinition, EquipmentDefinition equippedWeapon)
         {
-            ResistanceProfile profile = characterDefinition.Archetype != null ? characterDefinition.Archetype.BaseResistance.Clone() : new ResistanceProfile();
-            if (characterDefinition.ResistanceModifier != null)
-            {
-                profile.Add(characterDefinition.ResistanceModifier);
-            }
-
-            if (equippedWeapon != null)
-            {
-                profile.Add(equippedWeapon.ResistanceModifier);
-            }
-
-            return profile;
+            CharacterStatSnapshot snapshot = BuildCharacterSnapshot(characterDefinition, equippedWeapon);
+            return snapshot != null ? snapshot.ResistanceProfile : new ResistanceProfile();
         }
 
         public List<SkillDefinition> BuildSkillList(CharacterDefinition characterDefinition, EquipmentDefinition equippedWeapon)
         {
-            var skills = new List<SkillDefinition>();
-            if (characterDefinition == null)
-            {
-                return skills;
-            }
-
-            for (int i = 0; i < characterDefinition.StartingSkills.Count; i++)
-            {
-                SkillDefinition skill = characterDefinition.StartingSkills[i];
-                if (skill != null && !skills.Contains(skill))
-                {
-                    skills.Add(skill);
-                }
-            }
-
-            MemberProgressState state = GetOrCreateState(characterDefinition);
-            if (characterDefinition.Archetype != null)
-            {
-                IReadOnlyList<SkillUnlockDefinition> unlocks = characterDefinition.Archetype.SkillUnlocks;
-                for (int i = 0; i < unlocks.Count; i++)
-                {
-                    SkillUnlockDefinition unlock = unlocks[i];
-                    if (unlock != null && unlock.Skill != null && state.UnlockedSkillIds.Contains(unlock.Skill.SkillId) && !skills.Contains(unlock.Skill))
-                    {
-                        skills.Add(unlock.Skill);
-                    }
-                }
-            }
-
-            if (equippedWeapon != null)
-            {
-                IReadOnlyList<SkillDefinition> grantedSkills = equippedWeapon.GrantedSkills;
-                for (int i = 0; i < grantedSkills.Count; i++)
-                {
-                    SkillDefinition skill = grantedSkills[i];
-                    if (skill != null && !skills.Contains(skill))
-                    {
-                        skills.Add(skill);
-                    }
-                }
-            }
-
-            return skills;
+            CharacterStatSnapshot snapshot = BuildCharacterSnapshot(characterDefinition, equippedWeapon);
+            return snapshot != null ? new List<SkillDefinition>(snapshot.Skills) : new List<SkillDefinition>();
         }
 
         public ProgressionStateData CaptureState()
@@ -248,6 +282,8 @@ namespace TPS.Runtime.Combat
                         state.UnlockedSkillIds.Add(skillId);
                     }
                 }
+
+                RefreshUnlockedSkills(state);
             }
         }
 
@@ -312,18 +348,100 @@ namespace TPS.Runtime.Combat
                     continue;
                 }
 
-                if (state.Level < unlock.RequiredLevel)
-                {
-                    continue;
-                }
-
-                if (unlock.RequiredWeaponFamily != WeaponFamilyType.None && unlock.RequiredWeaponFamily != equippedFamily)
+                if (!IsUnlockActive(state, unlock, equippedFamily))
                 {
                     continue;
                 }
 
                 state.UnlockedSkillIds.Add(unlock.Skill.SkillId);
             }
+        }
+
+        private static bool IsUnlockActive(MemberProgressState state, SkillUnlockDefinition unlock, EquipmentDefinition equippedWeapon)
+        {
+            WeaponFamilyType equippedFamily = equippedWeapon != null ? equippedWeapon.WeaponFamily : WeaponFamilyType.None;
+            return IsUnlockActive(state, unlock, equippedFamily);
+        }
+
+        private static bool IsUnlockActive(MemberProgressState state, SkillUnlockDefinition unlock, WeaponFamilyType equippedFamily)
+        {
+            if (state == null || unlock == null)
+            {
+                return false;
+            }
+
+            if (state.Level < unlock.RequiredLevel)
+            {
+                return false;
+            }
+
+            return unlock.RequiredWeaponFamily == WeaponFamilyType.None || unlock.RequiredWeaponFamily == equippedFamily;
+        }
+
+        private static string GetUnlockId(SkillUnlockDefinition unlock, int index, string characterId)
+        {
+            if (unlock == null)
+            {
+                return $"{characterId}:unlock:{index}";
+            }
+
+            if (!string.IsNullOrWhiteSpace(unlock.UnlockId))
+            {
+                return unlock.UnlockId;
+            }
+
+            if (unlock.Skill != null && !string.IsNullOrWhiteSpace(unlock.Skill.SkillId))
+            {
+                return unlock.Skill.SkillId;
+            }
+
+            return $"{characterId}:unlock:{index}";
+        }
+
+        private static void ApplyGrowth(ComputedStats stats, CharacterDefinition characterDefinition, int level)
+        {
+            if (stats == null || characterDefinition == null || characterDefinition.Archetype == null)
+            {
+                return;
+            }
+
+            StatBlock growthStats = characterDefinition.Archetype.GrowthStats;
+            if (growthStats == null)
+            {
+                return;
+            }
+
+            int levelOffset = Mathf.Max(0, level - 1);
+            stats.MaxHP += growthStats.MaxHP * levelOffset;
+            stats.MaxMP += growthStats.MaxMP * levelOffset;
+            stats.Attack += growthStats.Attack * levelOffset;
+            stats.Magic += growthStats.Magic * levelOffset;
+            stats.Defense += growthStats.Defense * levelOffset;
+            stats.Resistance += growthStats.Resistance * levelOffset;
+            stats.Speed += growthStats.Speed * levelOffset;
+        }
+
+        private static void AddSkills(List<SkillDefinition> target, IReadOnlyList<SkillDefinition> skills)
+        {
+            if (target == null || skills == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < skills.Count; i++)
+            {
+                AddSkill(target, skills[i]);
+            }
+        }
+
+        private static void AddSkill(List<SkillDefinition> target, SkillDefinition skill)
+        {
+            if (target == null || skill == null || target.Contains(skill))
+            {
+                return;
+            }
+
+            target.Add(skill);
         }
     }
 }

@@ -20,6 +20,7 @@ namespace TPS.Runtime.Combat
             public string DisplayName;
             public CharacterDefinition CharacterDefinition;
             public EnemyDefinition EnemyDefinition;
+            public CharacterStatSnapshot Snapshot;
             public EquipmentDefinition EquippedWeapon;
             public StatBlock Stats;
             public ResistanceProfile ResistanceProfile;
@@ -116,16 +117,18 @@ namespace TPS.Runtime.Combat
                     }
 
                     EquipmentDefinition weapon = PartyService.Instance.GetEquippedWeapon(memberId);
+                    CharacterStatSnapshot snapshot = ProgressionService.Instance.BuildCharacterSnapshot(definition, weapon);
                     var unit = new BattleUnitState
                     {
                         IsPartyMember = true,
                         UnitId = memberId,
                         DisplayName = definition.DisplayName,
                         CharacterDefinition = definition,
+                        Snapshot = snapshot,
                         EquippedWeapon = weapon,
-                        Stats = ProgressionService.Instance.BuildFinalStats(definition, weapon),
-                        ResistanceProfile = ProgressionService.Instance.BuildResistanceProfile(definition, weapon),
-                        Skills = ProgressionService.Instance.BuildSkillList(definition, weapon),
+                        Stats = snapshot != null ? snapshot.Stats.ToStatBlock() : new StatBlock(),
+                        ResistanceProfile = snapshot != null ? snapshot.ResistanceProfile : new ResistanceProfile(),
+                        Skills = snapshot != null ? new List<SkillDefinition>(snapshot.Skills) : new List<SkillDefinition>(),
                         CurrentHP = PartyService.Instance.GetCurrentHP(memberId),
                         CurrentMP = PartyService.Instance.GetCurrentMP(memberId)
                     };
@@ -552,9 +555,10 @@ namespace TPS.Runtime.Combat
 
                 if (RewardService.Instance != null)
                 {
-                    _battleResult.RewardSummary = RewardService.Instance.ApplyRewardTable(
+                    RewardApplicationResult rewardResult = RewardService.Instance.ApplyRewardTable(
                         _context.EncounterDefinition.RewardTable,
                         PartyService.Instance != null ? PartyService.Instance.GetActiveMemberIds() : null);
+                    _battleResult.RewardSummary = rewardResult != null ? rewardResult.Summary : resultLabel;
                 }
             }
             else

@@ -20,24 +20,30 @@ namespace TPS.Runtime.Combat
             DontDestroyOnLoad(gameObject);
         }
 
-        public string ApplyRewardTable(RewardTableDefinition rewardTable, IReadOnlyList<string> partyMemberIds)
+        public RewardApplicationResult ApplyRewardTable(RewardTableDefinition rewardTable, IReadOnlyList<string> partyMemberIds)
         {
             if (rewardTable == null)
             {
-                return "No reward.";
+                return new RewardApplicationResult
+                {
+                    Summary = "No reward."
+                };
             }
 
+            var result = new RewardApplicationResult();
             var summaryParts = new List<string>();
 
             if (rewardTable.CurrencyReward > 0 && EconomyService.Instance != null)
             {
                 EconomyService.Instance.AddCurrency(rewardTable.CurrencyReward);
+                result.CurrencyGranted = rewardTable.CurrencyReward;
                 summaryParts.Add($"+{rewardTable.CurrencyReward} currency");
             }
 
             if (ProgressionService.Instance != null && partyMemberIds != null && rewardTable.ExpReward > 0)
             {
                 ProgressionService.Instance.AddExpToParty(rewardTable.ExpReward, partyMemberIds);
+                result.ExpGrantedPerMember = rewardTable.ExpReward;
                 summaryParts.Add($"+{rewardTable.ExpReward} EXP");
             }
 
@@ -50,6 +56,7 @@ namespace TPS.Runtime.Combat
                     if (itemGrant != null && itemGrant.Item != null)
                     {
                         InventoryService.Instance.AddItem(itemGrant.Item, itemGrant.Amount);
+                        result.ItemGrants.Add($"{itemGrant.Amount}x {itemGrant.Item.DisplayName}");
                         summaryParts.Add($"+{itemGrant.Amount} {itemGrant.Item.DisplayName}");
                     }
                 }
@@ -61,6 +68,7 @@ namespace TPS.Runtime.Combat
                     if (equipmentGrant != null && equipmentGrant.Equipment != null)
                     {
                         InventoryService.Instance.AddEquipment(equipmentGrant.Equipment, equipmentGrant.Amount);
+                        result.EquipmentGrants.Add($"{equipmentGrant.Amount}x {equipmentGrant.Equipment.DisplayName}");
                         summaryParts.Add($"+{equipmentGrant.Amount} {equipmentGrant.Equipment.DisplayName}");
                     }
                 }
@@ -71,19 +79,21 @@ namespace TPS.Runtime.Combat
                     if (rolledDrop.Item != null)
                     {
                         InventoryService.Instance.AddItem(rolledDrop.Item, rolledDrop.Amount);
+                        result.ItemGrants.Add($"{rolledDrop.Amount}x {rolledDrop.Item.DisplayName}");
                         summaryParts.Add($"+{rolledDrop.Amount} {rolledDrop.Item.DisplayName}");
                     }
                     else if (rolledDrop.Equipment != null)
                     {
                         InventoryService.Instance.AddEquipment(rolledDrop.Equipment, rolledDrop.Amount);
+                        result.EquipmentGrants.Add($"{rolledDrop.Amount}x {rolledDrop.Equipment.DisplayName}");
                         summaryParts.Add($"+{rolledDrop.Amount} {rolledDrop.Equipment.DisplayName}");
                     }
                 }
             }
 
-            string summary = summaryParts.Count > 0 ? string.Join(", ", summaryParts) : "Reward applied.";
-            GameEventBus.PublishRewardGranted(summary);
-            return summary;
+            result.Summary = summaryParts.Count > 0 ? string.Join(", ", summaryParts) : "Reward applied.";
+            GameEventBus.PublishRewardGranted(result.Summary);
+            return result;
         }
 
         private static WeightedDropEntry RollWeightedDrop(RewardTableDefinition rewardTable)

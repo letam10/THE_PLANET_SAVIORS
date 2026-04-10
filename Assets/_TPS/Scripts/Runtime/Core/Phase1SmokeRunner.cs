@@ -28,6 +28,7 @@ namespace TPS.Runtime.Core
             public bool ShopAvailable;
             public int Currency;
             public int ActivePartyCount;
+            public string LeadPartySummary;
             public bool SaveExists;
         }
 
@@ -81,6 +82,9 @@ namespace TPS.Runtime.Core
             GameEventBus.OnGameSaved += OnGameSaved;
             GameEventBus.OnGameLoaded += OnGameLoaded;
             GameEventBus.OnStateResolverCompleted += OnResolverCompleted;
+            GameEventBus.OnLevelUp += OnLevelUp;
+            GameEventBus.OnPartyChanged += OnPartyChanged;
+            GameEventBus.OnProgressionChanged += OnProgressionChanged;
             AddEvent("Smoke runner armed.");
             CaptureDerivedBaselines();
         }
@@ -96,6 +100,9 @@ namespace TPS.Runtime.Core
             GameEventBus.OnGameSaved -= OnGameSaved;
             GameEventBus.OnGameLoaded -= OnGameLoaded;
             GameEventBus.OnStateResolverCompleted -= OnResolverCompleted;
+            GameEventBus.OnLevelUp -= OnLevelUp;
+            GameEventBus.OnPartyChanged -= OnPartyChanged;
+            GameEventBus.OnProgressionChanged -= OnProgressionChanged;
         }
 
         private void Update()
@@ -120,7 +127,8 @@ namespace TPS.Runtime.Core
                 $"NPC: {(snapshot.NpcVisible ? "Visible" : "Hidden")} @ {snapshot.NpcLocation}",
                 $"Encounter Table: {snapshot.EncounterTableId} | Boss Cleared: {snapshot.BossCleared}",
                 $"Shop Available: {snapshot.ShopAvailable} | Currency: {snapshot.Currency}",
-                $"Party Active: {snapshot.ActivePartyCount} | Save Exists: {snapshot.SaveExists}"
+                $"Party Active: {snapshot.ActivePartyCount} | {snapshot.LeadPartySummary}",
+                $"Save Exists: {snapshot.SaveExists}"
             };
         }
 
@@ -172,6 +180,31 @@ namespace TPS.Runtime.Core
         private void OnSleepAdvanced(int day)
         {
             AddEvent($"Sleep advanced to day {day}. Shops and zone should refresh.");
+        }
+
+        private void OnLevelUp(string memberId, int newLevel)
+        {
+            AddEvent($"{memberId} reached level {newLevel}.");
+        }
+
+        private void OnPartyChanged(string memberId)
+        {
+            if (!string.IsNullOrWhiteSpace(memberId))
+            {
+                AddEvent($"Party state changed for {memberId}.");
+            }
+        }
+
+        private void OnProgressionChanged(string memberId)
+        {
+            if (!string.IsNullOrWhiteSpace(memberId) && PartyService.Instance != null)
+            {
+                CharacterStatSnapshot snapshot = PartyService.Instance.GetMemberSnapshot(memberId);
+                if (snapshot != null)
+                {
+                    AddEvent($"Progression snapshot {snapshot.DisplayName}: Lv{snapshot.Level} HP {snapshot.Stats.MaxHP} MP {snapshot.Stats.MaxMP}.");
+                }
+            }
         }
 
         private void OnGameSaved()
@@ -279,6 +312,7 @@ namespace TPS.Runtime.Core
                 ShopAvailable = GameStateManager.Instance != null && GameStateManager.Instance.GetBool($"shop.{_merchantId}.available"),
                 Currency = EconomyService.Instance != null ? EconomyService.Instance.Currency : 0,
                 ActivePartyCount = PartyService.Instance != null ? PartyService.Instance.GetActiveMemberIds().Count : 0,
+                LeadPartySummary = BuildLeadPartySummary(),
                 SaveExists = File.Exists(SaveFilePath)
             };
         }
@@ -333,6 +367,7 @@ namespace TPS.Runtime.Core
             CompareField(mismatches, "shop available", expected.ShopAvailable.ToString(), actual.ShopAvailable.ToString());
             CompareField(mismatches, "currency", expected.Currency.ToString(), actual.Currency.ToString());
             CompareField(mismatches, "active party", expected.ActivePartyCount.ToString(), actual.ActivePartyCount.ToString());
+            CompareField(mismatches, "lead party", expected.LeadPartySummary, actual.LeadPartySummary);
             return mismatches.Count == 0 ? string.Empty : string.Join("; ", mismatches);
         }
 
@@ -346,7 +381,30 @@ namespace TPS.Runtime.Core
 
         private static string FormatCompactSnapshot(SmokeSnapshot snapshot)
         {
-            return $"{snapshot.SceneName} | {snapshot.QuestStatus} | dlg:{snapshot.DialogueVariant} | npc:{snapshot.NpcLocation} | table:{snapshot.EncounterTableId} | cur:{snapshot.Currency}";
+            return $"{snapshot.SceneName} | {snapshot.QuestStatus} | dlg:{snapshot.DialogueVariant} | npc:{snapshot.NpcLocation} | table:{snapshot.EncounterTableId} | cur:{snapshot.Currency} | lead:{snapshot.LeadPartySummary}";
+        }
+
+        private static string BuildLeadPartySummary()
+        {
+            if (PartyService.Instance == null)
+            {
+                return "Lead: none";
+            }
+
+            List<string> activeMembers = PartyService.Instance.GetActiveMemberIds();
+            if (activeMembers.Count == 0)
+            {
+                return "Lead: none";
+            }
+
+            CharacterStatSnapshot snapshot = PartyService.Instance.GetMemberSnapshot(activeMembers[0]);
+            if (snapshot == null)
+            {
+                return "Lead: none";
+            }
+
+            EquipmentDefinition weapon = snapshot.EquippedWeapon;
+            return $"{snapshot.DisplayName} Lv{snapshot.Level} HP {PartyService.Instance.GetCurrentHP(snapshot.CharacterId)}/{snapshot.Stats.MaxHP} MP {PartyService.Instance.GetCurrentMP(snapshot.CharacterId)}/{snapshot.Stats.MaxMP} W:{(weapon != null ? weapon.DisplayName : "None")}";
         }
 
         private string GetClockPrefix()

@@ -69,9 +69,9 @@ namespace TPS.Editor
             assets.Vanguard = Phase1InstallerShared.LoadOrCreateAsset<CharacterArchetypeDefinition>("Assets/_TPS/Data/Phase1/Characters/ARC_Vanguard.asset");
             assets.Ranger = Phase1InstallerShared.LoadOrCreateAsset<CharacterArchetypeDefinition>("Assets/_TPS/Data/Phase1/Characters/ARC_Ranger.asset");
             assets.Mystic = Phase1InstallerShared.LoadOrCreateAsset<CharacterArchetypeDefinition>("Assets/_TPS/Data/Phase1/Characters/ARC_Mystic.asset");
-            ConfigureArchetype(assets.Vanguard, "arch_vanguard", "Vanguard", 40, 10, 10, 4, 7, 5, 6, 6, 2, 2, 1, 2, 1, 1, assets.GuardBreakSkill, 2, WeaponFamilyType.Blade);
-            ConfigureArchetype(assets.Ranger, "arch_ranger", "Ranger", 34, 12, 8, 5, 5, 5, 8, 4, 2, 2, 1, 1, 1, 2, assets.ShockShotSkill, 2, WeaponFamilyType.Bow);
-            ConfigureArchetype(assets.Mystic, "arch_mystic", "Mystic", 30, 18, 5, 10, 4, 7, 6, 3, 4, 1, 3, 1, 2, 1, assets.HealingWaveSkill, 2, WeaponFamilyType.Focus);
+            ConfigureArchetype(assets.Vanguard, "arch_vanguard", "Vanguard", 40, 10, 10, 4, 7, 5, 6, 6, 2, 2, 1, 2, 1, 1, "unlock_vanguard_guard_break", assets.GuardBreakSkill, 2, WeaponFamilyType.Blade, 6, 0, 1, 0, 1, 0, 0);
+            ConfigureArchetype(assets.Ranger, "arch_ranger", "Ranger", 34, 12, 8, 5, 5, 5, 8, 4, 2, 2, 1, 1, 1, 2, "unlock_ranger_shock_shot", assets.ShockShotSkill, 2, WeaponFamilyType.Bow, 0, 0, 1, 0, 0, 0, 2);
+            ConfigureArchetype(assets.Mystic, "arch_mystic", "Mystic", 30, 18, 5, 10, 4, 7, 6, 3, 4, 1, 3, 1, 2, 1, "unlock_mystic_healing_wave", assets.HealingWaveSkill, 2, WeaponFamilyType.Focus, 0, 6, 0, 2, 0, 1, 0);
 
             assets.Ari = Phase1InstallerShared.LoadOrCreateAsset<CharacterDefinition>("Assets/_TPS/Data/Phase1/Characters/CHR_Ari.asset");
             assets.Noa = Phase1InstallerShared.LoadOrCreateAsset<CharacterDefinition>("Assets/_TPS/Data/Phase1/Characters/CHR_Noa.asset");
@@ -90,16 +90,20 @@ namespace TPS.Editor
             assets.ScoutReward = Phase1InstallerShared.LoadOrCreateAsset<RewardTableDefinition>("Assets/_TPS/Data/Phase1/Combat/RWD_Scout.asset");
             assets.CaptainReward = Phase1InstallerShared.LoadOrCreateAsset<RewardTableDefinition>("Assets/_TPS/Data/Phase1/Combat/RWD_Captain.asset");
             assets.QuestReward = Phase1InstallerShared.LoadOrCreateAsset<RewardTableDefinition>("Assets/_TPS/Data/Phase1/Combat/RWD_Quest.asset");
+            assets.SideQuestReward = Phase1InstallerShared.LoadOrCreateAsset<RewardTableDefinition>("Assets/_TPS/Data/Phase1/Combat/RWD_DockSupplies.asset");
             ConfigureReward(assets.ScoutReward, "reward_scout", 28, 22, assets.Potion, 1);
             ConfigureReward(assets.CaptainReward, "reward_captain", 90, 55, assets.Ether, 1, null, null, assets.IronPike, 1);
             ConfigureReward(assets.QuestReward, "reward_harbor_quest", 120, 45, assets.Ether, 1);
+            ConfigureReward(assets.SideQuestReward, "reward_dock_supplies", 40, 20, assets.Potion, 2);
 
             assets.HarborScoutEncounter = Phase1InstallerShared.LoadOrCreateAsset<EncounterDefinition>("Assets/_TPS/Data/Phase1/World/ENC_HarborScout.asset");
             assets.HarborCaptainEncounter = Phase1InstallerShared.LoadOrCreateAsset<EncounterDefinition>("Assets/_TPS/Data/Phase1/World/ENC_HarborCaptain.asset");
             assets.PostBossEncounter = Phase1InstallerShared.LoadOrCreateAsset<EncounterDefinition>("Assets/_TPS/Data/Phase1/World/ENC_PostBossPatrol.asset");
+            assets.SideQuestEncounter = Phase1InstallerShared.LoadOrCreateAsset<EncounterDefinition>("Assets/_TPS/Data/Phase1/World/ENC_DockRainMites.asset");
             ConfigureEncounter(assets.HarborScoutEncounter, "enc_harbor_scout", "Harbor Scout Patrol", "aster_harbor", false, assets.ScoutReward, assets.RaiderScout);
             ConfigureEncounter(assets.HarborCaptainEncounter, "enc_harbor_captain", "Raider Captain", "aster_harbor", true, assets.CaptainReward, assets.RaiderCaptain, assets.RainMite);
             ConfigureEncounter(assets.PostBossEncounter, "enc_post_boss_patrol", "Rain Mite Sweep", "aster_harbor", false, assets.ScoutReward, assets.RainMite, assets.RaiderScout);
+            ConfigureEncounter(assets.SideQuestEncounter, "enc_dock_rain_mites", "Dock Rain Mites", "aster_harbor", true, assets.SideQuestReward, assets.RainMite, assets.RainMite);
 
             assets.PreBossTable = Phase1InstallerShared.LoadOrCreateAsset<EncounterTableDefinition>("Assets/_TPS/Data/Phase1/World/ECT_AsterHarbor_PreBoss.asset");
             assets.PostBossTable = Phase1InstallerShared.LoadOrCreateAsset<EncounterTableDefinition>("Assets/_TPS/Data/Phase1/World/ECT_AsterHarbor_PostBoss.asset");
@@ -110,10 +114,14 @@ namespace TPS.Editor
             ConfigureZone(assets.AsterHarborZone, "aster_harbor", "Aster Harbor", assets.PreBossTable, assets.PostBossTable, assets.HarborCaptainEncounter.EncounterId);
 
             assets.HarborQuest = Phase1InstallerShared.LoadOrCreateAsset<QuestDefinition>("Assets/_TPS/Data/Phase1/Quests/QST_ClearHarborThreat.asset");
+            assets.SideQuest = Phase1InstallerShared.LoadOrCreateAsset<QuestDefinition>("Assets/_TPS/Data/Phase1/Quests/QST_SecureDockSupplies.asset");
             ConfigureQuest(assets.HarborQuest, "quest_clear_harbor_threat", "Clear Harbor Threat", "Defeat the raider captain at the gate so the harbor patrol and town support can recover.", assets.QuestReward, assets.Lina, assets.HarborCaptainEncounter.EncounterId);
+            ConfigureSideQuest(assets.SideQuest, "quest_secure_dock_supplies", "Secure Dock Supplies", "Clear the rain mites feeding on the dock supply stacks so morning shipments can resume.", assets.SideQuestReward, assets.SideQuestEncounter.EncounterId);
 
             assets.HarborCaptainDialogue = Phase1InstallerShared.LoadOrCreateAsset<DialogueDefinition>("Assets/_TPS/Data/Phase1/Dialogue/DLG_HarborCaptain.asset");
+            assets.DockworkerDialogue = Phase1InstallerShared.LoadOrCreateAsset<DialogueDefinition>("Assets/_TPS/Data/Phase1/Dialogue/DLG_DockQuartermaster.asset");
             ConfigureDialogue(assets.HarborCaptainDialogue, assets.HarborQuest);
+            ConfigureSideQuestDialogue(assets.DockworkerDialogue, assets.SideQuest);
 
             assets.GeneralShop = Phase1InstallerShared.LoadOrCreateAsset<ShopDefinition>("Assets/_TPS/Data/Phase1/World/SHP_HarborGeneralStore.asset");
             ConfigureShop(assets.GeneralShop, "shop_harbor_general", "Harbor General Store", assets.Potion, assets.Ether, assets.IronPike);
@@ -201,7 +209,7 @@ namespace TPS.Editor
             EditorUtility.SetDirty(asset);
         }
 
-        private static void ConfigureArchetype(CharacterArchetypeDefinition asset, string id, string name, int hp, int mp, int atk, int mag, int def, int res, int speed, int hpGrowth, int mpGrowth, int atkGrowth, int magGrowth, int defGrowth, int resGrowth, int speedGrowth, SkillDefinition unlockSkill, int unlockLevel, WeaponFamilyType requiredWeaponFamily)
+        private static void ConfigureArchetype(CharacterArchetypeDefinition asset, string id, string name, int hp, int mp, int atk, int mag, int def, int res, int speed, int hpGrowth, int mpGrowth, int atkGrowth, int magGrowth, int defGrowth, int resGrowth, int speedGrowth, string unlockId, SkillDefinition unlockSkill, int unlockLevel, WeaponFamilyType requiredWeaponFamily, int unlockHp, int unlockMp, int unlockAtk, int unlockMag, int unlockDef, int unlockRes, int unlockSpeed)
         {
             SerializedObject so = new SerializedObject(asset);
             so.FindProperty("_archetypeId").stringValue = id;
@@ -213,9 +221,12 @@ namespace TPS.Editor
             if (unlocks.arraySize == 1)
             {
                 SerializedProperty unlock = unlocks.GetArrayElementAtIndex(0);
+                unlock.FindPropertyRelative("UnlockId").stringValue = unlockId;
                 unlock.FindPropertyRelative("Skill").objectReferenceValue = unlockSkill;
                 unlock.FindPropertyRelative("RequiredLevel").intValue = unlockLevel;
                 unlock.FindPropertyRelative("RequiredWeaponFamily").enumValueIndex = (int)requiredWeaponFamily;
+                Phase1InstallerShared.SetModifier(unlock.FindPropertyRelative("PassiveStatModifier"), unlockHp, unlockMp, unlockAtk, unlockMag, unlockDef, unlockRes, unlockSpeed);
+                Phase1InstallerShared.SetResistance(unlock.FindPropertyRelative("PassiveResistanceModifier"), 1f, 1f, 1f, 1f);
             }
             so.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(asset);
@@ -352,6 +363,31 @@ namespace TPS.Editor
             EditorUtility.SetDirty(asset);
         }
 
+        private static void ConfigureSideQuest(QuestDefinition asset, string questId, string title, string summary, RewardTableDefinition reward, string clearedEncounterId)
+        {
+            SerializedObject so = new SerializedObject(asset);
+            so.FindProperty("_questId").stringValue = questId;
+            so.FindProperty("_title").stringValue = title;
+            so.FindProperty("_summary").stringValue = summary;
+            so.FindProperty("_completionReward").objectReferenceValue = reward;
+            so.FindProperty("_recruitedMemberReward").objectReferenceValue = null;
+            SerializedProperty objectives = so.FindProperty("_objectives");
+            objectives.arraySize = 1;
+            SerializedProperty objective = objectives.GetArrayElementAtIndex(0);
+            objective.FindPropertyRelative("ObjectiveId").stringValue = "clear_dock_mites";
+            objective.FindPropertyRelative("Description").stringValue = "Clear the rain mites at the dock supply stacks.";
+            SerializedProperty conditions = objective.FindPropertyRelative("CompletionConditions");
+            conditions.FindPropertyRelative("Mode").enumValueIndex = (int)ConditionGroupMode.All;
+            SerializedProperty conditionList = conditions.FindPropertyRelative("Conditions");
+            conditionList.arraySize = 1;
+            SerializedProperty condition = conditionList.GetArrayElementAtIndex(0);
+            condition.FindPropertyRelative("Type").enumValueIndex = (int)ConditionType.EncounterCleared;
+            condition.FindPropertyRelative("EncounterId").stringValue = clearedEncounterId;
+            condition.FindPropertyRelative("ExpectedBool").boolValue = true;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(asset);
+        }
+
         private static void ConfigureDialogue(DialogueDefinition asset, QuestDefinition questDefinition)
         {
             SerializedObject so = new SerializedObject(asset);
@@ -362,6 +398,28 @@ namespace TPS.Editor
             ConfigureDialogueVariant(variants.GetArrayElementAtIndex(1), "turn_in", "Captain Rhea", "You broke the raider line. Take this pay, then bring Lina with you while we reset the harbor watch.", ConditionType.QuestState, questDefinition.QuestId, QuestStatus.ReadyToTurnIn, DialogueActionType.TryCompleteQuest, questDefinition, null);
             ConfigureDialogueVariant(variants.GetArrayElementAtIndex(2), "active", "Captain Rhea", "The raider captain still holds the gate. Once he falls, the harbor encounter routes will shift immediately.", ConditionType.QuestState, questDefinition.QuestId, QuestStatus.Active, DialogueActionType.SetFlag, null, "dialogue.harbor.quest_active");
             ConfigureDialogueVariant(variants.GetArrayElementAtIndex(3), "start", "Captain Rhea", "I stand in the square from 07:00 to 12:00, but when rain hits I move into the tavern. First, help us break the raider captain at the gate.", null, questDefinition.QuestId, QuestStatus.NotStarted, DialogueActionType.AcceptQuest, questDefinition, null);
+            so.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(asset);
+        }
+
+        private static void ConfigureSideQuestDialogue(DialogueDefinition asset, QuestDefinition questDefinition)
+        {
+            SerializedObject so = new SerializedObject(asset);
+            so.FindProperty("_dialogueId").stringValue = "dialogue_dock_quartermaster";
+            SerializedProperty variants = so.FindProperty("_variants");
+            variants.arraySize = 3;
+            ConfigureDialogueVariant(variants.GetArrayElementAtIndex(0), "completed", "Quartermaster Ivo", "The dock stacks are safe again. The crews can unload before noon, and the harbor board is back on schedule.", ConditionType.QuestState, questDefinition.QuestId, QuestStatus.Completed, DialogueActionType.SetFlag, null, "dialogue.dock.completed");
+            ConfigureDialogueVariant(variants.GetArrayElementAtIndex(1), "turn_in", "Quartermaster Ivo", "Good. The mites are gone, the stock ledger is back in order, and the supply banner is going up right now.", ConditionType.QuestState, questDefinition.QuestId, QuestStatus.ReadyToTurnIn, DialogueActionType.TryCompleteQuest, questDefinition, null);
+            ConfigureDialogueVariant(variants.GetArrayElementAtIndex(2), "start_or_active", "Quartermaster Ivo", "Rain mites are chewing through the dock stacks. Clear the supply lane and I'll release the reserve stock for the crews.", null, questDefinition.QuestId, QuestStatus.NotStarted, DialogueActionType.AcceptQuest, questDefinition, null);
+
+            SerializedProperty actions = variants.GetArrayElementAtIndex(1).FindPropertyRelative("Actions");
+            actions.arraySize = 2;
+            actions.GetArrayElementAtIndex(0).FindPropertyRelative("ActionType").enumValueIndex = (int)DialogueActionType.TryCompleteQuest;
+            actions.GetArrayElementAtIndex(0).FindPropertyRelative("Quest").objectReferenceValue = questDefinition;
+            actions.GetArrayElementAtIndex(1).FindPropertyRelative("ActionType").enumValueIndex = (int)DialogueActionType.SetZoneFact;
+            actions.GetArrayElementAtIndex(1).FindPropertyRelative("ZoneId").stringValue = "aster_harbor";
+            actions.GetArrayElementAtIndex(1).FindPropertyRelative("ZoneFactId").stringValue = "dock_supplies_secured";
+            actions.GetArrayElementAtIndex(1).FindPropertyRelative("BoolValue").boolValue = true;
             so.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(asset);
         }
@@ -392,13 +450,13 @@ namespace TPS.Editor
             Phase1InstallerShared.AssignObjectArray(so.FindProperty("_equipment"), assets.BronzeBlade, assets.FocusWand, assets.HunterBow, assets.IronPike);
             Phase1InstallerShared.AssignObjectArray(so.FindProperty("_skills"), assets.GuardBreakSkill, assets.FireBurstSkill, assets.HealingWaveSkill, assets.ShockShotSkill, assets.RaiderStrikeSkill, assets.StormSpitSkill);
             Phase1InstallerShared.AssignObjectArray(so.FindProperty("_statuses"), assets.Poison, assets.Burn, assets.Wet, assets.GuardBreak);
-            Phase1InstallerShared.AssignObjectArray(so.FindProperty("_rewardTables"), assets.ScoutReward, assets.CaptainReward, assets.QuestReward);
-            Phase1InstallerShared.AssignObjectArray(so.FindProperty("_encounters"), assets.HarborScoutEncounter, assets.HarborCaptainEncounter, assets.PostBossEncounter);
+            Phase1InstallerShared.AssignObjectArray(so.FindProperty("_rewardTables"), assets.ScoutReward, assets.CaptainReward, assets.QuestReward, assets.SideQuestReward);
+            Phase1InstallerShared.AssignObjectArray(so.FindProperty("_encounters"), assets.HarborScoutEncounter, assets.HarborCaptainEncounter, assets.PostBossEncounter, assets.SideQuestEncounter);
             Phase1InstallerShared.AssignObjectArray(so.FindProperty("_encounterTables"), assets.PreBossTable, assets.PostBossTable);
             Phase1InstallerShared.AssignObjectArray(so.FindProperty("_zones"), assets.AsterHarborZone);
             Phase1InstallerShared.AssignObjectArray(so.FindProperty("_shops"), assets.GeneralShop);
-            Phase1InstallerShared.AssignObjectArray(so.FindProperty("_dialogues"), assets.HarborCaptainDialogue);
-            Phase1InstallerShared.AssignObjectArray(so.FindProperty("_quests"), assets.HarborQuest);
+            Phase1InstallerShared.AssignObjectArray(so.FindProperty("_dialogues"), assets.HarborCaptainDialogue, assets.DockworkerDialogue);
+            Phase1InstallerShared.AssignObjectArray(so.FindProperty("_quests"), assets.HarborQuest, assets.SideQuest);
             so.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(assets.Catalog);
         }
