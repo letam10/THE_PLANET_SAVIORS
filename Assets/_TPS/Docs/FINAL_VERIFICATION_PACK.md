@@ -10,6 +10,7 @@
 - Recompile scripts trong Unity.
 - Chạy `Tools/TPS/Functional Lock/Run Final Validation Pack` hoặc tối thiểu:
   - `Tools/TPS/Content/Run Content Validation`
+  - `Tools/TPS/Environment/Validate Replace-Safe Layout`
   - `Tools/TPS/Phase 1/Run Project Audit`
 - Expected result:
   - compile clean
@@ -58,6 +59,7 @@
 - Mở lại project.
 - Chạy lại:
   - `Tools/TPS/Content/Run Content Validation`
+  - `Tools/TPS/Environment/Validate Replace-Safe Layout`
   - `Tools/TPS/Phase 1/Run Project Audit`
   - `Tools/TPS/Functional Lock/Prepare Final Core Smoke`
 - Press Play từ `Bootstrap`.

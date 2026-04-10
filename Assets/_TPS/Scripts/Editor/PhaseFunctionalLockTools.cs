@@ -12,6 +12,7 @@ namespace TPS.Editor
 
             ContentValidationResult validation = PhaseContentValidator.ValidateSharedCatalogAsset();
             LogValidation(validation);
+            PhaseEnvironmentTools.ValidateReplaceSafeLayoutMenu();
             Phase1ProjectAudit.RunProjectAuditMenu();
             Debug.Log("[TPSFunctionalLock] Compile & Audit complete. Continue with Assets/_TPS/Docs/FINAL_VERIFICATION_PACK.md");
         }
@@ -30,6 +31,7 @@ namespace TPS.Editor
             Phase1SceneInstaller.InstallVerticalSlice();
             ContentValidationResult validation = PhaseContentValidator.ValidateSharedCatalogAsset();
             LogValidation(validation);
+            PhaseEnvironmentTools.ValidateReplaceSafeLayoutMenu();
             Phase1ProjectAudit.ReinstallAndAuditMenu();
             Debug.Log("[TPSFunctionalLock] Validation pack complete. Review Assets/_TPS/Docs/FINAL_VERIFICATION_PACK.md for remaining smoke and reopen proof steps.");
         }

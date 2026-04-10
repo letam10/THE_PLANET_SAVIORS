@@ -8,6 +8,7 @@ using TPS.Runtime.Time;
 using TPS.Runtime.Weather;
 using TPS.Runtime.World;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace TPS.Runtime.UI
 {
@@ -109,6 +110,12 @@ namespace TPS.Runtime.UI
             string currencyText = EconomyService.Instance != null ? $"Currency: {EconomyService.Instance.Currency}" : "Currency: --";
             GUI.Label(new Rect(20f, y, width - 20f, 20f), currencyText);
             y += 24f;
+
+            if (SceneManager.GetActiveScene().name == "ZN_Town_AsterHarbor")
+            {
+                GUI.Label(new Rect(20f, y, width - 20f, 18f), "Environment: replace-safe generated scaffolding active");
+                y += 18f;
+            }
 
             if (PartyService.Instance != null)
             {

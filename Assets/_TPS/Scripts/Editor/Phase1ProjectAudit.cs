@@ -278,6 +278,17 @@ namespace TPS.Editor
                 ValidateSingleComponent<ConditionalActivator>(dockBannerController, report, dockBannerController.name);
                 ValidateConditionalActivatorConfiguration(dockBannerController.GetComponent<ConditionalActivator>(), report, dockBannerController.name);
             }
+
+            PhaseEnvironmentTools.EnvironmentValidationResult environmentValidation = PhaseEnvironmentTools.ValidateEnvironmentLayout(scene);
+            for (int i = 0; i < environmentValidation.Errors.Count; i++)
+            {
+                report.Error(environmentValidation.Errors[i]);
+            }
+
+            for (int i = 0; i < environmentValidation.Warnings.Count; i++)
+            {
+                report.Warning(environmentValidation.Warnings[i]);
+            }
         }
 
         private static void ValidateBattleScene(Scene scene, AuditReport report)

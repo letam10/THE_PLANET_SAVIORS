@@ -88,6 +88,7 @@ namespace TPS.Editor
                 ConfigureSideQuestNpc(worldRoot, shopBlock.transform.position + new Vector3(4f, 0f, -2f), assets.DockworkerDialogue);
                 ConfigureSideQuestEncounterAnchor(worldRoot, shopBlock.transform.position + new Vector3(8f, 0.5f, -5f), assets.SideQuestEncounter);
                 ConfigureSideQuestBanner(worldRoot, shopBlock.transform.position + new Vector3(6f, 1.25f, -1f));
+                PhaseEnvironmentTools.EnsureAsterHarborEnvironment(scene, worldRoot);
 
                 EditorSceneManager.MarkSceneDirty(scene);
                 EditorSceneManager.SaveScene(scene);
