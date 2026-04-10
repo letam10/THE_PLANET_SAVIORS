@@ -44,6 +44,38 @@ namespace TPS.Runtime.Quest
             return _questStates.TryGetValue(questId, out QuestRuntimeState state) && state.CompletedObjectives.Contains(objectiveId);
         }
 
+        public int GetCompletedObjectiveCount(string questId)
+        {
+            return _questStates.TryGetValue(questId, out QuestRuntimeState state) ? state.CompletedObjectives.Count : 0;
+        }
+
+        public int GetObjectiveCount(string questId)
+        {
+            return _questStates.TryGetValue(questId, out QuestRuntimeState state) && state.Definition != null
+                ? state.Definition.Objectives.Count
+                : 0;
+        }
+
+        public string GetNextIncompleteObjectiveDescription(string questId)
+        {
+            if (!_questStates.TryGetValue(questId, out QuestRuntimeState state) || state.Definition == null)
+            {
+                return string.Empty;
+            }
+
+            IReadOnlyList<QuestObjectiveDefinition> objectives = state.Definition.Objectives;
+            for (int i = 0; i < objectives.Count; i++)
+            {
+                QuestObjectiveDefinition objective = objectives[i];
+                if (objective != null && !string.IsNullOrWhiteSpace(objective.ObjectiveId) && !state.CompletedObjectives.Contains(objective.ObjectiveId))
+                {
+                    return objective.Description;
+                }
+            }
+
+            return state.Status == QuestStatus.Completed ? "Quest complete." : "All objectives complete. Turn in the quest.";
+        }
+
         public void AcceptQuest(QuestDefinition questDefinition)
         {
             if (questDefinition == null)

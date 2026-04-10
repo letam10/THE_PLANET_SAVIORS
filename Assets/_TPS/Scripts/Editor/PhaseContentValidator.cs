@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using TPS.Runtime.Combat;
+using TPS.Runtime.Conditions;
 using TPS.Runtime.Core;
 using TPS.Runtime.Dialogue;
 using TPS.Runtime.Quest;
+using UnityEditor;
 
 namespace TPS.Editor
 {
@@ -15,6 +17,18 @@ namespace TPS.Editor
 
     public static class PhaseContentValidator
     {
+        public const string SharedCatalogPath = "Assets/_TPS/Data/Phase1/Core/CAT_Phase1Content.asset";
+
+        public static Phase1ContentCatalog LoadSharedCatalog()
+        {
+            return AssetDatabase.LoadAssetAtPath<Phase1ContentCatalog>(SharedCatalogPath);
+        }
+
+        public static ContentValidationResult ValidateSharedCatalogAsset()
+        {
+            return ValidateCatalog(LoadSharedCatalog());
+        }
+
         public static ContentValidationResult ValidateCatalog(Phase1ContentCatalog catalog)
         {
             var result = new ContentValidationResult();
@@ -40,6 +54,7 @@ namespace TPS.Editor
             ValidateQuests(catalog.Quests, result.Errors);
             ValidateEncounters(catalog.Encounters, result.Errors);
             ValidateShops(catalog.Shops, result.Errors);
+            PhaseContentValidationRules.ValidateAdditionalRules(catalog, result);
             return result;
         }
 

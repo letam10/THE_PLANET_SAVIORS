@@ -95,7 +95,7 @@ namespace TPS.Runtime.UI
         {
             float width = 340f;
             float height = inBattle ? 180f : 260f;
-            GUI.Box(new Rect(10f, Screen.height - height - 10f, width, height), "Phase 1 Runtime");
+            GUI.Box(new Rect(10f, Screen.height - height - 10f, width, height), "Functional Lock Runtime");
 
             float y = Screen.height - height + 20f;
             string timeText = WorldClock.Instance != null ? WorldClock.Instance.GetFormattedTime() : "Time: --";
@@ -147,7 +147,7 @@ namespace TPS.Runtime.UI
 
             float width = 500f;
             float height = inBattle ? 220f : 270f;
-            GUI.Box(new Rect(10f, 10f, width, height), "Phase 1 Smoke");
+            GUI.Box(new Rect(10f, 10f, width, height), "Functional Lock Smoke");
 
             float rowY = 35f;
             string[] statusLines = Phase1SmokeRunner.Instance.BuildStatusLines();
@@ -281,12 +281,13 @@ namespace TPS.Runtime.UI
             }
 
             float width = 320f;
-            float height = 150f;
+            float height = 190f;
             float x = Screen.width - width - 10f;
-            GUI.Box(new Rect(x, 10f, width, height), "Quests");
-            float rowY = 40f;
+            float panelY = 10f;
+            GUI.Box(new Rect(x, panelY, width, height), "Quests");
+            float rowY = panelY + 30f;
             IReadOnlyList<QuestDefinition> quests = _contentCatalog.Quests;
-            for (int i = 0; i < quests.Count && rowY < 140f; i++)
+            for (int i = 0; i < quests.Count && rowY < panelY + height - 24f; i++)
             {
                 QuestDefinition quest = quests[i];
                 if (quest == null)
@@ -294,8 +295,16 @@ namespace TPS.Runtime.UI
                     continue;
                 }
 
-                GUI.Label(new Rect(x + 10f, rowY, width - 20f, 20f), $"{quest.Title}: {QuestService.Instance.GetQuestStatus(quest.QuestId)}");
-                rowY += 22f;
+                int completed = QuestService.Instance.GetCompletedObjectiveCount(quest.QuestId);
+                int total = QuestService.Instance.GetObjectiveCount(quest.QuestId);
+                string objectiveText = QuestService.Instance.GetNextIncompleteObjectiveDescription(quest.QuestId);
+                GUI.Label(new Rect(x + 10f, rowY, width - 20f, 20f), $"{quest.Title}: {QuestService.Instance.GetQuestStatus(quest.QuestId)} ({completed}/{Mathf.Max(total, 0)})");
+                rowY += 20f;
+                if (!string.IsNullOrWhiteSpace(objectiveText))
+                {
+                    GUI.Label(new Rect(x + 10f, rowY, width - 20f, 34f), objectiveText);
+                    rowY += 36f;
+                }
             }
         }
 

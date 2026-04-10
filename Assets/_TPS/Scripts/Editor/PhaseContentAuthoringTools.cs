@@ -22,9 +22,7 @@ namespace TPS.Editor
         [MenuItem("Tools/TPS/Content/Run Content Validation")]
         private static void RunContentValidation()
         {
-            const string catalogPath = "Assets/_TPS/Data/Phase1/Core/CAT_Phase1Content.asset";
-            Phase1ContentCatalog catalog = AssetDatabase.LoadAssetAtPath<Phase1ContentCatalog>(catalogPath);
-            ContentValidationResult result = PhaseContentValidator.ValidateCatalog(catalog);
+            ContentValidationResult result = PhaseContentValidator.ValidateSharedCatalogAsset();
             if (result.Errors.Count == 0 && result.Warnings.Count == 0)
             {
                 Debug.Log("[TPSContent] Content validation passed.");

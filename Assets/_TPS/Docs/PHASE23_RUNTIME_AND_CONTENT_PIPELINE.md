@@ -63,3 +63,10 @@
 ## Known limitations
 - Full 13-step end-to-end automation remains parked. Manual smoke is still the truthful proof path for complete world-to-battle-to-world behavior.
 - `Phase1ContentCatalog` keeps its legacy name for now. Treat it as the current shared registry, not as a Phase-1-only concept.
+
+## Functional lock references
+- See `Assets/_TPS/Docs/FEATURE_LOCK_MATRIX.md` for the locked vs deferred system decision table.
+- See `Assets/_TPS/Docs/GAMEPLAY_CONTRACTS.md` for the production content/runtime contracts.
+- See `Assets/_TPS/Docs/FINAL_VERIFICATION_PACK.md` for the final verification flow.
+- See `Assets/_TPS/Docs/ART_INTEGRATION_CONTRACT.md` for safe art replacement rules.
+- See `Assets/_TPS/Docs/FUNCTIONAL_LOCK_DECISION.md` for the final branch-level lock policy.

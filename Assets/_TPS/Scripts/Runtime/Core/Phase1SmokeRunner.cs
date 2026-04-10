@@ -20,11 +20,14 @@ namespace TPS.Runtime.Core
             public int Minute;
             public WeatherType Weather;
             public string QuestStatus;
+            public string SideQuestStatus;
             public string DialogueVariant;
+            public string SideDialogueVariant;
             public string NpcLocation;
             public bool NpcVisible;
             public string EncounterTableId;
             public bool BossCleared;
+            public bool DockSuppliesSecured;
             public bool ShopAvailable;
             public int Currency;
             public int ActivePartyCount;
@@ -41,16 +44,22 @@ namespace TPS.Runtime.Core
         [SerializeField] private string _dialogueAnchorId = "harbor_captain";
         [SerializeField] private string _merchantId = "harbor_general_store";
         [SerializeField] private string _bossEncounterId = "enc_harbor_captain";
+        [SerializeField] private string _sideQuestId = "quest_secure_dock_supplies";
+        [SerializeField] private string _sideDialogueAnchorId = "dock_quartermaster";
+        [SerializeField] private string _sideZoneFactId = "dock_supplies_secured";
 
         private readonly List<string> _timeline = new List<string>();
         private SmokeSnapshot _lastSavedSnapshot;
         private string _lastSceneName = string.Empty;
         private string _lastQuestStatus = string.Empty;
+        private string _lastSideQuestStatus = string.Empty;
         private string _lastDialogueVariant = string.Empty;
+        private string _lastSideDialogueVariant = string.Empty;
         private string _lastNpcLocation = string.Empty;
         private string _lastEncounterTableId = string.Empty;
         private bool _lastNpcVisible;
         private bool _lastBossCleared;
+        private bool _lastDockSuppliesSecured;
         private bool _lastShopAvailable;
         private float _nextPollAt;
         private bool _hasSavedSnapshot;
@@ -123,9 +132,11 @@ namespace TPS.Runtime.Core
             {
                 $"Scene: {snapshot.SceneName}",
                 $"Clock: Day {snapshot.Day} {snapshot.Hour:00}:{snapshot.Minute:00} | Weather: {snapshot.Weather}",
-                $"Quest: {snapshot.QuestStatus} | Dialogue: {snapshot.DialogueVariant}",
+                $"Main Quest: {snapshot.QuestStatus} | Dialogue: {snapshot.DialogueVariant}",
+                $"Dock Quest: {snapshot.SideQuestStatus} | Dock Dialogue: {snapshot.SideDialogueVariant}",
                 $"NPC: {(snapshot.NpcVisible ? "Visible" : "Hidden")} @ {snapshot.NpcLocation}",
                 $"Encounter Table: {snapshot.EncounterTableId} | Boss Cleared: {snapshot.BossCleared}",
+                $"Dock Supplies Secured: {snapshot.DockSuppliesSecured}",
                 $"Shop Available: {snapshot.ShopAvailable} | Currency: {snapshot.Currency}",
                 $"Party Active: {snapshot.ActivePartyCount} | {snapshot.LeadPartySummary}",
                 $"Save Exists: {snapshot.SaveExists}"
@@ -158,17 +169,18 @@ namespace TPS.Runtime.Core
 
         private void OnQuestChanged(string questId)
         {
-            if (questId == _questId)
+            if (questId == _questId || questId == _sideQuestId)
             {
-                AddEvent($"Quest state: {GetQuestStatus()}");
+                string label = questId == _sideQuestId ? "Dock quest" : "Quest";
+                AddEvent($"{label} state: {GetQuestStatus(questId)}");
             }
         }
 
         private void OnDialogueChanged(string key)
         {
-            if (key == _questId || key == _dialogueAnchorId || key.StartsWith("dialogue.harbor"))
+            if (key == _questId || key == _sideQuestId || key == _dialogueAnchorId || key == _sideDialogueAnchorId || key.StartsWith("dialogue.harbor") || key.StartsWith("dialogue.dock"))
             {
-                AddEvent($"Dialogue variant: {GetDialogueVariantId()}");
+                AddEvent($"Dialogue variants: main={GetDialogueVariantId(_dialogueAnchorId, "dialogue_harbor_captain")}, dock={GetDialogueVariantId(_sideDialogueAnchorId, "dialogue_dock_quartermaster")}");
             }
         }
 
@@ -249,10 +261,22 @@ namespace TPS.Runtime.Core
                 AddEvent($"Quest mirror now {snapshot.QuestStatus}.");
             }
 
+            if (!string.Equals(snapshot.SideQuestStatus, _lastSideQuestStatus))
+            {
+                _lastSideQuestStatus = snapshot.SideQuestStatus;
+                AddEvent($"Dock quest mirror now {snapshot.SideQuestStatus}.");
+            }
+
             if (!string.Equals(snapshot.DialogueVariant, _lastDialogueVariant))
             {
                 _lastDialogueVariant = snapshot.DialogueVariant;
                 AddEvent($"Dialogue mirror now {snapshot.DialogueVariant}.");
+            }
+
+            if (!string.Equals(snapshot.SideDialogueVariant, _lastSideDialogueVariant))
+            {
+                _lastSideDialogueVariant = snapshot.SideDialogueVariant;
+                AddEvent($"Dock dialogue mirror now {snapshot.SideDialogueVariant}.");
             }
 
             if (!string.Equals(snapshot.NpcLocation, _lastNpcLocation) || snapshot.NpcVisible != _lastNpcVisible)
@@ -274,6 +298,12 @@ namespace TPS.Runtime.Core
                 AddEvent($"Boss cleared mirror now {snapshot.BossCleared}.");
             }
 
+            if (snapshot.DockSuppliesSecured != _lastDockSuppliesSecured)
+            {
+                _lastDockSuppliesSecured = snapshot.DockSuppliesSecured;
+                AddEvent($"Dock supplies secured mirror now {snapshot.DockSuppliesSecured}.");
+            }
+
             if (snapshot.ShopAvailable != _lastShopAvailable)
             {
                 _lastShopAvailable = snapshot.ShopAvailable;
@@ -286,11 +316,14 @@ namespace TPS.Runtime.Core
             SmokeSnapshot snapshot = CaptureSnapshot();
             _lastSceneName = snapshot.SceneName;
             _lastQuestStatus = snapshot.QuestStatus;
+            _lastSideQuestStatus = snapshot.SideQuestStatus;
             _lastDialogueVariant = snapshot.DialogueVariant;
+            _lastSideDialogueVariant = snapshot.SideDialogueVariant;
             _lastNpcLocation = snapshot.NpcLocation;
             _lastNpcVisible = snapshot.NpcVisible;
             _lastEncounterTableId = snapshot.EncounterTableId;
             _lastBossCleared = snapshot.BossCleared;
+            _lastDockSuppliesSecured = snapshot.DockSuppliesSecured;
             _lastShopAvailable = snapshot.ShopAvailable;
         }
 
@@ -303,12 +336,15 @@ namespace TPS.Runtime.Core
                 Hour = WorldClock.Instance != null ? WorldClock.Instance.CurrentHour : 0,
                 Minute = WorldClock.Instance != null ? WorldClock.Instance.CurrentMinute : 0,
                 Weather = WeatherSystem.Instance != null ? WeatherSystem.Instance.CurrentWeather : WeatherType.Sunny,
-                QuestStatus = GetQuestStatus(),
-                DialogueVariant = GetDialogueVariantId(),
+                QuestStatus = GetQuestStatus(_questId),
+                SideQuestStatus = GetQuestStatus(_sideQuestId),
+                DialogueVariant = GetDialogueVariantId(_dialogueAnchorId, "dialogue_harbor_captain"),
+                SideDialogueVariant = GetDialogueVariantId(_sideDialogueAnchorId, "dialogue_dock_quartermaster"),
                 NpcLocation = GameStateManager.Instance != null ? GameStateManager.Instance.GetString($"npc.{_npcId}.location", "unknown") : "unknown",
                 NpcVisible = GameStateManager.Instance != null && GameStateManager.Instance.GetBool($"npc.{_npcId}.visible"),
                 EncounterTableId = GameStateManager.Instance != null ? GameStateManager.Instance.GetString($"zone.{_zoneId}.encounter_table", "none") : "none",
                 BossCleared = EncounterService.Instance != null && EncounterService.Instance.IsEncounterCleared(_bossEncounterId),
+                DockSuppliesSecured = ZoneStateService.Instance != null && ZoneStateService.Instance.GetBoolFact(_zoneId, _sideZoneFactId, false),
                 ShopAvailable = GameStateManager.Instance != null && GameStateManager.Instance.GetBool($"shop.{_merchantId}.available"),
                 Currency = EconomyService.Instance != null ? EconomyService.Instance.Currency : 0,
                 ActivePartyCount = PartyService.Instance != null ? PartyService.Instance.GetActiveMemberIds().Count : 0,
@@ -317,21 +353,21 @@ namespace TPS.Runtime.Core
             };
         }
 
-        private string GetQuestStatus()
+        private string GetQuestStatus(string questId)
         {
-            return QuestService.Instance != null ? QuestService.Instance.GetQuestStatus(_questId).ToString() : "Unavailable";
+            return QuestService.Instance != null ? QuestService.Instance.GetQuestStatus(questId).ToString() : "Unavailable";
         }
 
-        private string GetDialogueVariantId()
+        private string GetDialogueVariantId(string anchorId, string fallbackDialogueId)
         {
             if (GameStateManager.Instance != null)
             {
-                return GameStateManager.Instance.GetString($"dialogue.{_dialogueAnchorId}.active_variant", "none");
+                return GameStateManager.Instance.GetString($"dialogue.{anchorId}.active_variant", "none");
             }
 
             if (_contentCatalog != null && DialogueStateService.Instance != null)
             {
-                DialogueDefinition dialogue = _contentCatalog.GetDialogue("dialogue_harbor_captain");
+                DialogueDefinition dialogue = _contentCatalog.GetDialogue(fallbackDialogueId);
                 DialogueVariant variant = DialogueStateService.Instance.ResolveCurrentVariant(dialogue);
                 return variant != null ? variant.VariantId : "none";
             }
@@ -358,12 +394,15 @@ namespace TPS.Runtime.Core
             CompareField(mismatches, "hour", expected.Hour.ToString(), actual.Hour.ToString());
             CompareField(mismatches, "minute", expected.Minute.ToString(), actual.Minute.ToString());
             CompareField(mismatches, "weather", expected.Weather.ToString(), actual.Weather.ToString());
-            CompareField(mismatches, "quest", expected.QuestStatus, actual.QuestStatus);
-            CompareField(mismatches, "dialogue", expected.DialogueVariant, actual.DialogueVariant);
+            CompareField(mismatches, "main quest", expected.QuestStatus, actual.QuestStatus);
+            CompareField(mismatches, "dock quest", expected.SideQuestStatus, actual.SideQuestStatus);
+            CompareField(mismatches, "main dialogue", expected.DialogueVariant, actual.DialogueVariant);
+            CompareField(mismatches, "dock dialogue", expected.SideDialogueVariant, actual.SideDialogueVariant);
             CompareField(mismatches, "npc location", expected.NpcLocation, actual.NpcLocation);
             CompareField(mismatches, "npc visibility", expected.NpcVisible.ToString(), actual.NpcVisible.ToString());
             CompareField(mismatches, "encounter table", expected.EncounterTableId, actual.EncounterTableId);
             CompareField(mismatches, "boss cleared", expected.BossCleared.ToString(), actual.BossCleared.ToString());
+            CompareField(mismatches, "dock supplies secured", expected.DockSuppliesSecured.ToString(), actual.DockSuppliesSecured.ToString());
             CompareField(mismatches, "shop available", expected.ShopAvailable.ToString(), actual.ShopAvailable.ToString());
             CompareField(mismatches, "currency", expected.Currency.ToString(), actual.Currency.ToString());
             CompareField(mismatches, "active party", expected.ActivePartyCount.ToString(), actual.ActivePartyCount.ToString());
@@ -381,7 +420,7 @@ namespace TPS.Runtime.Core
 
         private static string FormatCompactSnapshot(SmokeSnapshot snapshot)
         {
-            return $"{snapshot.SceneName} | {snapshot.QuestStatus} | dlg:{snapshot.DialogueVariant} | npc:{snapshot.NpcLocation} | table:{snapshot.EncounterTableId} | cur:{snapshot.Currency} | lead:{snapshot.LeadPartySummary}";
+            return $"{snapshot.SceneName} | main:{snapshot.QuestStatus} | dock:{snapshot.SideQuestStatus} | dlg:{snapshot.DialogueVariant}/{snapshot.SideDialogueVariant} | npc:{snapshot.NpcLocation} | table:{snapshot.EncounterTableId} | dock_fact:{snapshot.DockSuppliesSecured} | cur:{snapshot.Currency} | lead:{snapshot.LeadPartySummary}";
         }
 
         private static string BuildLeadPartySummary()

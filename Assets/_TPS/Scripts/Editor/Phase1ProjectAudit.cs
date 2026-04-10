@@ -41,13 +41,13 @@ namespace TPS.Editor
         [MenuItem("Tools/TPS/Phase 1/Run Project Audit")]
         public static void RunProjectAuditMenu()
         {
-            RunAudit(false);
+            RunProjectAudit();
         }
 
         [MenuItem("Tools/TPS/Phase 1/Reinstall And Audit")]
         public static void ReinstallAndAuditMenu()
         {
-            RunAudit(true);
+            ReinstallAndAudit();
         }
 
         [MenuItem("Tools/TPS/Phase 1/Prepare Manual Smoke")]
@@ -63,6 +63,16 @@ namespace TPS.Editor
 
             EditorSceneManager.OpenScene("Assets/_TPS/Scenes/Bootstrap/Bootstrap.unity", OpenSceneMode.Single);
             Debug.Log("[Phase1Audit] Manual smoke prepared. Press Play from Bootstrap and follow Assets/_TPS/Docs/PHASE1_MANUAL_SMOKE.md");
+        }
+
+        public static bool RunProjectAudit()
+        {
+            return RunAudit(false);
+        }
+
+        public static bool ReinstallAndAudit()
+        {
+            return RunAudit(true);
         }
 
         private static bool RunAudit(bool reinstallFirst)
@@ -136,9 +146,8 @@ namespace TPS.Editor
 
         private static void ValidateContentCatalog(AuditReport report)
         {
-            const string catalogPath = "Assets/_TPS/Data/Phase1/Core/CAT_Phase1Content.asset";
-            Phase1ContentCatalog catalog = AssetDatabase.LoadAssetAtPath<Phase1ContentCatalog>(catalogPath);
-            report.Expect(catalog != null, "Phase1 content catalog loaded", $"Missing content catalog at {catalogPath}");
+            Phase1ContentCatalog catalog = PhaseContentValidator.LoadSharedCatalog();
+            report.Expect(catalog != null, "Phase1 content catalog loaded", $"Missing content catalog at {PhaseContentValidator.SharedCatalogPath}");
             if (catalog == null)
             {
                 return;
@@ -203,6 +212,8 @@ namespace TPS.Editor
                 ValidateSingleComponent<NPCSchedule>(npc, report, npc.name);
                 ValidateSingleComponent<DialogueAnchor>(npc, report, npc.name);
                 ValidateSerializedString(npc.GetComponent<NPCSchedule>(), "_npcId", report, "NPCSchedule");
+                ValidateNpcScheduleConfiguration(npc.GetComponent<NPCSchedule>(), report, "Town NPC schedule");
+                ValidateSerializedString(npc.GetComponent<DialogueAnchor>(), "_anchorId", report, "Town NPC DialogueAnchor");
                 ValidateObjectReference(npc.GetComponent<DialogueAnchor>(), "_dialogueDefinition", report, "DialogueAnchor");
             }
 
@@ -211,6 +222,7 @@ namespace TPS.Editor
             if (shop != null)
             {
                 ValidateSingleComponent<MerchantAnchor>(shop, report, shop.name);
+                ValidateSerializedString(shop.GetComponent<MerchantAnchor>(), "_merchantId", report, "MerchantAnchor");
                 ValidateObjectReference(shop.GetComponent<MerchantAnchor>(), "_shopDefinition", report, "MerchantAnchor");
             }
 
@@ -226,6 +238,7 @@ namespace TPS.Editor
             if (trigger != null)
             {
                 ValidateSingleComponent<EncounterAnchor>(trigger, report, trigger.name);
+                ValidateEncounterAnchorConfiguration(trigger.GetComponent<EncounterAnchor>(), report, "PF_EncounterTrigger_Test");
                 ValidateSerializedString(trigger.GetComponent<EncounterAnchor>(), "_zoneId", report, "PF_EncounterTrigger_Test EncounterAnchor");
             }
 
@@ -234,6 +247,7 @@ namespace TPS.Editor
             if (bossAnchor != null)
             {
                 ValidateSingleComponent<EncounterAnchor>(bossAnchor, report, bossAnchor.name);
+                ValidateEncounterAnchorConfiguration(bossAnchor.GetComponent<EncounterAnchor>(), report, "ENC_SubBoss_Anchor");
                 ValidateObjectReference(bossAnchor.GetComponent<EncounterAnchor>(), "_directEncounter", report, "Sub-boss EncounterAnchor");
             }
 
@@ -243,6 +257,8 @@ namespace TPS.Editor
             {
                 ValidateSingleComponent<NPCSchedule>(dockNpc, report, dockNpc.name);
                 ValidateSingleComponent<DialogueAnchor>(dockNpc, report, dockNpc.name);
+                ValidateNpcScheduleConfiguration(dockNpc.GetComponent<NPCSchedule>(), report, "Dock quartermaster schedule");
+                ValidateSerializedString(dockNpc.GetComponent<DialogueAnchor>(), "_anchorId", report, "Dock quartermaster DialogueAnchor");
                 ValidateObjectReference(dockNpc.GetComponent<DialogueAnchor>(), "_dialogueDefinition", report, "Dock quartermaster DialogueAnchor");
             }
 
@@ -251,6 +267,7 @@ namespace TPS.Editor
             if (dockEncounter != null)
             {
                 ValidateSingleComponent<EncounterAnchor>(dockEncounter, report, dockEncounter.name);
+                ValidateEncounterAnchorConfiguration(dockEncounter.GetComponent<EncounterAnchor>(), report, "ENC_DockRainMites_Anchor");
                 ValidateObjectReference(dockEncounter.GetComponent<EncounterAnchor>(), "_directEncounter", report, "Dock encounter anchor");
             }
 
@@ -259,6 +276,7 @@ namespace TPS.Editor
             if (dockBannerController != null)
             {
                 ValidateSingleComponent<ConditionalActivator>(dockBannerController, report, dockBannerController.name);
+                ValidateConditionalActivatorConfiguration(dockBannerController.GetComponent<ConditionalActivator>(), report, dockBannerController.name);
             }
         }
 
@@ -360,6 +378,98 @@ namespace TPS.Editor
             if (property != null)
             {
                 report.Expect(!string.IsNullOrWhiteSpace(property.stringValue), $"{context}.{propertyName} assigned", $"{context}.{propertyName} is empty.");
+            }
+        }
+
+        private static void ValidateNpcScheduleConfiguration(NPCSchedule schedule, AuditReport report, string context)
+        {
+            if (schedule == null)
+            {
+                report.Error($"{context} is missing NPCSchedule.");
+                return;
+            }
+
+            SerializedObject so = new SerializedObject(schedule);
+            SerializedProperty slots = so.FindProperty("_slots");
+            report.Expect(slots != null && slots.arraySize > 0, $"{context} has schedule slots", $"{context} has no schedule slots configured.");
+            if (slots == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < slots.arraySize; i++)
+            {
+                SerializedProperty slot = slots.GetArrayElementAtIndex(i);
+                SerializedProperty targetMarker = slot.FindPropertyRelative("TargetMarker");
+                SerializedProperty visible = slot.FindPropertyRelative("Visible");
+                report.Expect(targetMarker != null, $"{context} slot {i} exposes target marker", $"{context} slot {i} is missing TargetMarker.");
+                if (targetMarker != null && visible != null && visible.boolValue)
+                {
+                    if (targetMarker.objectReferenceValue != null)
+                    {
+                        report.Expect(true, $"{context} slot {i} target assigned", string.Empty);
+                    }
+                    else
+                    {
+                        report.Expect(true, $"{context} slot {i} allowed to stay at current transform", string.Empty);
+                    }
+                }
+            }
+        }
+
+        private static void ValidateEncounterAnchorConfiguration(EncounterAnchor encounterAnchor, AuditReport report, string context)
+        {
+            if (encounterAnchor == null)
+            {
+                report.Error($"{context} is missing EncounterAnchor.");
+                return;
+            }
+
+            ValidateSerializedString(encounterAnchor, "_anchorId", report, context);
+            SerializedObject so = new SerializedObject(encounterAnchor);
+            SerializedProperty useZoneEncounterTable = so.FindProperty("_useZoneEncounterTable");
+            SerializedProperty directEncounter = so.FindProperty("_directEncounter");
+            SerializedProperty zoneId = so.FindProperty("_zoneId");
+            if (useZoneEncounterTable != null && useZoneEncounterTable.boolValue)
+            {
+                report.Expect(zoneId != null && !string.IsNullOrWhiteSpace(zoneId.stringValue), $"{context} zone encounter configuration valid", $"{context} uses a zone encounter table but has no zone id.");
+            }
+            else
+            {
+                report.Expect(directEncounter != null && directEncounter.objectReferenceValue != null, $"{context} direct encounter assigned", $"{context} has no direct encounter assigned.");
+            }
+        }
+
+        private static void ValidateConditionalActivatorConfiguration(ConditionalActivator activator, AuditReport report, string context)
+        {
+            if (activator == null)
+            {
+                report.Error($"{context} is missing ConditionalActivator.");
+                return;
+            }
+
+            SerializedObject so = new SerializedObject(activator);
+            SerializedProperty targetMode = so.FindProperty("_targetMode");
+            if (targetMode == null)
+            {
+                report.Error($"{context} is missing _targetMode.");
+                return;
+            }
+
+            ActivatorTargetMode mode = (ActivatorTargetMode)targetMode.enumValueIndex;
+            if (mode == ActivatorTargetMode.RendererEnable)
+            {
+                Renderer renderer = activator.GetComponent<Renderer>();
+                SerializedProperty targetRenderer = so.FindProperty("_targetRenderer");
+                bool hasRendererTarget = (targetRenderer != null && targetRenderer.objectReferenceValue != null) || renderer != null;
+                report.Expect(hasRendererTarget, $"{context} renderer target valid", $"{context} uses RendererEnable but has no renderer target.");
+            }
+            else if (mode == ActivatorTargetMode.ColliderEnable)
+            {
+                Collider collider = activator.GetComponent<Collider>();
+                SerializedProperty targetCollider = so.FindProperty("_targetCollider");
+                bool hasColliderTarget = (targetCollider != null && targetCollider.objectReferenceValue != null) || collider != null;
+                report.Expect(hasColliderTarget, $"{context} collider target valid", $"{context} uses ColliderEnable but has no collider target.");
             }
         }
 

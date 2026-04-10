@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using NUnit.Framework;
 using TPS.Runtime.Combat;
+using TPS.Runtime.Conditions;
 using TPS.Runtime.Core;
 using TPS.Runtime.SaveLoad;
 using UnityEngine;

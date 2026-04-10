@@ -182,6 +182,7 @@ namespace TPS.Runtime.Conditions
         public ConditionGroupMode Mode = ConditionGroupMode.All;
         public List<GameCondition> Conditions = new List<GameCondition>();
         [SerializeField] private ConditionDefinition _sharedDefinition;
+        public ConditionDefinition SharedDefinition => _sharedDefinition;
 
         public bool EvaluateAll()
         {

@@ -431,6 +431,9 @@ MonoBehaviour:
   _dialogueAnchorId: harbor_captain
   _merchantId: harbor_general_store
   _bossEncounterId: enc_harbor_captain
+  _sideQuestId: quest_secure_dock_supplies
+  _sideDialogueAnchorId: dock_quartermaster
+  _sideZoneFactId: dock_supplies_secured
 --- !u!114 &177854923
 MonoBehaviour:
   m_ObjectHideFlags: 0
