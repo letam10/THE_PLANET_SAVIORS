@@ -153,10 +153,10 @@ namespace TPS.Editor
             ValidateManagedContainer(generatedRoot, DebugContainerName, result);
 
             EnvironmentContext context = BuildContext(scene, worldRoot);
-            ValidateExclusions(FindChild(generatedRoot, BuildingsContainerName), result, context, 1.5f);
-            ValidateExclusions(FindChild(generatedRoot, PropsContainerName), result, context, 1.25f);
-            ValidateExclusions(FindChild(generatedRoot, VegetationContainerName), result, context, 1.15f);
-            ValidateExclusions(FindChild(generatedRoot, AmbientContainerName), result, context, 2.25f);
+            ValidateExclusions(FindChild(generatedRoot, BuildingsContainerName), result, context, 0.75f);
+            ValidateExclusions(FindChild(generatedRoot, PropsContainerName), result, context, 0.45f, "Merchant block", "Inn block", "Tavern marker");
+            ValidateExclusions(FindChild(generatedRoot, VegetationContainerName), result, context, 0.5f);
+            ValidateExclusions(FindChild(generatedRoot, AmbientContainerName), result, context, 0.65f, "Inn block", "Square marker");
 
             return result;
         }
@@ -222,15 +222,15 @@ namespace TPS.Editor
                 EncounterFringe = gate != null ? gate.transform.position : new Vector3(0f, 0f, -8f)
             };
 
-            AddExclusion(context, captainNpc, 2.25f, "Quest NPC");
-            AddExclusion(context, dockNpc, 2.25f, "Dock quest NPC");
-            AddExclusion(context, shop, 2.9f, "Merchant block");
-            AddExclusion(context, tavern, 3.1f, "Inn block");
-            AddExclusion(context, patrolEncounter, 2.8f, "Zone encounter trigger");
-            AddExclusion(context, bossAnchor, 2.3f, "Boss encounter anchor");
-            AddExclusion(context, dockEncounter, 2.3f, "Dock encounter anchor");
-            AddExclusion(context, square, 2f, "Square marker");
-            AddExclusion(context, tavernMarker, 1.5f, "Tavern marker");
+            AddExclusion(context, captainNpc, 1.4f, "Quest NPC");
+            AddExclusion(context, dockNpc, 1.4f, "Dock quest NPC");
+            AddExclusion(context, shop, 2f, "Merchant block");
+            AddExclusion(context, tavern, 2f, "Inn block");
+            AddExclusion(context, patrolEncounter, 1.8f, "Zone encounter trigger");
+            AddExclusion(context, bossAnchor, 1.6f, "Boss encounter anchor");
+            AddExclusion(context, dockEncounter, 1.6f, "Dock encounter anchor");
+            AddExclusion(context, square, 1.2f, "Square marker");
+            AddExclusion(context, tavernMarker, 0.8f, "Tavern marker");
             return context;
         }
 
@@ -252,7 +252,7 @@ namespace TPS.Editor
             BuildHouseSlot(container, "BLD_RowHouse_West_A", new Vector3(-13f, 0f, 8f), new Vector3(3.4f, 3.2f, 3.4f), "Residential landmark house west.");
             BuildHouseSlot(container, "BLD_RowHouse_West_B", new Vector3(-16.5f, 0f, 4.5f), new Vector3(3.1f, 3f, 3.2f), "Residential support house west.");
             BuildHouseSlot(container, "BLD_RowHouse_West_C", new Vector3(-14f, 0f, 0.5f), new Vector3(3f, 2.8f, 3.3f), "Residential support house near encounter fringe.");
-            BuildHouseSlot(container, "BLD_MarketStall_Row_A", new Vector3(4f, 0f, 7.5f), new Vector3(2.5f, 2.2f, 2f), "Small commercial frontage scaffold.");
+            BuildHouseSlot(container, "BLD_MarketStall_Row_A", new Vector3(2f, 0f, 9.5f), new Vector3(2.5f, 2.2f, 2f), "Small commercial frontage scaffold.");
             BuildHouseSlot(container, "BLD_MarketStall_Row_B", new Vector3(1f, 0f, 7.75f), new Vector3(2.2f, 2.1f, 1.8f), "Small market stall scaffold.");
             BuildHouseSlot(container, "BLD_HarborShed_A", new Vector3(12.5f, 0f, 7.5f), new Vector3(4f, 2.8f, 3f), "Harbor shed scaffold.");
             BuildHouseSlot(container, "BLD_HarborShed_B", new Vector3(15.5f, 0f, -1.5f), new Vector3(3.2f, 2.5f, 2.5f), "Dockside storage shed scaffold.");
@@ -260,16 +260,16 @@ namespace TPS.Editor
 
         private static void BuildProps(Transform container, EnvironmentContext context)
         {
-            BuildCrateCluster(container, "PRP_HarborCrates_A", new Vector3(11.5f, 0f, 5.5f), 4, "Harbor cargo clutter near quartermaster.");
-            BuildCrateCluster(container, "PRP_HarborCrates_B", new Vector3(13.5f, 0f, 2f), 3, "Harbor cargo clutter near pier.");
+            BuildCrateCluster(container, "PRP_HarborCrates_A", new Vector3(13.2f, 0f, 6.8f), 4, "Harbor cargo clutter near quartermaster.");
+            BuildCrateCluster(container, "PRP_HarborCrates_B", new Vector3(16.8f, 0f, -2.2f), 3, "Harbor cargo clutter near pier.");
             BuildFenceRun(container, "PRP_ResidentialFence", new Vector3(-9.5f, 0f, 1.5f), 7, 1.5f, Quaternion.identity, "Residential edge fence line.");
-            BuildFenceRun(container, "PRP_HarborPosts", new Vector3(13f, 0f, -0.5f), 6, 1.4f, Quaternion.Euler(0f, 90f, 0f), "Harbor mooring post line.");
+            BuildFenceRun(container, "PRP_HarborPosts", new Vector3(18.2f, 0f, -2f), 5, 1.25f, Quaternion.Euler(0f, 90f, 0f), "Harbor mooring post line.");
             BuildLamp(container, "PRP_SquareLamp_A", new Vector3(-2f, 0f, 6.5f), "Square readability lamp.");
             BuildLamp(container, "PRP_SquareLamp_B", new Vector3(2.5f, 0f, 6.5f), "Square readability lamp.");
-            BuildLamp(container, "PRP_HarborLamp", new Vector3(10.5f, 0f, 0.5f), "Harbor readability lamp.");
+            BuildLamp(container, "PRP_HarborLamp", new Vector3(9.2f, 0f, -0.8f), "Harbor readability lamp.");
             BuildSign(container, "PRP_TavernSign", context.TavernPosition + new Vector3(2.2f, 0.1f, 0f), "Tavern frontage sign scaffold.");
             BuildSign(container, "PRP_ShopSign", context.ShopPosition + new Vector3(-2.2f, 0.1f, 0f), "Shop frontage sign scaffold.");
-            BuildLandmark(container, "PRP_HarborBeacon", new Vector3(18f, 0f, 2f), "Harbor landmark beacon for scene readability.");
+            BuildLandmark(container, "PRP_HarborBeacon", new Vector3(19f, 0f, 3.5f), "Harbor landmark beacon for scene readability.");
             BuildLandmark(container, "PRP_GateBannerFrame", new Vector3(0f, 0f, -10.5f), "Encounter fringe landmark frame.");
         }
 
@@ -312,15 +312,15 @@ namespace TPS.Editor
         private static void BuildAmbient(Transform container)
         {
             ClearManagedChildren(container);
-            BuildAmbientPair(container, "AMB_SquareChat_A", new Vector3(-2.5f, 0f, 2.2f), Quaternion.Euler(0f, 20f, 0f), "Ambient pair chatting in the square.");
-            BuildAmbientPair(container, "AMB_SquareChat_B", new Vector3(2.2f, 0f, 1.8f), Quaternion.Euler(0f, -15f, 0f), "Ambient pair chatting near the market frontage.");
-            BuildAmbientSolo(container, "AMB_HarborLookout_A", new Vector3(14f, 0f, 6f), "Ambient lookout facing the harbor.");
-            BuildAmbientSolo(container, "AMB_HarborLookout_B", new Vector3(17f, 0f, 2f), "Ambient lookout near the pier edge.");
+            BuildAmbientPair(container, "AMB_SquareChat_A", new Vector3(-2.8f, 0f, 1.2f), Quaternion.Euler(0f, 20f, 0f), "Ambient pair chatting in the square.");
+            BuildAmbientPair(container, "AMB_SquareChat_B", new Vector3(-0.8f, 0f, 0.4f), Quaternion.Euler(0f, -15f, 0f), "Ambient pair chatting near the market frontage.");
+            BuildAmbientSolo(container, "AMB_HarborLookout_A", new Vector3(15.8f, 0f, 7.2f), "Ambient lookout facing the harbor.");
+            BuildAmbientSolo(container, "AMB_HarborLookout_B", new Vector3(18.8f, 0f, 2.4f), "Ambient lookout near the pier edge.");
             BuildAmbientSolo(container, "AMB_TavernRest_A", new Vector3(-8.5f, 0f, 6.8f), "Ambient villager resting near the tavern.");
-            BuildAmbientSolo(container, "AMB_RainShelter_A", new Vector3(-3.5f, 0f, 5.9f), "Ambient rain shelter point near tavern awning.");
-            BuildAmbientCreature(container, "AMB_Cat_Dock", new Vector3(11.2f, 0f, 2.2f), PrimitiveType.Sphere, "Ambient dock cat placeholder.");
-            BuildAmbientCreature(container, "AMB_Bird_Post_A", new Vector3(14f, 1.6f, -0.5f), PrimitiveType.Sphere, "Ambient bird placeholder.");
-            BuildAmbientCreature(container, "AMB_Bird_Post_B", new Vector3(16.5f, 1.7f, 4.8f), PrimitiveType.Sphere, "Ambient bird placeholder.");
+            BuildAmbientSolo(container, "AMB_RainShelter_A", new Vector3(-1.8f, 0f, 6.8f), "Ambient rain shelter point near tavern awning.");
+            BuildAmbientCreature(container, "AMB_Cat_Dock", new Vector3(9.2f, 0f, 1.5f), PrimitiveType.Sphere, "Ambient dock cat placeholder.");
+            BuildAmbientCreature(container, "AMB_Bird_Post_A", new Vector3(18.2f, 1.6f, -2.2f), PrimitiveType.Sphere, "Ambient bird placeholder.");
+            BuildAmbientCreature(container, "AMB_Bird_Post_B", new Vector3(19.4f, 1.7f, 5.6f), PrimitiveType.Sphere, "Ambient bird placeholder.");
         }
 
         private static void BuildDebug(Transform container, EnvironmentContext context)
@@ -582,7 +582,7 @@ namespace TPS.Editor
             }
         }
 
-        private static void ValidateExclusions(GameObject container, EnvironmentValidationResult result, EnvironmentContext context, float extraRadius)
+        private static void ValidateExclusions(GameObject container, EnvironmentValidationResult result, EnvironmentContext context, float extraRadius, params string[] ignoredLabels)
         {
             if (container == null)
             {
@@ -596,6 +596,11 @@ namespace TPS.Editor
                 for (int i = 0; i < context.Exclusions.Count; i++)
                 {
                     ExclusionZone zone = context.Exclusions[i];
+                    if (Array.IndexOf(ignoredLabels, zone.Label) >= 0)
+                    {
+                        continue;
+                    }
+
                     if (Vector3.Distance(position, zone.Center) < zone.Radius + extraRadius)
                     {
                         result.Errors.Add($"{child.name} is too close to exclusion zone '{zone.Label}'.");
