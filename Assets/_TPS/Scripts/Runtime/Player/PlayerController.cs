@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using TPS.Runtime.UI;
 
 namespace TPS.Runtime.Player
 {
@@ -43,8 +44,8 @@ namespace TPS.Runtime.Player
 
         private void Update()
         {
-            // Horizontal Movement
-            Vector2 input = _moveAction.ReadValue<Vector2>();
+            bool uiFocused = RuntimeUiInputState.IsUiFocused;
+            Vector2 input = uiFocused ? Vector2.zero : _moveAction.ReadValue<Vector2>();
 
             Camera cam = Camera.main;
             Vector3 moveDir = Vector3.zero;
@@ -60,7 +61,7 @@ namespace TPS.Runtime.Player
                 moveDir = (forward * input.y) + (right * input.x);
             }
 
-            bool isSprinting = _sprintAction.IsPressed();
+            bool isSprinting = !uiFocused && _sprintAction.IsPressed();
             float speed = isSprinting ? _sprintSpeed : _walkSpeed;
 
             // Jump & Gravity
@@ -71,7 +72,7 @@ namespace TPS.Runtime.Player
                     _verticalVelocity.y = -2f; // Small downward force to keep grounded
                 }
 
-                if (_jumpAction.WasPressedThisFrame())
+                if (!uiFocused && _jumpAction.WasPressedThisFrame())
                 {
                     _verticalVelocity.y = Mathf.Sqrt(_jumpHeight * -2f * _gravity);
                 }

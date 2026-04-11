@@ -5,6 +5,7 @@ using TPS.Runtime.Core;
 using TPS.Runtime.Dialogue;
 using TPS.Runtime.NPC;
 using TPS.Runtime.Quest;
+using TPS.Runtime.Spawn;
 using TPS.Runtime.UI;
 using TPS.Runtime.World;
 using TPS.Runtime.Conditions;
@@ -88,6 +89,10 @@ namespace TPS.Editor
             ValidateScene("Assets/_TPS/Scenes/Core/Core.unity", ValidateCoreScene, report);
             ValidateScene("Assets/_TPS/Scenes/World/ZN_Town_AsterHarbor.unity", ValidateWorldScene, report);
             ValidateScene("Assets/_TPS/Scenes/Battle/BTL_Standard.unity", ValidateBattleScene, report);
+            ValidateOptionalExpansionScene("Assets/_TPS/Scenes/World/ZN_Settlement_Gullwatch.unity", ValidateExpansionWorldScene, report);
+            ValidateOptionalExpansionScene("Assets/_TPS/Scenes/World/ZN_Settlement_RedCedar.unity", ValidateExpansionWorldScene, report);
+            ValidateOptionalExpansionScene("Assets/_TPS/Scenes/Dungeons/DG_TideCaverns.unity", ValidateExpansionWorldScene, report);
+            ValidateOptionalExpansionScene("Assets/_TPS/Scenes/Dungeons/DG_QuarryRuins.unity", ValidateExpansionWorldScene, report);
             ValidatePrefabs(report);
 
             foreach (string warning in report.Warnings)
@@ -124,10 +129,30 @@ namespace TPS.Editor
             int core = content.IndexOf("Assets/_TPS/Scenes/Core/Core.unity");
             int town = content.IndexOf("Assets/_TPS/Scenes/World/ZN_Town_AsterHarbor.unity");
             int battle = content.IndexOf("Assets/_TPS/Scenes/Battle/BTL_Standard.unity");
+            int gullwatch = content.IndexOf("Assets/_TPS/Scenes/World/ZN_Settlement_Gullwatch.unity");
+            int redCedar = content.IndexOf("Assets/_TPS/Scenes/World/ZN_Settlement_RedCedar.unity");
+            int tideCaverns = content.IndexOf("Assets/_TPS/Scenes/Dungeons/DG_TideCaverns.unity");
+            int quarryRuins = content.IndexOf("Assets/_TPS/Scenes/Dungeons/DG_QuarryRuins.unity");
             report.Expect(bootstrap >= 0, "Bootstrap present in Windows build profile", "Bootstrap missing from Windows build profile.");
             report.Expect(core > bootstrap && bootstrap >= 0, "Core ordered after Bootstrap", "Core is not ordered after Bootstrap in Windows build profile.");
             report.Expect(town > core && core >= 0, "Town ordered after Core", "ZN_Town_AsterHarbor is not ordered after Core in Windows build profile.");
             report.Expect(battle > town && town >= 0, "Battle ordered after Town", "BTL_Standard is not ordered after ZN_Town_AsterHarbor in Windows build profile.");
+            if (System.IO.File.Exists("Assets/_TPS/Scenes/World/ZN_Settlement_Gullwatch.unity"))
+            {
+                report.Expect(gullwatch > battle, "Gullwatch present after battle", "ZN_Settlement_Gullwatch missing or ordered before BTL_Standard.");
+            }
+            if (System.IO.File.Exists("Assets/_TPS/Scenes/World/ZN_Settlement_RedCedar.unity"))
+            {
+                report.Expect(redCedar > battle, "RedCedar present after battle", "ZN_Settlement_RedCedar missing or ordered before BTL_Standard.");
+            }
+            if (System.IO.File.Exists("Assets/_TPS/Scenes/Dungeons/DG_TideCaverns.unity"))
+            {
+                report.Expect(tideCaverns > battle, "TideCaverns present after battle", "DG_TideCaverns missing or ordered before BTL_Standard.");
+            }
+            if (System.IO.File.Exists("Assets/_TPS/Scenes/Dungeons/DG_QuarryRuins.unity"))
+            {
+                report.Expect(quarryRuins > battle, "QuarryRuins present after battle", "DG_QuarryRuins missing or ordered before BTL_Standard.");
+            }
         }
 
         private static void ValidateScene(string scenePath, System.Action<Scene, AuditReport> validate, AuditReport report)
@@ -142,6 +167,16 @@ namespace TPS.Editor
             {
                 EditorSceneManager.CloseScene(scene, true);
             }
+        }
+
+        private static void ValidateOptionalExpansionScene(string scenePath, System.Action<Scene, AuditReport> validate, AuditReport report)
+        {
+            if (!System.IO.File.Exists(scenePath))
+            {
+                return;
+            }
+
+            ValidateScene(scenePath, validate, report);
         }
 
         private static void ValidateContentCatalog(AuditReport report)
@@ -299,6 +334,34 @@ namespace TPS.Editor
             {
                 ValidateSingleComponent<BattleWorldBridge>(battleRoot, report, battleRoot.name);
             }
+        }
+
+        private static void ValidateExpansionWorldScene(Scene scene, AuditReport report)
+        {
+            GameObject worldRoot = FindDeep(scene, "WorldRoot");
+            report.Expect(worldRoot != null, $"{scene.name} world root found", $"{scene.name} is missing WorldRoot.");
+            if (worldRoot == null)
+            {
+                return;
+            }
+
+            GameObject spawn = FindDeep(scene, "MK_PlayerSpawn_Default");
+            report.Expect(spawn != null, $"{scene.name} default spawn found", $"{scene.name} is missing MK_PlayerSpawn_Default.");
+            if (spawn != null)
+            {
+                ValidateSingleComponent<SpawnPoint>(spawn, report, $"{scene.name} spawn");
+            }
+            GameObject[] roots = scene.GetRootGameObjects();
+            int travelCount = 0;
+            int encounterCount = 0;
+            for (int i = 0; i < roots.Length; i++)
+            {
+                travelCount += roots[i].GetComponentsInChildren<SceneTravelAnchor>(true).Length;
+                encounterCount += roots[i].GetComponentsInChildren<EncounterAnchor>(true).Length;
+            }
+
+            report.Expect(travelCount > 0, $"{scene.name} has travel anchors", $"{scene.name} should include at least one SceneTravelAnchor.");
+            report.Expect(encounterCount > 0, $"{scene.name} has encounter anchors", $"{scene.name} should include at least one EncounterAnchor.");
         }
 
         private static void ValidatePrefabs(AuditReport report)

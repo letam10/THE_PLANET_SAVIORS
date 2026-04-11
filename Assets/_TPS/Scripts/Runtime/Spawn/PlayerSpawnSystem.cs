@@ -14,6 +14,7 @@ namespace TPS.Runtime.Spawn
 
         private GameConfig _config;
         private GameObject _playerInstance;
+        private string _pendingSpawnId;
 
         public GameObject PlayerInstance => _playerInstance;
 
@@ -59,8 +60,12 @@ namespace TPS.Runtime.Spawn
             }
 
             // Find a spawn point in the newly loaded scene
-            string spawnId = _config.DefaultSpawnId;
+            string spawnId = !string.IsNullOrWhiteSpace(_pendingSpawnId) ? _pendingSpawnId : _config.DefaultSpawnId;
             SpawnPoint point = FindSpawnPointInScene(scene, spawnId);
+            if (point == null && !string.IsNullOrWhiteSpace(_pendingSpawnId) && _pendingSpawnId != _config.DefaultSpawnId)
+            {
+                point = FindSpawnPointInScene(scene, _config.DefaultSpawnId);
+            }
 
             if (point == null)
             {
@@ -81,6 +86,7 @@ namespace TPS.Runtime.Spawn
             }
 
             TeleportPlayer(point.transform);
+            _pendingSpawnId = null;
         }
 
         private SpawnPoint FindSpawnPointInScene(Scene scene, string spawnId)
@@ -139,6 +145,13 @@ namespace TPS.Runtime.Spawn
             position = Vector3.zero;
             rotation = Quaternion.identity;
             return false;
+        }
+
+        public void SetPendingSpawnId(string spawnId)
+        {
+            _pendingSpawnId = string.IsNullOrWhiteSpace(spawnId)
+                ? _config != null ? _config.DefaultSpawnId : "Default"
+                : spawnId;
         }
     }
 }

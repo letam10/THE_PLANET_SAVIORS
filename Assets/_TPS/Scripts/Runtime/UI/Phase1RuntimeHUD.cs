@@ -15,6 +15,16 @@ namespace TPS.Runtime.UI
 {
     public sealed class Phase1RuntimeHUD : MonoBehaviour
     {
+        private enum RuntimePanelType
+        {
+            None = 0,
+            Inventory = 1,
+            Character = 2,
+            Quest = 3,
+            Equipment = 4,
+            System = 5
+        }
+
         public static Phase1RuntimeHUD Instance { get; private set; }
 
         [SerializeField] private Phase1ContentCatalog _contentCatalog;
@@ -22,6 +32,8 @@ namespace TPS.Runtime.UI
         private MerchantAnchor _activeMerchant;
         private string _lastMessage = "";
         private float _messageExpireAt = -1f;
+        private RuntimePanelType _activePanel;
+        private string _selectedMemberId;
 
         private void Awake()
         {
@@ -37,14 +49,16 @@ namespace TPS.Runtime.UI
 
         private void OnEnable()
         {
-            RuntimeUiInputState.SetUiFocused(false);
+            RuntimeUiInputState.RestoreGameplayFocus();
+            _activePanel = RuntimePanelType.None;
+            EnsureSelectedMember();
         }
 
         private void OnDisable()
         {
             if (Instance == this)
             {
-                RuntimeUiInputState.SetUiFocused(false);
+                RuntimeUiInputState.RestoreGameplayFocus();
             }
         }
 
@@ -60,18 +74,59 @@ namespace TPS.Runtime.UI
             {
                 ToggleUiFocus();
             }
+            else if (keyboard.iKey.wasPressedThisFrame)
+            {
+                OpenPanel(RuntimePanelType.Inventory);
+            }
+            else if (keyboard.cKey.wasPressedThisFrame)
+            {
+                OpenPanel(RuntimePanelType.Character);
+            }
+            else if (keyboard.jKey.wasPressedThisFrame)
+            {
+                OpenPanel(RuntimePanelType.Quest);
+            }
+            else if (keyboard.kKey.wasPressedThisFrame)
+            {
+                OpenPanel(RuntimePanelType.Equipment);
+            }
+            else if (keyboard.f5Key.wasPressedThisFrame && SaveLoadManager.Instance != null)
+            {
+                SaveLoadManager.Instance.SaveGame();
+                ShowMessage("Manual save requested.");
+            }
+            else if (keyboard.f9Key.wasPressedThisFrame && SaveLoadManager.Instance != null)
+            {
+                SaveLoadManager.Instance.LoadGame();
+                ShowMessage("Manual load requested.");
+            }
+            else if (keyboard.pKey.wasPressedThisFrame)
+            {
+                OpenPanel(RuntimePanelType.System);
+            }
             else if (keyboard.escapeKey.wasPressedThisFrame)
             {
                 if (_activeMerchant != null)
                 {
                     CloseShop();
                 }
+                else if (_activePanel != RuntimePanelType.None)
+                {
+                    CloseAllPanels(restoreGameplayFocus: true);
+                }
                 else if (RuntimeUiInputState.IsUiFocused)
                 {
-                    RuntimeUiInputState.SetUiFocused(false);
-                    ShowMessage("Closed UI focus.");
+                    OpenPanel(RuntimePanelType.System);
+                }
+                else
+                {
+                    OpenPanel(RuntimePanelType.System);
                 }
             }
+
+            if (keyboard.digit1Key.wasPressedThisFrame) SelectMemberByIndex(0);
+            else if (keyboard.digit2Key.wasPressedThisFrame) SelectMemberByIndex(1);
+            else if (keyboard.digit3Key.wasPressedThisFrame) SelectMemberByIndex(2);
         }
 
         public void ShowMessage(string message, float duration = 4f)
@@ -83,13 +138,21 @@ namespace TPS.Runtime.UI
         public void ToggleShop(MerchantAnchor merchantAnchor)
         {
             _activeMerchant = _activeMerchant == merchantAnchor ? null : merchantAnchor;
+            if (_activeMerchant != null)
+            {
+                _activePanel = RuntimePanelType.None;
+            }
+
             RuntimeUiInputState.SetUiFocused(_activeMerchant != null);
         }
 
         public void CloseShop()
         {
             _activeMerchant = null;
-            RuntimeUiInputState.SetUiFocused(false);
+            if (_activePanel == RuntimePanelType.None)
+            {
+                RuntimeUiInputState.RestoreGameplayFocus();
+            }
         }
 
         public ItemDefinition FindFirstUsableConsumable()
@@ -120,8 +183,7 @@ namespace TPS.Runtime.UI
             DrawSmokePanel(inBattle);
             if (!inBattle)
             {
-                DrawInventoryPanel();
-                DrawQuestPanel();
+                DrawActiveWorldPanel();
                 if (_activeMerchant != null)
                 {
                     DrawMerchantPanel();
@@ -136,7 +198,16 @@ namespace TPS.Runtime.UI
 
         private void ToggleUiFocus()
         {
-            RuntimeUiInputState.ToggleUiFocused();
+            if (_activePanel == RuntimePanelType.None && _activeMerchant == null)
+            {
+                RuntimeUiInputState.ToggleUiFocused();
+            }
+            else
+            {
+                CloseAllPanels(restoreGameplayFocus: true);
+                return;
+            }
+
             if (!RuntimeUiInputState.IsUiFocused)
             {
                 _activeMerchant = null;
@@ -145,6 +216,106 @@ namespace TPS.Runtime.UI
             ShowMessage(RuntimeUiInputState.IsUiFocused
                 ? "UI focus enabled. Cursor unlocked for HUD buttons."
                 : "Gameplay focus restored. Cursor locked for camera.");
+        }
+
+        private void OpenPanel(RuntimePanelType panel)
+        {
+            _activeMerchant = null;
+            _activePanel = panel;
+            EnsureSelectedMember();
+            RuntimeUiInputState.SetUiFocused(panel != RuntimePanelType.None);
+            ShowMessage(panel == RuntimePanelType.None
+                ? "Gameplay focus restored."
+                : $"Opened {GetPanelDisplayName(panel)}.");
+        }
+
+        private void CloseAllPanels(bool restoreGameplayFocus)
+        {
+            _activeMerchant = null;
+            _activePanel = RuntimePanelType.None;
+            if (restoreGameplayFocus)
+            {
+                RuntimeUiInputState.RestoreGameplayFocus();
+            }
+        }
+
+        private void DrawActiveWorldPanel()
+        {
+            switch (_activePanel)
+            {
+                case RuntimePanelType.Inventory:
+                    DrawInventoryPanel(showEquipment: false);
+                    break;
+                case RuntimePanelType.Character:
+                    DrawCharacterPanel();
+                    break;
+                case RuntimePanelType.Quest:
+                    DrawQuestPanel();
+                    break;
+                case RuntimePanelType.Equipment:
+                    DrawInventoryPanel(showEquipment: true);
+                    break;
+                case RuntimePanelType.System:
+                    DrawSystemPanel();
+                    break;
+            }
+        }
+
+        private void EnsureSelectedMember()
+        {
+            if (PartyService.Instance == null)
+            {
+                _selectedMemberId = null;
+                return;
+            }
+
+            List<string> activeMembers = PartyService.Instance.GetActiveMemberIds();
+            if (activeMembers.Count == 0)
+            {
+                _selectedMemberId = null;
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(_selectedMemberId) || !activeMembers.Contains(_selectedMemberId))
+            {
+                _selectedMemberId = activeMembers[0];
+            }
+        }
+
+        private void SelectMemberByIndex(int index)
+        {
+            if (PartyService.Instance == null)
+            {
+                return;
+            }
+
+            List<string> activeMembers = PartyService.Instance.GetActiveMemberIds();
+            if (index < 0 || index >= activeMembers.Count)
+            {
+                return;
+            }
+
+            _selectedMemberId = activeMembers[index];
+            ShowMessage($"Selected {_selectedMemberId}.");
+        }
+
+        private string GetPanelDisplayName(RuntimePanelType panel)
+        {
+            switch (panel)
+            {
+                case RuntimePanelType.Inventory:
+                    return "Inventory";
+                case RuntimePanelType.Character:
+                    return "Character";
+                case RuntimePanelType.Quest:
+                    return "Quest Log";
+                case RuntimePanelType.Equipment:
+                    return "Equipment";
+                case RuntimePanelType.System:
+                    return "System";
+                default:
+                    return "Gameplay";
+            }
         }
 
         private void DrawStatusPanel(bool inBattle)
@@ -198,7 +369,9 @@ namespace TPS.Runtime.UI
                 if (GUI.Button(new Rect(160f, y, 50f, 24f), "Sun") && WeatherSystem.Instance != null) WeatherSystem.Instance.SetWeather(WeatherType.Sunny);
                 if (GUI.Button(new Rect(220f, y, 50f, 24f), "Rain") && WeatherSystem.Instance != null) WeatherSystem.Instance.SetWeather(WeatherType.Rain);
                 y += 30f;
-                string focusLabel = RuntimeUiInputState.IsUiFocused ? "UI focus ON (Tab/Esc to close)" : "Press Tab to unlock cursor for HUD";
+                string focusLabel = RuntimeUiInputState.IsUiFocused
+                    ? $"UI mode ON | Active: {GetPanelDisplayName(_activePanel)} | Esc closes | 1-3 select member"
+                    : "Gameplay mode ON | Tab unlocks cursor | I/C/J/K open panels | F5 save | F9 load | P system";
                 GUI.Label(new Rect(20f, y, width - 20f, 18f), focusLabel);
             }
         }
@@ -245,9 +418,9 @@ namespace TPS.Runtime.UI
             }
         }
 
-        private void DrawInventoryPanel()
+        private void DrawInventoryPanel(bool showEquipment)
         {
-            if (_contentCatalog == null || InventoryService.Instance == null)
+            if (_contentCatalog == null || InventoryService.Instance == null || PartyService.Instance == null)
             {
                 return;
             }
@@ -256,85 +429,148 @@ namespace TPS.Runtime.UI
             float height = 260f;
             float x = Screen.width - width - 10f;
             float y = Screen.height - height - 10f;
-            GUI.Box(new Rect(x, y, width, height), "Inventory / Equipment");
+            GUI.Box(new Rect(x, y, width, height), showEquipment ? "Equipment" : "Inventory");
 
             float rowY = y + 30f;
-            IReadOnlyList<ItemDefinition> items = _contentCatalog.Items;
-            for (int i = 0; i < items.Count && rowY < y + height - 30f; i++)
+            DrawMemberSelector(x + 10f, ref rowY, width - 20f);
+
+            if (!showEquipment)
             {
-                ItemDefinition item = items[i];
-                if (item == null)
+                IReadOnlyList<ItemDefinition> items = _contentCatalog.Items;
+                for (int i = 0; i < items.Count && rowY < y + height - 30f; i++)
                 {
-                    continue;
-                }
-
-                int count = InventoryService.Instance.GetItemCount(item.ItemId);
-                if (count <= 0)
-                {
-                    continue;
-                }
-
-                GUI.Label(new Rect(x + 10f, rowY, 150f, 20f), $"{item.DisplayName} x{count}");
-                if (GUI.Button(new Rect(x + 170f, rowY - 2f, 50f, 24f), "Use"))
-                {
-                    UseConsumable(item);
-                }
-                if (GUI.Button(new Rect(x + 230f, rowY - 2f, 50f, 24f), "Sell"))
-                {
-                    if (EconomyService.Instance != null && EconomyService.Instance.SellItem(item))
+                    ItemDefinition item = items[i];
+                    if (item == null)
                     {
-                        ShowMessage($"Sold {item.DisplayName}.");
-                    }
-                }
-                rowY += 24f;
-            }
-
-            IReadOnlyList<EquipmentDefinition> equipment = _contentCatalog.Equipment;
-            for (int i = 0; i < equipment.Count && rowY < y + height - 50f; i++)
-            {
-                EquipmentDefinition item = equipment[i];
-                if (item == null)
-                {
-                    continue;
-                }
-
-                int count = InventoryService.Instance.GetEquipmentCount(item.EquipmentId);
-                if (count <= 0)
-                {
-                    continue;
-                }
-
-                GUI.Label(new Rect(x + 10f, rowY, 150f, 20f), $"{item.DisplayName} x{count}");
-                List<string> activeMembers = PartyService.Instance != null ? PartyService.Instance.GetActiveMemberIds() : null;
-                if (activeMembers != null && activeMembers.Count > 0)
-                {
-                    string targetMember = activeMembers[0];
-                    if (GUI.Button(new Rect(x + 170f, rowY - 2f, 70f, 24f), $"Equip {targetMember}") && PartyService.Instance.EquipWeapon(targetMember, item))
-                    {
-                        ShowMessage($"{targetMember} equipped {item.DisplayName}.");
+                        continue;
                     }
 
-                    EquipmentDefinition equippedWeapon = PartyService.Instance.GetEquippedWeapon(targetMember);
-                    if (equippedWeapon == item && GUI.Button(new Rect(x + 170f, rowY + 22f, 70f, 24f), $"Unequip"))
+                    int count = InventoryService.Instance.GetItemCount(item.ItemId);
+                    if (count <= 0)
                     {
-                        if (PartyService.Instance.UnequipWeapon(targetMember))
+                        continue;
+                    }
+
+                    GUI.Label(new Rect(x + 10f, rowY, 150f, 20f), $"{item.DisplayName} x{count}");
+                    if (GUI.Button(new Rect(x + 170f, rowY - 2f, 60f, 24f), "Use"))
+                    {
+                        UseConsumable(item);
+                    }
+                    if (GUI.Button(new Rect(x + 240f, rowY - 2f, 50f, 24f), "Sell"))
+                    {
+                        if (EconomyService.Instance != null && EconomyService.Instance.SellItem(item))
                         {
-                            ShowMessage($"{targetMember} unequipped {item.DisplayName}.");
+                            ShowMessage($"Sold {item.DisplayName}.");
                         }
                     }
+                    rowY += 24f;
                 }
-                if (GUI.Button(new Rect(x + 250f, rowY - 2f, 50f, 24f), "Sell"))
+            }
+            else
+            {
+                IReadOnlyList<EquipmentDefinition> equipment = _contentCatalog.Equipment;
+                for (int i = 0; i < equipment.Count && rowY < y + height - 50f; i++)
                 {
-                    if (EconomyService.Instance != null && EconomyService.Instance.SellEquipment(item))
+                    EquipmentDefinition item = equipment[i];
+                    if (item == null)
                     {
-                        ShowMessage($"Sold {item.DisplayName}.");
+                        continue;
                     }
-                    else
+
+                    int count = InventoryService.Instance.GetEquipmentCount(item.EquipmentId);
+                    if (count <= 0)
                     {
-                        ShowMessage($"Could not sell {item.DisplayName}.");
+                        continue;
                     }
+
+                    GUI.Label(new Rect(x + 10f, rowY, 150f, 20f), $"{item.DisplayName} x{count}");
+                    if (!string.IsNullOrWhiteSpace(_selectedMemberId) &&
+                        GUI.Button(new Rect(x + 170f, rowY - 2f, 80f, 24f), $"Equip {_selectedMemberId}") &&
+                        PartyService.Instance.EquipWeapon(_selectedMemberId, item))
+                    {
+                        ShowMessage($"{_selectedMemberId} equipped {item.DisplayName}.");
+                    }
+
+                    EquipmentDefinition equippedWeapon = !string.IsNullOrWhiteSpace(_selectedMemberId)
+                        ? PartyService.Instance.GetEquippedWeapon(_selectedMemberId)
+                        : null;
+                    if (equippedWeapon == item && GUI.Button(new Rect(x + 170f, rowY + 22f, 80f, 24f), "Unequip"))
+                    {
+                        if (PartyService.Instance.UnequipWeapon(_selectedMemberId))
+                        {
+                            ShowMessage($"{_selectedMemberId} unequipped {item.DisplayName}.");
+                        }
+                    }
+
+                    if (GUI.Button(new Rect(x + 260f, rowY - 2f, 50f, 24f), "Sell"))
+                    {
+                        if (EconomyService.Instance != null && EconomyService.Instance.SellEquipment(item))
+                        {
+                            ShowMessage($"Sold {item.DisplayName}.");
+                        }
+                        else
+                        {
+                            ShowMessage($"Could not sell {item.DisplayName}.");
+                        }
+                    }
+                    rowY += 48f;
                 }
-                rowY += 48f;
+            }
+        }
+
+        private void DrawCharacterPanel()
+        {
+            if (PartyService.Instance == null)
+            {
+                return;
+            }
+
+            EnsureSelectedMember();
+            float width = 360f;
+            float height = 250f;
+            float x = Screen.width - width - 10f;
+            float y = Screen.height - height - 10f;
+            GUI.Box(new Rect(x, y, width, height), "Character");
+
+            float rowY = y + 30f;
+            DrawMemberSelector(x + 10f, ref rowY, width - 20f);
+
+            if (string.IsNullOrWhiteSpace(_selectedMemberId))
+            {
+                GUI.Label(new Rect(x + 10f, rowY, width - 20f, 20f), "No active party member selected.");
+                return;
+            }
+
+            CharacterStatSnapshot snapshot = PartyService.Instance.GetMemberSnapshot(_selectedMemberId);
+            if (snapshot == null)
+            {
+                GUI.Label(new Rect(x + 10f, rowY, width - 20f, 20f), "Character snapshot unavailable.");
+                return;
+            }
+
+            GUI.Label(new Rect(x + 10f, rowY, width - 20f, 20f), $"{snapshot.DisplayName} Lv{snapshot.Level}");
+            rowY += 22f;
+            GUI.Label(new Rect(x + 10f, rowY, width - 20f, 20f), $"HP {PartyService.Instance.GetCurrentHP(snapshot.CharacterId)}/{snapshot.Stats.MaxHP}  MP {PartyService.Instance.GetCurrentMP(snapshot.CharacterId)}/{snapshot.Stats.MaxMP}");
+            rowY += 22f;
+            GUI.Label(new Rect(x + 10f, rowY, width - 20f, 20f), $"ATK {snapshot.Stats.Attack}  MAG {snapshot.Stats.Magic}  DEF {snapshot.Stats.Defense}");
+            rowY += 20f;
+            GUI.Label(new Rect(x + 10f, rowY, width - 20f, 20f), $"RES {snapshot.Stats.Resistance}  SPD {snapshot.Stats.Speed}");
+            rowY += 20f;
+            string weaponName = snapshot.EquippedWeapon != null ? snapshot.EquippedWeapon.DisplayName : "No Weapon";
+            GUI.Label(new Rect(x + 10f, rowY, width - 20f, 20f), $"Weapon: {weaponName}");
+            rowY += 24f;
+            GUI.Label(new Rect(x + 10f, rowY, width - 20f, 20f), "Skills");
+            rowY += 18f;
+            for (int i = 0; i < snapshot.Skills.Count && rowY < y + height - 20f; i++)
+            {
+                SkillDefinition skill = snapshot.Skills[i];
+                if (skill == null)
+                {
+                    continue;
+                }
+
+                GUI.Label(new Rect(x + 20f, rowY, width - 30f, 18f), $"- {skill.DisplayName} ({skill.ResourceCost} MP)");
+                rowY += 18f;
             }
         }
 
@@ -371,6 +607,65 @@ namespace TPS.Runtime.UI
                     rowY += 36f;
                 }
             }
+        }
+
+        private void DrawSystemPanel()
+        {
+            float width = 280f;
+            float height = 210f;
+            float x = (Screen.width - width) * 0.5f;
+            float y = (Screen.height - height) * 0.5f;
+            GUI.Box(new Rect(x, y, width, height), "System");
+            GUI.Label(new Rect(x + 15f, y + 30f, width - 30f, 20f), $"Mode: {RuntimeUiInputState.CurrentMode}");
+            GUI.Label(new Rect(x + 15f, y + 50f, width - 30f, 20f), $"Scene: {SceneManager.GetActiveScene().name}");
+
+            if (GUI.Button(new Rect(x + 15f, y + 82f, width - 30f, 28f), "Save Game") && SaveLoadManager.Instance != null)
+            {
+                SaveLoadManager.Instance.SaveGame();
+                ShowMessage("Game saved.");
+            }
+
+            if (GUI.Button(new Rect(x + 15f, y + 116f, width - 30f, 28f), "Load Game") && SaveLoadManager.Instance != null)
+            {
+                SaveLoadManager.Instance.LoadGame();
+                ShowMessage("Game loaded.");
+            }
+
+            if (GUI.Button(new Rect(x + 15f, y + 150f, width - 30f, 28f), "Return To Gameplay"))
+            {
+                CloseAllPanels(restoreGameplayFocus: true);
+            }
+        }
+
+        private void DrawMemberSelector(float x, ref float rowY, float width)
+        {
+            if (PartyService.Instance == null)
+            {
+                return;
+            }
+
+            EnsureSelectedMember();
+            List<string> activeMembers = PartyService.Instance.GetActiveMemberIds();
+            if (activeMembers.Count == 0)
+            {
+                return;
+            }
+
+            GUI.Label(new Rect(x, rowY, width, 18f), $"Selected: {_selectedMemberId}");
+            rowY += 20f;
+
+            float buttonWidth = Mathf.Min(95f, width / Mathf.Max(1, activeMembers.Count));
+            for (int i = 0; i < activeMembers.Count; i++)
+            {
+                string memberId = activeMembers[i];
+                if (GUI.Button(new Rect(x + i * (buttonWidth + 6f), rowY, buttonWidth, 22f), $"{i + 1}:{memberId}"))
+                {
+                    _selectedMemberId = memberId;
+                    ShowMessage($"Selected {memberId}.");
+                }
+            }
+
+            rowY += 28f;
         }
 
         private void DrawMerchantPanel()
@@ -428,8 +723,8 @@ namespace TPS.Runtime.UI
                 return;
             }
 
-            List<string> activeMembers = PartyService.Instance.GetActiveMemberIds();
-            string targetMember = activeMembers.Count > 0 ? activeMembers[0] : null;
+            EnsureSelectedMember();
+            string targetMember = _selectedMemberId;
             if (targetMember == null)
             {
                 return;

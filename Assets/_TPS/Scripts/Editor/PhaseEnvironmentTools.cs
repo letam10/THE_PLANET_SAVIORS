@@ -240,11 +240,18 @@ namespace TPS.Editor
             BuildPrimitiveSlot(container, "PAD_Harbor", EnvironmentGeneratedCategory.Blockout, new Vector3(11f, 0.05f, 3f), new Vector3(13f, 0.2f, 10f), PrimitiveType.Cube, "Harbor work area placeholder pad.");
             BuildPrimitiveSlot(container, "PAD_Residential", EnvironmentGeneratedCategory.Blockout, new Vector3(-11f, 0.05f, 4f), new Vector3(11f, 0.2f, 9f), PrimitiveType.Cube, "Residential strip placeholder pad.");
             BuildPrimitiveSlot(container, "PAD_Frontier", EnvironmentGeneratedCategory.Blockout, new Vector3(0f, 0.05f, -7.5f), new Vector3(7f, 0.2f, 5f), PrimitiveType.Cube, "Encounter fringe pad near the gate.");
+            BuildPrimitiveSlot(container, "PAD_NorthMarket", EnvironmentGeneratedCategory.Blockout, new Vector3(0f, 0.05f, 12.5f), new Vector3(19f, 0.2f, 5.5f), PrimitiveType.Cube, "Northern market and civic frontage extension.");
+            BuildPrimitiveSlot(container, "PAD_WestHomes", EnvironmentGeneratedCategory.Blockout, new Vector3(-18f, 0.05f, 4f), new Vector3(10f, 0.2f, 16f), PrimitiveType.Cube, "Expanded west residential lane.");
+            BuildPrimitiveSlot(container, "PAD_EastDocks", EnvironmentGeneratedCategory.Blockout, new Vector3(20f, 0.05f, 3.5f), new Vector3(8f, 0.2f, 14f), PrimitiveType.Cube, "Expanded east harbor district.");
             BuildPrimitiveSlot(container, "PATH_MainAvenue", EnvironmentGeneratedCategory.Blockout, new Vector3(0f, 0.11f, -1.5f), new Vector3(4f, 0.12f, 17f), PrimitiveType.Cube, "Primary path from gate to square.");
             BuildPrimitiveSlot(container, "PATH_CrossStreet", EnvironmentGeneratedCategory.Blockout, new Vector3(0f, 0.11f, 5.5f), new Vector3(18f, 0.12f, 3.5f), PrimitiveType.Cube, "Cross street connecting tavern frontage, square, and harbor.");
             BuildPrimitiveSlot(container, "PATH_HarborApproach", EnvironmentGeneratedCategory.Blockout, new Vector3(8f, 0.11f, 3f), new Vector3(8f, 0.12f, 3f), PrimitiveType.Cube, "Harbor approach path.");
+            BuildPrimitiveSlot(container, "PATH_NorthArcade", EnvironmentGeneratedCategory.Blockout, new Vector3(0f, 0.11f, 10.5f), new Vector3(5f, 0.12f, 9f), PrimitiveType.Cube, "Northern civic arcade route.");
+            BuildPrimitiveSlot(container, "PATH_WestLane", EnvironmentGeneratedCategory.Blockout, new Vector3(-14.5f, 0.11f, 4f), new Vector3(3.5f, 0.12f, 15f), PrimitiveType.Cube, "West residential lane.");
+            BuildPrimitiveSlot(container, "PATH_EastPierRoad", EnvironmentGeneratedCategory.Blockout, new Vector3(16.5f, 0.11f, 3f), new Vector3(4f, 0.12f, 13f), PrimitiveType.Cube, "East dock road.");
             BuildPrimitiveSlot(container, "DOCK_MainPier", EnvironmentGeneratedCategory.Blockout, new Vector3(15f, 0.16f, 1.5f), new Vector3(4f, 0.25f, 9f), PrimitiveType.Cube, "Main pier placeholder.");
             BuildPrimitiveSlot(container, "DOCK_SidePier", EnvironmentGeneratedCategory.Blockout, new Vector3(17f, 0.16f, 6.5f), new Vector3(3f, 0.25f, 5f), PrimitiveType.Cube, "Side pier placeholder.");
+            BuildPrimitiveSlot(container, "DOCK_LongPier", EnvironmentGeneratedCategory.Blockout, new Vector3(21f, 0.16f, 2.5f), new Vector3(3.5f, 0.25f, 11f), PrimitiveType.Cube, "Outer long pier placeholder.");
         }
 
         private static void BuildBuildings(Transform container)
@@ -256,6 +263,13 @@ namespace TPS.Editor
             BuildHouseSlot(container, "BLD_MarketStall_Row_B", new Vector3(1f, 0f, 7.75f), new Vector3(2.2f, 2.1f, 1.8f), "Small market stall scaffold.");
             BuildHouseSlot(container, "BLD_HarborShed_A", new Vector3(12.5f, 0f, 7.5f), new Vector3(4f, 2.8f, 3f), "Harbor shed scaffold.");
             BuildHouseSlot(container, "BLD_HarborShed_B", new Vector3(15.5f, 0f, -1.5f), new Vector3(3.2f, 2.5f, 2.5f), "Dockside storage shed scaffold.");
+            BuildHouseSlot(container, "BLD_NorthArcade_A", new Vector3(-6f, 0f, 13.5f), new Vector3(3.2f, 3f, 2.8f), "North arcade frontage scaffold.");
+            BuildHouseSlot(container, "BLD_NorthArcade_B", new Vector3(-2.2f, 0f, 13.4f), new Vector3(3f, 2.8f, 2.6f), "North arcade frontage scaffold.");
+            BuildHouseSlot(container, "BLD_NorthArcade_C", new Vector3(1.8f, 0f, 13.2f), new Vector3(3f, 2.8f, 2.8f), "North arcade frontage scaffold.");
+            BuildHouseSlot(container, "BLD_EastDockHouse_A", new Vector3(19.5f, 0f, 9.8f), new Vector3(3.4f, 2.8f, 3f), "East dock worker housing scaffold.");
+            BuildHouseSlot(container, "BLD_EastDockHouse_B", new Vector3(21.5f, 0f, 6.2f), new Vector3(3f, 2.6f, 2.8f), "East dock worker housing scaffold.");
+            BuildHouseSlot(container, "BLD_WestLane_A", new Vector3(-20.5f, 0f, 9.5f), new Vector3(3.4f, 3f, 3.2f), "Expanded west lane housing.");
+            BuildHouseSlot(container, "BLD_WestLane_B", new Vector3(-21f, 0f, -1.2f), new Vector3(3.2f, 2.8f, 3f), "Expanded west lane housing.");
         }
 
         private static void BuildProps(Transform container, EnvironmentContext context)
@@ -271,6 +285,11 @@ namespace TPS.Editor
             BuildSign(container, "PRP_ShopSign", context.ShopPosition + new Vector3(-2.2f, 0.1f, 0f), "Shop frontage sign scaffold.");
             BuildLandmark(container, "PRP_HarborBeacon", new Vector3(19f, 0f, 3.5f), "Harbor landmark beacon for scene readability.");
             BuildLandmark(container, "PRP_GateBannerFrame", new Vector3(0f, 0f, -10.5f), "Encounter fringe landmark frame.");
+            BuildLamp(container, "PRP_NorthLamp_A", new Vector3(-4.5f, 0f, 12.8f), "North arcade readability lamp.");
+            BuildLamp(container, "PRP_NorthLamp_B", new Vector3(4.5f, 0f, 12.8f), "North arcade readability lamp.");
+            BuildCrateCluster(container, "PRP_MarketCrates_A", new Vector3(4.2f, 0f, 11.2f), 3, "Market clutter cluster.");
+            BuildFenceRun(container, "PRP_WestLaneFence", new Vector3(-17.5f, 0f, -3.2f), 6, 1.45f, Quaternion.identity, "West lane fence line.");
+            BuildLandmark(container, "PRP_NorthBellFrame", new Vector3(0f, 0f, 15.5f), "Town-top bell frame landmark.");
         }
 
         private static void BuildVegetation(Transform container, EnvironmentContext context)
@@ -279,7 +298,9 @@ namespace TPS.Editor
             Vector3[] treeSlots =
             {
                 new Vector3(-18f, 0f, 8.5f), new Vector3(-18f, 0f, 1.5f), new Vector3(-8.5f, 0f, 9f),
-                new Vector3(8.5f, 0f, 9.5f), new Vector3(19f, 0f, 7f), new Vector3(19f, 0f, -1f)
+                new Vector3(8.5f, 0f, 9.5f), new Vector3(19f, 0f, 7f), new Vector3(19f, 0f, -1f),
+                new Vector3(-22f, 0f, 11f), new Vector3(-22f, 0f, -2f), new Vector3(21f, 0f, 11.5f),
+                new Vector3(22f, 0f, -4f), new Vector3(0f, 0f, 18.5f)
             };
 
             for (int i = 0; i < treeSlots.Length; i++)
@@ -295,7 +316,9 @@ namespace TPS.Editor
                 new Vector3(-15f, 0f, 10.5f), new Vector3(-12f, 0f, 10f), new Vector3(-7f, 0f, 8.8f),
                 new Vector3(6.5f, 0f, 9.6f), new Vector3(11f, 0f, 9.2f), new Vector3(17f, 0f, 8.4f),
                 new Vector3(18.5f, 0f, 4.5f), new Vector3(18.2f, 0f, -2.5f), new Vector3(7f, 0f, -2f),
-                new Vector3(-8.5f, 0f, -1.5f), new Vector3(-16.5f, 0f, -2.2f), new Vector3(-13.2f, 0f, 6.2f)
+                new Vector3(-8.5f, 0f, -1.5f), new Vector3(-16.5f, 0f, -2.2f), new Vector3(-13.2f, 0f, 6.2f),
+                new Vector3(-22f, 0f, 7f), new Vector3(-22.4f, 0f, -0.8f), new Vector3(-2.5f, 0f, 15.2f),
+                new Vector3(6.5f, 0f, 14.6f), new Vector3(21.2f, 0f, 9.2f), new Vector3(22f, 0f, 1.2f)
             };
 
             int clutterIndex = 1;
@@ -321,6 +344,10 @@ namespace TPS.Editor
             BuildAmbientCreature(container, "AMB_Cat_Dock", new Vector3(9.2f, 0f, 1.5f), PrimitiveType.Sphere, "Ambient dock cat placeholder.");
             BuildAmbientCreature(container, "AMB_Bird_Post_A", new Vector3(18.2f, 1.6f, -2.2f), PrimitiveType.Sphere, "Ambient bird placeholder.");
             BuildAmbientCreature(container, "AMB_Bird_Post_B", new Vector3(19.4f, 1.7f, 5.6f), PrimitiveType.Sphere, "Ambient bird placeholder.");
+            BuildAmbientPair(container, "AMB_NorthMarket_A", new Vector3(1.5f, 0f, 12.1f), Quaternion.Euler(0f, 90f, 0f), "Ambient pair near the north market.");
+            BuildAmbientSolo(container, "AMB_WestLane_A", new Vector3(-19.4f, 0f, 6.2f), "Ambient resident along the west lane.");
+            BuildAmbientSolo(container, "AMB_DockWorker_A", new Vector3(20.6f, 0f, 8.6f), "Ambient dock worker placeholder.");
+            BuildAmbientCreature(container, "AMB_Dog_West", new Vector3(-15.2f, 0f, 2.1f), PrimitiveType.Sphere, "Ambient stray dog placeholder.");
         }
 
         private static void BuildDebug(Transform container, EnvironmentContext context)
@@ -630,7 +657,10 @@ namespace TPS.Editor
         {
             return Mathf.Abs(position.x) < 2.8f && position.z > -10f && position.z < 8.5f
                 || Mathf.Abs(position.z - 5.5f) < 2f && position.x > -10f && position.x < 10f
-                || Mathf.Abs(position.z - 3f) < 1.8f && position.x > 5f && position.x < 12.5f;
+                || Mathf.Abs(position.z - 3f) < 1.8f && position.x > 5f && position.x < 12.5f
+                || Mathf.Abs(position.z - 10.5f) < 2f && position.x > -10f && position.x < 10f
+                || Mathf.Abs(position.x + 14.5f) < 2f && position.z > -4f && position.z < 12f
+                || Mathf.Abs(position.x - 16.5f) < 2f && position.z > -3f && position.z < 12f;
         }
 
         private static void AddExclusion(EnvironmentContext context, GameObject target, float radius, string label)
