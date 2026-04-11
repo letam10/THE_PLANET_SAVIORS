@@ -24,7 +24,9 @@ namespace TPS.Runtime.UI
             Equipment = 4,
             System = 5,
             Shop = 6,
-            Help = 7
+            Help = 7,
+            Battle = 8,
+            BattleEnd = 9
         }
 
         public static RuntimeMenuCanvasController Instance { get; private set; }
@@ -95,6 +97,7 @@ namespace TPS.Runtime.UI
         {
             EnsureSelectedMember();
             EnsureEventSystem();
+            SyncBattlePanelState();
             SyncMerchantPanelState();
             HandleHotkeys();
             RefreshCurrentPanelIfNeeded();
@@ -208,6 +211,10 @@ namespace TPS.Runtime.UI
 
             EnsureEventSystem();
             RefreshHintText();
+            if (IsBattlePanelActive())
+            {
+                _hintText.text = "Battle mode: click actions and targets in the panel. Esc opens system. Tab returns to the battle panel.";
+            }
             RefreshVisibility();
         }
 
@@ -243,9 +250,23 @@ namespace TPS.Runtime.UI
                 return;
             }
 
+             BattleWorldBridge battleBridge = BattleWorldBridge.Instance;
+             bool battleActive = battleBridge != null && battleBridge.HasActiveEncounter;
+
             if (keyboard.tabKey.wasPressedThisFrame)
             {
-                if (_activePanel == PanelType.None)
+                if (battleActive)
+                {
+                    if (_activePanel == PanelType.System)
+                    {
+                        ClosePanels();
+                    }
+                    else
+                    {
+                        OpenPanel(PanelType.System);
+                    }
+                }
+                else if (_activePanel == PanelType.None)
                 {
                     OpenPanel(PanelType.System);
                 }
@@ -258,7 +279,7 @@ namespace TPS.Runtime.UI
 
             if (keyboard.escapeKey.wasPressedThisFrame)
             {
-                if (_activePanel != PanelType.None || GetActiveMerchant() != null)
+                if (_activePanel != PanelType.None || GetActiveMerchant() != null || battleActive)
                 {
                     ClosePanels();
                 }
@@ -266,6 +287,16 @@ namespace TPS.Runtime.UI
                 {
                     OpenPanel(PanelType.System);
                 }
+                return;
+            }
+
+            if (battleActive)
+            {
+                if (keyboard.hKey.wasPressedThisFrame)
+                {
+                    OpenPanel(PanelType.Help);
+                }
+
                 return;
             }
 
@@ -289,6 +320,11 @@ namespace TPS.Runtime.UI
 
         private void SyncMerchantPanelState()
         {
+            if (IsBattlePanelActive())
+            {
+                return;
+            }
+
             MerchantAnchor merchant = GetActiveMerchant();
             if (merchant != null && _activePanel != PanelType.Shop)
             {
@@ -299,6 +335,32 @@ namespace TPS.Runtime.UI
             if (merchant == null && _activePanel == PanelType.Shop)
             {
                 ClosePanels();
+            }
+        }
+
+        private void SyncBattlePanelState()
+        {
+            BattleWorldBridge bridge = BattleWorldBridge.Instance;
+            bool battleActive = bridge != null && bridge.HasActiveEncounter;
+            if (battleActive)
+            {
+                RuntimeUiInputState.SetUiFocused(true);
+                PanelType desired = bridge.IsBattleEnded ? PanelType.BattleEnd : PanelType.Battle;
+                if (_activePanel != desired && _activePanel != PanelType.System && _activePanel != PanelType.Help)
+                {
+                    _activePanel = desired;
+                    RebuildContent();
+                    RefreshVisibility();
+                }
+
+                return;
+            }
+
+            if (_activePanel == PanelType.Battle || _activePanel == PanelType.BattleEnd)
+            {
+                _activePanel = PanelType.None;
+                RuntimeUiInputState.RestoreGameplayFocus();
+                RefreshVisibility();
             }
         }
 
@@ -329,6 +391,15 @@ namespace TPS.Runtime.UI
 
         private void ClosePanels()
         {
+            BattleWorldBridge bridge = BattleWorldBridge.Instance;
+            if (bridge != null && bridge.HasActiveEncounter)
+            {
+                _activePanel = bridge.IsBattleEnded ? PanelType.BattleEnd : PanelType.Battle;
+                RuntimeUiInputState.SetUiFocused(true);
+                RefreshVisibility();
+                return;
+            }
+
             MerchantAnchor merchant = GetActiveMerchant();
             if (merchant != null && Phase1RuntimeHUD.Instance != null)
             {
@@ -355,6 +426,11 @@ namespace TPS.Runtime.UI
                 dimmer.gameObject.SetActive(visible);
             }
 
+            if (_buttonBar != null)
+            {
+                _buttonBar.gameObject.SetActive(!IsBattlePanelActive());
+            }
+
             RefreshHintText();
         }
 
@@ -367,6 +443,14 @@ namespace TPS.Runtime.UI
 
             ClearChildren(_contentColumn);
             _titleText.text = GetPanelTitle(_activePanel);
+            if (_activePanel == PanelType.Battle)
+            {
+                _titleText.text = "Battle";
+            }
+            else if (_activePanel == PanelType.BattleEnd)
+            {
+                _titleText.text = "Battle Summary";
+            }
             _contentScroll.normalizedPosition = Vector2.one;
             switch (_activePanel)
             {
@@ -390,6 +474,12 @@ namespace TPS.Runtime.UI
                     break;
                 case PanelType.Help:
                     BuildHelpPanel();
+                    break;
+                case PanelType.Battle:
+                    BuildBattlePanel();
+                    break;
+                case PanelType.BattleEnd:
+                    BuildBattleEndPanel();
                     break;
             }
         }
@@ -632,6 +722,91 @@ namespace TPS.Runtime.UI
             AddInfoLine(T("Use UI mode when trading, equipping, saving, or checking quests.", "Hãy dùng UI mode khi mua bán, trang bị, lưu hoặc xem nhiệm vụ."));
             AddInfoLine(T("If the weather changes, watch NPC shelter spots and the district readout.", "Khi thời tiết đổi, hãy nhìn NPC trú mưa và biến đổi ở từng khu."));
             AddInfoLine(T("Travel anchors should drop you on safe ground; if not, the spawn fallback will correct it.", "Travel anchor sẽ cố đặt bạn xuống mặt đất an toàn; nếu không, spawn fallback sẽ tự sửa."));
+        }
+
+        private void BuildBattlePanel()
+        {
+            BattleWorldBridge bridge = BattleWorldBridge.Instance;
+            if (bridge == null || !bridge.HasActiveEncounter)
+            {
+                AddInfoLine(T("Battle state unavailable.", "KhÃ´ng cÃ³ tráº¡ng thÃ¡i chiáº¿n Ä‘áº¥u."));
+                return;
+            }
+
+            AddInfoLine(bridge.EncounterTitle);
+            AddInfoLine(bridge.CurrentActorLabel);
+
+            AddHeader(T("Turn Order", "Thá»© tá»± lÆ°á»£t"));
+            foreach (string line in bridge.GetTurnOrderLabels())
+            {
+                AddInfoLine(line);
+            }
+
+            AddHeader(T("Party", "Äá»™i hÃ¬nh"));
+            foreach (string line in bridge.GetPartyStatusLines())
+            {
+                AddInfoLine(line);
+            }
+
+            AddHeader(T("Enemies", "Káº» Ä‘á»‹ch"));
+            foreach (string line in bridge.GetEnemyStatusLines())
+            {
+                AddInfoLine(line);
+            }
+
+            AddHeader(T("Targets", "Má»¥c tiÃªu"));
+            RectTransform enemyTargetRow = CreateRow(54f);
+            CreateText("EnemyTargetLabel", enemyTargetRow, $"{T("Enemy", "Äá»‹ch")}: {bridge.GetEnemyTargetLabel()}", 16, TextAnchor.MiddleLeft, FontStyle.Normal, false);
+            CreateActionButton(enemyTargetRow, "<", () => { bridge.CycleEnemyTarget(-1); RebuildContent(); }, 44f);
+            CreateActionButton(enemyTargetRow, ">", () => { bridge.CycleEnemyTarget(1); RebuildContent(); }, 44f);
+
+            RectTransform allyTargetRow = CreateRow(54f);
+            CreateText("AllyTargetLabel", allyTargetRow, $"{T("Ally", "Äá»“ng minh")}: {bridge.GetAllyTargetLabel()}", 16, TextAnchor.MiddleLeft, FontStyle.Normal, false);
+            CreateActionButton(allyTargetRow, "<", () => { bridge.CycleAllyTarget(-1); RebuildContent(); }, 44f);
+            CreateActionButton(allyTargetRow, ">", () => { bridge.CycleAllyTarget(1); RebuildContent(); }, 44f);
+
+            AddHeader(T("Actions", "HÃ nh Ä‘á»™ng"));
+            IReadOnlyList<BattleWorldBridge.BattleActionView> actions = bridge.GetAvailableActions();
+            for (int i = 0; i < actions.Count; i++)
+            {
+                BattleWorldBridge.BattleActionView action = actions[i];
+                RectTransform row = CreateRow(72f);
+                CreateText("BattleActionLabel", row, $"{action.Label}\n{action.Detail}", 16, TextAnchor.MiddleLeft, FontStyle.Normal, true, 56f);
+                Button button = CreateActionButton(row, action.CanUse ? T("Confirm", "XÃ¡c nháº­n") : T("Unavailable", "ChÆ°a dÃ¹ng Ä‘Æ°á»£c"), () =>
+                {
+                    bridge.ExecuteActionFromUi(action);
+                    RebuildContent();
+                }, 130f);
+                button.interactable = action.CanUse;
+            }
+
+            AddHeader(T("Battle Feed", "Nháº­t kÃ½ giao tranh"));
+            foreach (string line in bridge.GetCombatLogLines())
+            {
+                AddInfoLine(line);
+            }
+        }
+
+        private void BuildBattleEndPanel()
+        {
+            BattleWorldBridge bridge = BattleWorldBridge.Instance;
+            if (bridge == null)
+            {
+                AddInfoLine(T("Battle already closed.", "Tráº­n Ä‘áº¥u Ä‘Ã£ Ä‘Ã³ng."));
+                return;
+            }
+
+            AddHeader(bridge.ResultTitle);
+            AddInfoLine(bridge.RewardSummary);
+            AddInfoLine($"{T("Returning to", "Quay vá»")}: {bridge.ReturnSceneName}");
+            RectTransform row = CreateRow(62f);
+            CreateActionButton(row, T("Return To World", "Quay vá» tháº¿ giá»›i"), bridge.ReturnToWorldFromUi, 220f);
+
+            AddHeader(T("Battle Feed", "Nháº­t kÃ½ giao tranh"));
+            foreach (string line in bridge.GetCombatLogLines())
+            {
+                AddInfoLine(line);
+            }
         }
 
         private RectTransform CreateRow(float preferredHeight = 62f)
@@ -1096,6 +1271,11 @@ namespace TPS.Runtime.UI
             {
                 Destroy(root.GetChild(i).gameObject);
             }
+        }
+
+        private bool IsBattlePanelActive()
+        {
+            return _activePanel == PanelType.Battle || _activePanel == PanelType.BattleEnd;
         }
     }
 }

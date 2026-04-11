@@ -188,7 +188,7 @@ namespace TPS.Runtime.UI
         private void OnGUI()
         {
             bool inBattle = SceneLoader.Instance != null && SceneLoader.Instance.CurrentContentScene == "BTL_Standard";
-            bool menuVisible = RuntimeMenuCanvasController.Instance != null && RuntimeMenuCanvasController.Instance.IsMenuVisible && !inBattle;
+            bool menuVisible = RuntimeMenuCanvasController.Instance != null && (RuntimeMenuCanvasController.Instance.IsMenuVisible || inBattle);
 
             if (!menuVisible)
             {

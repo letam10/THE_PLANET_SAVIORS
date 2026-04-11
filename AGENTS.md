@@ -4,7 +4,6 @@
 - For any non-trivial task, start by producing a plan as a markdown table.
 - The plan must include: Goal, Files to change, Risks, Validation steps, Commit message.
 - After producing the plan, stop and wait for explicit user approval.
-- Do not edit files until the user replies exactly: APPROVE PLAN.
 - Always work on the current worktree branch, never on main.
 - Break work into small checkpoints.
 - A checkpoint should usually be one coherent step, roughly 1 to 5 related files or one completed subtask.

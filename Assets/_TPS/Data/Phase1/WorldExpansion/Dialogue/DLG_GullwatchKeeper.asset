@@ -14,20 +14,21 @@ MonoBehaviour:
   m_EditorClassIdentifier: TPS.Runtime::TPS.Runtime.Dialogue.DialogueDefinition
   _dialogueId: dialogue_gullwatch_keeper
   _variants:
-  - VariantId: cleared
+  - VariantId: completed
     SpeakerName: Mira of Gullwatch
-    Body: The harbor road is open again. Even the gulls are less frantic now.
+    Body: The beacon is lit, the surf path is safe, and the ferry hands are back
+      on schedule.
     Conditions:
       Mode: 0
       Conditions:
-      - Type: 5
+      - Type: 3
         StartHour: 0
         EndHour: 0
         StateKey: 
         ExpectedBool: 1
         ExpectedWeather: 0
-        QuestId: 
-        ExpectedQuestStatus: 0
+        QuestId: quest_secure_tide_route
+        ExpectedQuestStatus: 3
         DialogueFlagId: 
         EncounterId: enc_gullwatch_shoreline
         InventoryDefinitionId: 
@@ -39,12 +40,146 @@ MonoBehaviour:
       _sharedDefinition: {fileID: 0}
     OneShot: 0
     OneShotConsumptionId: 
-    Actions: []
+    Actions:
+    - ActionType: 1
+      FlagId: dialogue.gullwatch.completed
+      BoolValue: 1
+      OneShotId: 
+      Quest: {fileID: 0}
+      Character: {fileID: 0}
+      ZoneId: 
+      ZoneFactId: 
+      CurrencyAmount: 0
+      WeatherType: 0
     Choices: []
-  - VariantId: uncleared
+  - VariantId: turn_in
     SpeakerName: Mira of Gullwatch
-    Body: Crabs keep crawling out at low tide. Clear the shoreline and the village
-      can work in peace.
+    Body: You broke the matriarch's hold on the caverns. Take this, and watch the
+      shoreline flare back to life.
+    Conditions:
+      Mode: 0
+      Conditions:
+      - Type: 3
+        StartHour: 0
+        EndHour: 0
+        StateKey: 
+        ExpectedBool: 1
+        ExpectedWeather: 0
+        QuestId: quest_secure_tide_route
+        ExpectedQuestStatus: 2
+        DialogueFlagId: 
+        EncounterId: 
+        InventoryDefinitionId: 
+        MinimumCount: 0
+        PartyMemberId: 
+        ZoneId: 
+        ZoneFactId: 
+        MinimumCurrency: 0
+      _sharedDefinition: {fileID: 0}
+    OneShot: 0
+    OneShotConsumptionId: 
+    Actions:
+    - ActionType: 4
+      FlagId: 
+      BoolValue: 1
+      OneShotId: 
+      Quest: {fileID: 11400000, guid: e55ca7951882d234f877fc83e8c82127, type: 2}
+      Character: {fileID: 0}
+      ZoneId: 
+      ZoneFactId: 
+      CurrencyAmount: 0
+      WeatherType: 0
+    - ActionType: 6
+      FlagId: 
+      BoolValue: 1
+      OneShotId: 
+      Quest: {fileID: 0}
+      Character: {fileID: 0}
+      ZoneId: gullwatch
+      ZoneFactId: tide_route_secured
+      CurrencyAmount: 0
+      WeatherType: 0
+    Choices: []
+  - VariantId: active
+    SpeakerName: Mira of Gullwatch
+    Body: Follow the spray markers into Tide Caverns. The matriarch nests beyond
+      the second flooded chamber.
+    Conditions:
+      Mode: 0
+      Conditions:
+      - Type: 3
+        StartHour: 0
+        EndHour: 0
+        StateKey: 
+        ExpectedBool: 1
+        ExpectedWeather: 0
+        QuestId: quest_secure_tide_route
+        ExpectedQuestStatus: 1
+        DialogueFlagId: 
+        EncounterId: 
+        InventoryDefinitionId: 
+        MinimumCount: 0
+        PartyMemberId: 
+        ZoneId: 
+        ZoneFactId: 
+        MinimumCurrency: 0
+      _sharedDefinition: {fileID: 0}
+    OneShot: 0
+    OneShotConsumptionId: 
+    Actions:
+    - ActionType: 1
+      FlagId: dialogue.gullwatch.route_active
+      BoolValue: 1
+      OneShotId: 
+      Quest: {fileID: 0}
+      Character: {fileID: 0}
+      ZoneId: 
+      ZoneFactId: 
+      CurrencyAmount: 0
+      WeatherType: 0
+    Choices: []
+  - VariantId: start
+    SpeakerName: Mira of Gullwatch
+    Body: Quartermaster Ivo said you were coming. Clear Tide Caverns and we'll reopen
+      the full coastal route by dusk.
+    Conditions:
+      Mode: 0
+      Conditions:
+      - Type: 8
+        StartHour: 0
+        EndHour: 0
+        StateKey: 
+        ExpectedBool: 1
+        ExpectedWeather: 0
+        QuestId: 
+        ExpectedQuestStatus: 0
+        DialogueFlagId: 
+        EncounterId: 
+        InventoryDefinitionId: 
+        MinimumCount: 0
+        PartyMemberId: 
+        ZoneId: aster_harbor
+        ZoneFactId: dock_supplies_secured
+        MinimumCurrency: 0
+      _sharedDefinition: {fileID: 0}
+    OneShot: 0
+    OneShotConsumptionId: 
+    Actions:
+    - ActionType: 3
+      FlagId: 
+      BoolValue: 1
+      OneShotId: 
+      Quest: {fileID: 11400000, guid: e55ca7951882d234f877fc83e8c82127, type: 2}
+      Character: {fileID: 0}
+      ZoneId: 
+      ZoneFactId: 
+      CurrencyAmount: 0
+      WeatherType: 0
+    Choices: []
+  - VariantId: fallback
+    SpeakerName: Mira of Gullwatch
+    Body: The gulls are quieter, but we still watch the tide line. Handle the harbor
+      first, then we'll talk routes.
     Conditions:
       Mode: 0
       Conditions: []

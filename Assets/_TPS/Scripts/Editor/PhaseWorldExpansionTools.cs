@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using TPS.Runtime.Combat;
+using TPS.Runtime.Conditions;
 using TPS.Runtime.Dialogue;
 using TPS.Runtime.Spawn;
 using TPS.Runtime.World;
@@ -248,6 +249,7 @@ namespace TPS.Editor
 
                 EnsureRumorNpc(worldRoot.transform, "NPC_HarborWayfinder", new Vector3(-4f, 0f, 10.5f), assets.GullwatchDialogue, "consult");
                 BuildAsterHarborExpansionRoot(worldRoot.transform);
+                BuildAsterHarborGoldenPathFocus(worldRoot.transform);
 
                 EditorSceneManager.MarkSceneDirty(scene);
                 EditorSceneManager.SaveScene(scene);
@@ -357,6 +359,10 @@ namespace TPS.Editor
                 EnsureDialogueNpc(worldRoot.transform, $"NPC_{sceneName}_Guide", new Vector3(-3f, 0f, 2.5f), dialogue, "talk");
                 EnsureEncounterAnchor(worldRoot.transform, encounterAnchorName, encounterPosition, encounter, encounter.ZoneId, hideWhenCleared: true);
                 BuildSettlementGenerated(worldRoot.transform, districtName, districtDescription);
+                if (sceneName == "ZN_Settlement_Gullwatch")
+                {
+                    BuildGullwatchFocusedPass(worldRoot.transform);
+                }
                 EditorSceneManager.MarkSceneDirty(scene);
                 EditorSceneManager.SaveScene(scene);
             }
@@ -377,6 +383,10 @@ namespace TPS.Editor
                 EnsureEncounterAnchor(worldRoot.transform, patrolAnchorName, new Vector3(0f, 0.5f, -1.5f), patrolEncounter, patrolEncounter.ZoneId, hideWhenCleared: false);
                 EnsureEncounterAnchor(worldRoot.transform, bossAnchorName, new Vector3(0f, 0.5f, 9.5f), bossEncounter, bossEncounter.ZoneId, hideWhenCleared: true);
                 BuildDungeonGenerated(worldRoot.transform, districtName);
+                if (sceneName == "DG_TideCaverns")
+                {
+                    BuildTideCavernsFocusedPass(worldRoot.transform);
+                }
                 EditorSceneManager.MarkSceneDirty(scene);
                 EditorSceneManager.SaveScene(scene);
             }
@@ -588,6 +598,21 @@ namespace TPS.Editor
             BuildLandmarkCluster(travel.transform, "LMK_QuarryRuinsRoad", new Vector3(24f, 0f, -13f));
         }
 
+        private static void BuildAsterHarborGoldenPathFocus(Transform worldRoot)
+        {
+            GameObject root = EnsureManagedNode(worldRoot, "ENV_GoldenPathFocus", "aster_harbor_focus");
+            GameObject pathProps = EnsureManagedNode(root.transform, "ENV_PathProps", "aster_harbor_focus");
+            GameObject landmarks = EnsureManagedNode(root.transform, "ENV_Landmarks", "aster_harbor_focus");
+            GameObject ambient = EnsureManagedNode(root.transform, "ENV_Ambient", "aster_harbor_focus");
+
+            BuildCrateLine(pathProps.transform, "PRP_DockLaneMarkers", new Vector3(5f, 0f, 2.5f), 5, 0.95f);
+            BuildFenceLine(pathProps.transform, "PRP_GullwatchRoutePosts", new Vector3(-20f, 0f, 13f), 5, 1.35f);
+            BuildLandmarkCluster(landmarks.transform, "LMK_DockObjectiveBoard", new Vector3(6.5f, 0f, 3f));
+            BuildLandmarkCluster(landmarks.transform, "LMK_GullwatchGuide", new Vector3(-22f, 0f, 14f));
+            BuildAmbientSolo(ambient.transform, "AMB_PathRunner", new Vector3(4.2f, 0f, 3.8f));
+            BuildAmbientCreature(ambient.transform, "AMB_GullwatchBirds", new Vector3(-18.2f, 1.9f, 13.4f));
+        }
+
         private static void BuildSettlementGenerated(Transform worldRoot, string districtName, string description)
         {
             GameObject root = EnsureManagedNode(worldRoot, "ENV_Generated", districtName.ToLowerInvariant());
@@ -617,6 +642,39 @@ namespace TPS.Editor
             BuildAmbientCreature(ambient.transform, "AMB_Bird", new Vector3(2f, 1.6f, 8.4f));
         }
 
+        private static void BuildGullwatchFocusedPass(Transform worldRoot)
+        {
+            GameObject root = EnsureManagedNode(worldRoot, "ENV_GullwatchFocus", "gullwatch_focus");
+            GameObject props = EnsureManagedNode(root.transform, "ENV_Props", "gullwatch_focus");
+            GameObject ambient = EnsureManagedNode(root.transform, "ENV_Ambient", "gullwatch_focus");
+            GameObject interiors = EnsureManagedNode(root.transform, "ENV_Interiors", "gullwatch_focus");
+            GameObject consequence = EnsureManagedNode(root.transform, "ENV_Consequence", "gullwatch_focus");
+
+            BuildLandmarkCluster(props.transform, "LMK_ShoreBeaconFrame", new Vector3(9.2f, 0f, 9.8f));
+            BuildFenceLine(props.transform, "PRP_ShoreWalkPosts", new Vector3(6.2f, 0f, 6.8f), 6, 1.2f);
+            BuildCrateLine(props.transform, "PRP_FishingGear", new Vector3(-4.2f, 0f, 5.5f), 4, 0.95f);
+            BuildAmbientPair(ambient.transform, "AMB_FisherFamily", new Vector3(1.6f, 0f, 5.2f));
+            BuildAmbientSolo(ambient.transform, "AMB_WatchMira", new Vector3(8.1f, 0f, 7.6f));
+            BuildAmbientCreature(ambient.transform, "AMB_ShoreBirds", new Vector3(5.2f, 1.8f, 10.2f));
+
+            BuildFocusedInteriorRoom(interiors.transform, "INT_GullwatchBeaconHouse", new Vector3(28f, 0f, 14f), new Vector3(8f, 3.2f, 8f), new Vector3(5.8f, 0f, 7f));
+
+            GameObject activeBeacon = EnsureManagedNode(consequence.transform, "PRP_BeaconLit", "gullwatch_focus");
+            activeBeacon.transform.localPosition = new Vector3(9.2f, 0f, 9.8f);
+            ClearManagedChildren(activeBeacon.transform, GetGenerationId(consequence.transform));
+            CreatePrimitiveVisual(activeBeacon.transform, "GEN_Base", PrimitiveType.Cube, new Vector3(0f, 0.6f, 0f), new Vector3(1.2f, 1.2f, 1.2f), GetGenerationId(consequence.transform), "Lit beacon base.");
+            CreatePrimitiveVisual(activeBeacon.transform, "GEN_Spire", PrimitiveType.Cylinder, new Vector3(0f, 2.5f, 0f), new Vector3(0.28f, 2.1f, 0.28f), GetGenerationId(consequence.transform), "Lit beacon spire.");
+            CreatePrimitiveVisual(activeBeacon.transform, "GEN_Flame", PrimitiveType.Sphere, new Vector3(0f, 4.9f, 0f), new Vector3(0.7f, 0.7f, 0.7f), GetGenerationId(consequence.transform), "Beacon flame placeholder.");
+            EnsureConditionalActivator(activeBeacon, "gullwatch", "tide_route_secured", true, false);
+
+            GameObject dormantBeacon = EnsureManagedNode(consequence.transform, "PRP_BeaconDormant", "gullwatch_focus");
+            dormantBeacon.transform.localPosition = new Vector3(9.2f, 0f, 9.8f);
+            ClearManagedChildren(dormantBeacon.transform, GetGenerationId(consequence.transform));
+            CreatePrimitiveVisual(dormantBeacon.transform, "GEN_Base", PrimitiveType.Cube, new Vector3(0f, 0.5f, 0f), new Vector3(1.1f, 1f, 1.1f), GetGenerationId(consequence.transform), "Dormant beacon base.");
+            CreatePrimitiveVisual(dormantBeacon.transform, "GEN_Spire", PrimitiveType.Cylinder, new Vector3(0f, 2.3f, 0f), new Vector3(0.24f, 2f, 0.24f), GetGenerationId(consequence.transform), "Dormant beacon spire.");
+            EnsureConditionalActivator(dormantBeacon, "gullwatch", "tide_route_secured", true, true);
+        }
+
         private static void BuildDungeonGenerated(Transform worldRoot, string districtName)
         {
             GameObject root = EnsureManagedNode(worldRoot, "ENV_Generated", districtName.ToLowerInvariant());
@@ -644,6 +702,21 @@ namespace TPS.Editor
             BuildFenceLine(props.transform, "PRP_BossSpikes_Left", new Vector3(-4f, 0f, 11.8f), 4, 1.1f);
             BuildFenceLine(props.transform, "PRP_BossSpikes_Right", new Vector3(0.5f, 0f, 11.8f), 4, 1.1f);
             BuildPrimitiveSlot(debug.transform, "DBG_RoomMarker", PrimitiveType.Cylinder, new Vector3(0f, 1.4f, 9f), new Vector3(0.4f, 2.8f, 0.4f), "Boss room readability marker.");
+        }
+
+        private static void BuildTideCavernsFocusedPass(Transform worldRoot)
+        {
+            GameObject root = EnsureManagedNode(worldRoot, "ENV_TideFocus", "tide_caverns_focus");
+            GameObject leadIn = EnsureManagedNode(root.transform, "ENV_LeadIn", "tide_caverns_focus");
+            GameObject props = EnsureManagedNode(root.transform, "ENV_Props", "tide_caverns_focus");
+            GameObject ambient = EnsureManagedNode(root.transform, "ENV_Ambient", "tide_caverns_focus");
+
+            BuildLandmarkCluster(leadIn.transform, "LMK_TideGate", new Vector3(0f, 0f, -10.8f));
+            BuildFenceLine(leadIn.transform, "PRP_TideMarkers", new Vector3(-3.4f, 0f, -7.4f), 6, 1.25f);
+            BuildCrateLine(props.transform, "PRP_WetDebris", new Vector3(-4.5f, 0f, -2.4f), 5, 0.95f);
+            BuildLandmarkCluster(props.transform, "LMK_MatriarchNest", new Vector3(0f, 0f, 12.2f));
+            BuildAmbientCreature(ambient.transform, "AMB_TideDriftA", new Vector3(-2.5f, 0.2f, -5.2f));
+            BuildAmbientCreature(ambient.transform, "AMB_TideDriftB", new Vector3(2.8f, 0.2f, 4.4f));
         }
 
         private static void BuildBattleBlockout(Transform container)
@@ -753,6 +826,128 @@ namespace TPS.Editor
             slot.transform.localPosition = position;
             ClearManagedChildren(slot.transform, GetGenerationId(parent));
             CreatePrimitiveVisual(slot.transform, "GEN_Creature", PrimitiveType.Sphere, Vector3.zero, new Vector3(0.45f, 0.3f, 0.45f), GetGenerationId(parent), "Ambient creature");
+        }
+
+        private static void BuildFocusedInteriorRoom(Transform container, string name, Vector3 interiorPosition, Vector3 roomSize, Vector3 exteriorDoorPosition)
+        {
+            GameObject slot = EnsureManagedNode(container, name, GetGenerationId(container));
+            slot.transform.localPosition = interiorPosition;
+            slot.transform.localRotation = Quaternion.identity;
+            slot.transform.localScale = Vector3.one;
+
+            if (HasManualChildren(slot, GetGenerationId(container)))
+            {
+                return;
+            }
+
+            ClearManagedChildren(slot.transform, GetGenerationId(container));
+            CreatePrimitiveVisual(slot.transform, "GEN_Floor", PrimitiveType.Cube, new Vector3(0f, 0.05f, 0f), new Vector3(roomSize.x, 0.1f, roomSize.z), GetGenerationId(container), "Settlement interior floor.");
+            CreatePrimitiveVisual(slot.transform, "GEN_Ceiling", PrimitiveType.Cube, new Vector3(0f, roomSize.y, 0f), new Vector3(roomSize.x, 0.1f, roomSize.z), GetGenerationId(container), "Settlement interior ceiling.");
+            CreatePrimitiveVisual(slot.transform, "GEN_Wall_North", PrimitiveType.Cube, new Vector3(0f, roomSize.y * 0.5f, roomSize.z * 0.5f), new Vector3(roomSize.x, roomSize.y, 0.2f), GetGenerationId(container), "Settlement interior wall.");
+            CreatePrimitiveVisual(slot.transform, "GEN_Wall_South_Left", PrimitiveType.Cube, new Vector3(-roomSize.x * 0.28f, roomSize.y * 0.5f, -roomSize.z * 0.5f), new Vector3(roomSize.x * 0.44f, roomSize.y, 0.2f), GetGenerationId(container), "Settlement interior wall.");
+            CreatePrimitiveVisual(slot.transform, "GEN_Wall_South_Right", PrimitiveType.Cube, new Vector3(roomSize.x * 0.28f, roomSize.y * 0.5f, -roomSize.z * 0.5f), new Vector3(roomSize.x * 0.44f, roomSize.y, 0.2f), GetGenerationId(container), "Settlement interior wall.");
+            CreatePrimitiveVisual(slot.transform, "GEN_Wall_West", PrimitiveType.Cube, new Vector3(-roomSize.x * 0.5f, roomSize.y * 0.5f, 0f), new Vector3(0.2f, roomSize.y, roomSize.z), GetGenerationId(container), "Settlement interior wall.");
+            CreatePrimitiveVisual(slot.transform, "GEN_Wall_East", PrimitiveType.Cube, new Vector3(roomSize.x * 0.5f, roomSize.y * 0.5f, 0f), new Vector3(0.2f, roomSize.y, roomSize.z), GetGenerationId(container), "Settlement interior wall.");
+            CreatePrimitiveVisual(slot.transform, "GEN_Table", PrimitiveType.Cube, new Vector3(0f, 0.62f, 1.2f), new Vector3(2.1f, 0.2f, 1.1f), GetGenerationId(container), "Settlement table.");
+            CreatePrimitiveVisual(slot.transform, "GEN_Bunk", PrimitiveType.Cube, new Vector3(-2f, 0.4f, -1.1f), new Vector3(1.8f, 0.45f, 1f), GetGenerationId(container), "Settlement bunk.");
+            CreatePrimitiveVisual(slot.transform, "GEN_Crates", PrimitiveType.Cube, new Vector3(2.1f, 0.4f, -1.2f), new Vector3(0.9f, 0.8f, 0.9f), GetGenerationId(container), "Settlement cargo.");
+
+            Transform interiorEntry = EnsureMarker(slot.transform, "MK_InteriorEntry", new Vector3(0f, 0.15f, -roomSize.z * 0.33f), Quaternion.identity);
+            Transform interiorExit = EnsureMarker(slot.transform, "MK_InteriorExit", new Vector3(0f, 0.15f, -roomSize.z * 0.45f), Quaternion.identity);
+            Transform exteriorMarker = EnsureMarker(container.parent, $"{name}_ExteriorReturn", exteriorDoorPosition, Quaternion.Euler(0f, 180f, 0f));
+
+            EnsureDoor(container.parent, $"{name}_ExteriorDoor", exteriorDoorPosition, interiorEntry, true);
+            EnsureDoor(slot.transform, "Door_Exit", interiorExit.localPosition, exteriorMarker, false);
+        }
+
+        private static Transform EnsureMarker(Transform parent, string name, Vector3 localPosition, Quaternion localRotation)
+        {
+            GameObject marker = FindImmediateChild(parent, name);
+            if (marker == null)
+            {
+                marker = new GameObject(name);
+                marker.transform.SetParent(parent, false);
+            }
+
+            marker.transform.localPosition = localPosition;
+            marker.transform.localRotation = localRotation;
+            marker.transform.localScale = Vector3.one;
+            return marker.transform;
+        }
+
+        private static void EnsureDoor(Transform parent, string name, Vector3 localPosition, Transform targetMarker, bool outwardFacing)
+        {
+            GameObject doorRoot = FindImmediateChild(parent, name);
+            if (doorRoot == null)
+            {
+                doorRoot = new GameObject(name);
+                doorRoot.transform.SetParent(parent, false);
+            }
+
+            doorRoot.transform.localPosition = localPosition;
+            doorRoot.transform.localRotation = outwardFacing ? Quaternion.identity : Quaternion.Euler(0f, 180f, 0f);
+            doorRoot.transform.localScale = Vector3.one;
+
+            BoxCollider collider = doorRoot.GetComponent<BoxCollider>();
+            if (collider == null)
+            {
+                collider = doorRoot.AddComponent<BoxCollider>();
+            }
+
+            collider.isTrigger = true;
+            collider.size = new Vector3(1.6f, 2.2f, 0.8f);
+            collider.center = new Vector3(0f, 1.1f, 0f);
+
+            InteriorTravelDoor travelDoor = doorRoot.GetComponent<InteriorTravelDoor>();
+            if (travelDoor == null)
+            {
+                travelDoor = doorRoot.AddComponent<InteriorTravelDoor>();
+            }
+
+            GameObject leaf = FindImmediateChild(doorRoot.transform, "GEN_DoorLeaf");
+            if (leaf == null)
+            {
+                leaf = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                leaf.name = "GEN_DoorLeaf";
+                leaf.transform.SetParent(doorRoot.transform, false);
+            }
+
+            leaf.transform.localPosition = new Vector3(0f, 0.95f, 0f);
+            leaf.transform.localScale = new Vector3(1f, 1.9f, 0.16f);
+            PlaceholderScaffoldStyleUtility.ApplyStyle(leaf, EnvironmentGeneratedCategory.Building, "GEN_Door", "Simple settlement door scaffold.");
+
+            SerializedObject so = new SerializedObject(travelDoor);
+            so.FindProperty("_doorId").stringValue = name.ToLowerInvariant();
+            so.FindProperty("_interactionLabel").stringValue = outwardFacing ? "enter" : "leave";
+            so.FindProperty("_targetMarker").objectReferenceValue = targetMarker;
+            so.FindProperty("_doorLeaf").objectReferenceValue = leaf.transform;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(travelDoor);
+        }
+
+        private static void EnsureConditionalActivator(GameObject target, string zoneId, string zoneFactId, bool expectedValue, bool invertResult)
+        {
+            ConditionalActivator activator = target.GetComponent<ConditionalActivator>();
+            if (activator == null)
+            {
+                activator = target.AddComponent<ConditionalActivator>();
+            }
+
+            SerializedObject so = new SerializedObject(activator);
+            SerializedProperty resolver = so.FindProperty("_resolver");
+            resolver.FindPropertyRelative("Mode").enumValueIndex = (int)ConditionGroupMode.All;
+            SerializedProperty conditions = resolver.FindPropertyRelative("Conditions");
+            conditions.arraySize = 1;
+            SerializedProperty condition = conditions.GetArrayElementAtIndex(0);
+            condition.FindPropertyRelative("Type").enumValueIndex = (int)ConditionType.ZoneFactBoolEquals;
+            condition.FindPropertyRelative("ZoneId").stringValue = zoneId;
+            condition.FindPropertyRelative("ZoneFactId").stringValue = zoneFactId;
+            condition.FindPropertyRelative("ExpectedBool").boolValue = expectedValue;
+            so.FindProperty("_targetMode").enumValueIndex = (int)ActivatorTargetMode.GameObjectSetActive;
+            so.FindProperty("_targetGameObject").objectReferenceValue = target;
+            so.FindProperty("_invertResult").boolValue = invertResult;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(activator);
         }
 
         private static void BuildPrimitiveSlot(Transform parent, string name, PrimitiveType primitiveType, Vector3 position, Vector3 scale, string notes)
