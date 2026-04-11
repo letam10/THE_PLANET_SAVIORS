@@ -33,8 +33,6 @@ namespace TPS.Runtime.Combat
             public int Speed => Stats != null ? Stats.Speed : 0;
         }
 
-        [SerializeField] private string _battleSceneName = "BTL_Standard";
-
         private readonly List<BattleUnitState> _partyUnits = new List<BattleUnitState>();
         private readonly List<BattleUnitState> _enemyUnits = new List<BattleUnitState>();
         private readonly List<BattleUnitState> _turnOrder = new List<BattleUnitState>();
@@ -657,13 +655,16 @@ namespace TPS.Runtime.Combat
                 yield break;
             }
 
-            yield return SceneLoader.Instance.LoadContentSceneAsync(_context.ReturnSceneName);
-            yield return null;
-
             if (PlayerSpawnSystem.Instance != null)
             {
-                PlayerSpawnSystem.Instance.TeleportPlayerExact(_context.ReturnPosition, _context.ReturnRotation);
+                PlayerSpawnSystem.Instance.SetPendingSpawnTransform(
+                    _context.ReturnPosition,
+                    _context.ReturnRotation,
+                    _context.ReturnSpawnId);
             }
+
+            yield return SceneLoader.Instance.LoadContentSceneAsync(_context.ReturnSceneName);
+            yield return null;
 
             ToggleWorldControls(true);
             if (EncounterService.Instance != null)

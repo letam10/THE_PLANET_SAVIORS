@@ -12,6 +12,7 @@ namespace TPS.Runtime.World
         {
             public EncounterDefinition EncounterDefinition;
             public string ReturnSceneName;
+            public string ReturnSpawnId;
             public Vector3 ReturnPosition;
             public Quaternion ReturnRotation;
             public string ZoneId;
@@ -123,7 +124,7 @@ namespace TPS.Runtime.World
             return null;
         }
 
-        public void BeginEncounter(EncounterDefinition encounterDefinition, string returnSceneName, Vector3 returnPosition, Quaternion returnRotation)
+        public void BeginEncounter(EncounterDefinition encounterDefinition, string returnSceneName, string returnSpawnId, Vector3 returnPosition, Quaternion returnRotation)
         {
             if (encounterDefinition == null)
             {
@@ -134,6 +135,7 @@ namespace TPS.Runtime.World
             {
                 EncounterDefinition = encounterDefinition,
                 ReturnSceneName = returnSceneName,
+                ReturnSpawnId = returnSpawnId,
                 ReturnPosition = returnPosition,
                 ReturnRotation = returnRotation,
                 ZoneId = encounterDefinition.ZoneId

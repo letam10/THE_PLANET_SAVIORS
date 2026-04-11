@@ -18,6 +18,7 @@ namespace TPS.Editor
         private const string PropsContainerName = "ENV_Props";
         private const string VegetationContainerName = "ENV_Vegetation";
         private const string AmbientContainerName = "ENV_Ambient";
+        private const string InteriorsContainerName = "ENV_Interiors";
         private const string DebugContainerName = "ENV_Debug";
 
         private readonly struct ExclusionZone
@@ -97,6 +98,7 @@ namespace TPS.Editor
             GameObject props = EnsureManagedNode(generatedRoot.transform, PropsContainerName, EnvironmentGeneratedCategory.Prop, "Replace-safe prop group slots.");
             GameObject vegetation = EnsureManagedNode(generatedRoot.transform, VegetationContainerName, EnvironmentGeneratedCategory.Vegetation, "Replace-safe vegetation and clutter slots.");
             GameObject ambient = EnsureManagedNode(generatedRoot.transform, AmbientContainerName, EnvironmentGeneratedCategory.Ambient, "Replace-safe ambient crowd and creature slots.");
+            GameObject interiors = EnsureManagedNode(generatedRoot.transform, InteriorsContainerName, EnvironmentGeneratedCategory.Building, "Replace-safe enterable placeholder interiors.");
             GameObject debug = EnsureManagedNode(generatedRoot.transform, DebugContainerName, EnvironmentGeneratedCategory.Debug, "Environment debug and district labels.");
 
             BuildBlockout(blockout.transform);
@@ -112,6 +114,7 @@ namespace TPS.Editor
                 BuildAmbient(ambient.transform);
             }
 
+            BuildInteriors(interiors.transform, context);
             BuildDebug(debug.transform, context);
         }
 
@@ -150,6 +153,7 @@ namespace TPS.Editor
             ValidateManagedContainer(generatedRoot, PropsContainerName, result);
             ValidateManagedContainer(generatedRoot, VegetationContainerName, result);
             ValidateManagedContainer(generatedRoot, AmbientContainerName, result);
+            ValidateManagedContainer(generatedRoot, InteriorsContainerName, result);
             ValidateManagedContainer(generatedRoot, DebugContainerName, result);
 
             EnvironmentContext context = BuildContext(scene, worldRoot);
@@ -350,6 +354,17 @@ namespace TPS.Editor
             BuildAmbientCreature(container, "AMB_Dog_West", new Vector3(-15.2f, 0f, 2.1f), PrimitiveType.Sphere, "Ambient stray dog placeholder.");
         }
 
+        private static void BuildInteriors(Transform container, EnvironmentContext context)
+        {
+            Vector3 shopExterior = context.ShopPosition + new Vector3(-0.4f, 0f, 1.8f);
+            Vector3 tavernExterior = context.TavernPosition + new Vector3(0.3f, 0f, 1.9f);
+            Vector3 houseExterior = new Vector3(-13f, 0f, 2.6f);
+
+            BuildInteriorRoom(container, "INT_Shop", new Vector3(44f, 0f, 22f), new Vector3(8f, 3.2f, 8f), "Simple shop placeholder interior.", shopExterior);
+            BuildInteriorRoom(container, "INT_Tavern", new Vector3(44f, 0f, 38f), new Vector3(10f, 3.4f, 10f), "Simple tavern placeholder interior.", tavernExterior);
+            BuildInteriorRoom(container, "INT_WestHouse", new Vector3(58f, 0f, 22f), new Vector3(7f, 3f, 7f), "Simple house placeholder interior.", houseExterior);
+        }
+
         private static void BuildDebug(Transform container, EnvironmentContext context)
         {
             BuildPrimitiveSlot(container, "DBG_SquareLandmark", EnvironmentGeneratedCategory.Debug, context.SquareCenter + new Vector3(0f, 1.8f, 0f), new Vector3(0.35f, 3.5f, 0.35f), PrimitiveType.Cylinder, "Scene readability landmark for the square.");
@@ -369,6 +384,100 @@ namespace TPS.Editor
             CreatePrimitiveVisual(slot.transform, "GEN_Body", PrimitiveType.Cube, new Vector3(0f, size.y * 0.5f, 0f), size, EnvironmentGeneratedCategory.Building, notes);
             CreatePrimitiveVisual(slot.transform, "GEN_Roof", PrimitiveType.Cube, new Vector3(0f, size.y + 0.35f, 0f), new Vector3(size.x + 0.4f, 0.35f, size.z + 0.6f), EnvironmentGeneratedCategory.Building, "Roof placeholder.");
             CreatePrimitiveVisual(slot.transform, "GEN_Door", PrimitiveType.Cube, new Vector3(0f, 0.9f, size.z * 0.5f + 0.05f), new Vector3(0.8f, 1.8f, 0.2f), EnvironmentGeneratedCategory.Building, "Door readout marker.");
+        }
+
+        private static void BuildInteriorRoom(Transform container, string name, Vector3 position, Vector3 roomSize, string notes, Vector3 exteriorDoorPosition)
+        {
+            GameObject slot = EnsureSlot(container, name, EnvironmentGeneratedCategory.Building, position, notes);
+            GameObject visuals = EnsureManagedNode(slot.transform, "GEN_InteriorVisuals", EnvironmentGeneratedCategory.Building, "Managed interior visuals.");
+            visuals.transform.localPosition = Vector3.zero;
+            visuals.transform.localRotation = Quaternion.identity;
+            visuals.transform.localScale = Vector3.one;
+            ClearManagedChildren(visuals.transform);
+
+            CreatePrimitiveVisual(visuals.transform, "GEN_Floor", PrimitiveType.Cube, new Vector3(0f, 0.05f, 0f), new Vector3(roomSize.x, 0.1f, roomSize.z), EnvironmentGeneratedCategory.Blockout, "Interior floor.");
+            CreatePrimitiveVisual(visuals.transform, "GEN_Ceiling", PrimitiveType.Cube, new Vector3(0f, roomSize.y, 0f), new Vector3(roomSize.x, 0.12f, roomSize.z), EnvironmentGeneratedCategory.Building, "Interior ceiling.");
+            CreatePrimitiveVisual(visuals.transform, "GEN_Wall_North", PrimitiveType.Cube, new Vector3(0f, roomSize.y * 0.5f, roomSize.z * 0.5f), new Vector3(roomSize.x, roomSize.y, 0.2f), EnvironmentGeneratedCategory.Building, "Interior north wall.");
+            CreatePrimitiveVisual(visuals.transform, "GEN_Wall_South_Left", PrimitiveType.Cube, new Vector3(-roomSize.x * 0.28f, roomSize.y * 0.5f, -roomSize.z * 0.5f), new Vector3(roomSize.x * 0.44f, roomSize.y, 0.2f), EnvironmentGeneratedCategory.Building, "Interior south wall.");
+            CreatePrimitiveVisual(visuals.transform, "GEN_Wall_South_Right", PrimitiveType.Cube, new Vector3(roomSize.x * 0.28f, roomSize.y * 0.5f, -roomSize.z * 0.5f), new Vector3(roomSize.x * 0.44f, roomSize.y, 0.2f), EnvironmentGeneratedCategory.Building, "Interior south wall.");
+            CreatePrimitiveVisual(visuals.transform, "GEN_Wall_West", PrimitiveType.Cube, new Vector3(-roomSize.x * 0.5f, roomSize.y * 0.5f, 0f), new Vector3(0.2f, roomSize.y, roomSize.z), EnvironmentGeneratedCategory.Building, "Interior west wall.");
+            CreatePrimitiveVisual(visuals.transform, "GEN_Wall_East", PrimitiveType.Cube, new Vector3(roomSize.x * 0.5f, roomSize.y * 0.5f, 0f), new Vector3(0.2f, roomSize.y, roomSize.z), EnvironmentGeneratedCategory.Building, "Interior east wall.");
+            CreatePrimitiveVisual(visuals.transform, "GEN_Table", PrimitiveType.Cube, new Vector3(0f, 0.65f, 1.2f), new Vector3(2.2f, 0.22f, 1.2f), EnvironmentGeneratedCategory.Prop, "Interior table placeholder.");
+            CreatePrimitiveVisual(visuals.transform, "GEN_CrateA", PrimitiveType.Cube, new Vector3(-2.2f, 0.4f, 1.9f), new Vector3(0.8f, 0.8f, 0.8f), EnvironmentGeneratedCategory.Prop, "Interior crate placeholder.");
+            CreatePrimitiveVisual(visuals.transform, "GEN_CrateB", PrimitiveType.Cube, new Vector3(2.2f, 0.4f, 1.9f), new Vector3(0.8f, 0.8f, 0.8f), EnvironmentGeneratedCategory.Prop, "Interior crate placeholder.");
+            CreatePrimitiveVisual(visuals.transform, "GEN_BedBench", PrimitiveType.Cube, new Vector3(0f, 0.45f, -1.5f), new Vector3(2.2f, 0.45f, 1.1f), EnvironmentGeneratedCategory.Prop, "Interior bench or bed placeholder.");
+
+            Transform interiorEntry = EnsureMarker(slot.transform, "MK_InteriorEntry", new Vector3(0f, 0.15f, -roomSize.z * 0.33f), Quaternion.identity);
+            Transform interiorExit = EnsureMarker(slot.transform, "MK_InteriorExit", new Vector3(0f, 0.15f, -roomSize.z * 0.45f), Quaternion.identity);
+            Transform exteriorMarker = EnsureMarker(container.parent, $"{name}_ExteriorReturn", exteriorDoorPosition, Quaternion.Euler(0f, 180f, 0f));
+
+            EnsureDoor(container.parent, $"{name}_ExteriorDoor", exteriorDoorPosition, interiorEntry, true);
+            EnsureDoor(slot.transform, "Door_Exit", interiorExit.localPosition, exteriorMarker, false);
+        }
+
+        private static Transform EnsureMarker(Transform parent, string name, Vector3 localPosition, Quaternion localRotation)
+        {
+            GameObject marker = FindImmediateChild(parent, name);
+            if (marker == null)
+            {
+                marker = new GameObject(name);
+                marker.transform.SetParent(parent, false);
+            }
+
+            marker.transform.localPosition = localPosition;
+            marker.transform.localRotation = localRotation;
+            marker.transform.localScale = Vector3.one;
+            return marker.transform;
+        }
+
+        private static void EnsureDoor(Transform parent, string name, Vector3 localPosition, Transform targetMarker, bool outwardFacing)
+        {
+            GameObject doorRoot = FindImmediateChild(parent, name);
+            if (doorRoot == null)
+            {
+                doorRoot = new GameObject(name);
+                doorRoot.transform.SetParent(parent, false);
+            }
+
+            doorRoot.transform.localPosition = localPosition;
+            doorRoot.transform.localRotation = outwardFacing ? Quaternion.identity : Quaternion.Euler(0f, 180f, 0f);
+            doorRoot.transform.localScale = Vector3.one;
+
+            BoxCollider collider = doorRoot.GetComponent<BoxCollider>();
+            if (collider == null)
+            {
+                collider = doorRoot.AddComponent<BoxCollider>();
+            }
+
+            collider.isTrigger = true;
+            collider.size = new Vector3(1.6f, 2.2f, 0.8f);
+            collider.center = new Vector3(0f, 1.1f, 0f);
+
+            InteriorTravelDoor travelDoor = doorRoot.GetComponent<InteriorTravelDoor>();
+            if (travelDoor == null)
+            {
+                travelDoor = doorRoot.AddComponent<InteriorTravelDoor>();
+            }
+
+            GameObject leaf = FindImmediateChild(doorRoot.transform, "GEN_DoorLeaf");
+            if (leaf == null)
+            {
+                leaf = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                leaf.name = "GEN_DoorLeaf";
+                leaf.transform.SetParent(doorRoot.transform, false);
+            }
+
+            leaf.transform.localPosition = new Vector3(0f, 0.95f, 0f);
+            leaf.transform.localScale = new Vector3(1f, 1.9f, 0.16f);
+            PlaceholderScaffoldStyleUtility.ApplyStyle(leaf, EnvironmentGeneratedCategory.Building, "GEN_Door", "Simple door leaf scaffold.");
+
+            SerializedObject so = new SerializedObject(travelDoor);
+            so.FindProperty("_doorId").stringValue = name.ToLowerInvariant();
+            so.FindProperty("_interactionLabel").stringValue = outwardFacing ? "enter" : "leave";
+            so.FindProperty("_targetMarker").objectReferenceValue = targetMarker;
+            so.FindProperty("_doorLeaf").objectReferenceValue = leaf.transform;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(travelDoor);
         }
 
         private static void BuildCrateCluster(Transform container, string name, Vector3 position, int crateCount, string notes)
@@ -555,6 +664,7 @@ namespace TPS.Editor
             so.FindProperty("_notes").stringValue = notes;
             so.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(marker);
+            PlaceholderScaffoldStyleUtility.ApplyStyle(target, category, name, notes);
             return target;
         }
 

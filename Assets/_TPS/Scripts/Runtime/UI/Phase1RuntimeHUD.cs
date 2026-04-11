@@ -35,6 +35,9 @@ namespace TPS.Runtime.UI
         private RuntimePanelType _activePanel;
         private string _selectedMemberId;
 
+        public MerchantAnchor ActiveMerchant => _activeMerchant;
+        public Phase1ContentCatalog ContentCatalog => _contentCatalog;
+
         private void Awake()
         {
             if (Instance != null && Instance != this)
@@ -49,6 +52,8 @@ namespace TPS.Runtime.UI
 
         private void OnEnable()
         {
+            RuntimeMenuCanvasController.EnsureExists();
+            WeatherPresentationController.EnsureExists();
             RuntimeUiInputState.RestoreGameplayFocus();
             _activePanel = RuntimePanelType.None;
             EnsureSelectedMember();
@@ -64,6 +69,11 @@ namespace TPS.Runtime.UI
 
         private void Update()
         {
+            if (RuntimeMenuCanvasController.Instance != null)
+            {
+                return;
+            }
+
             Keyboard keyboard = Keyboard.current;
             if (keyboard == null)
             {
@@ -178,15 +188,24 @@ namespace TPS.Runtime.UI
         private void OnGUI()
         {
             bool inBattle = SceneLoader.Instance != null && SceneLoader.Instance.CurrentContentScene == "BTL_Standard";
+            bool menuVisible = RuntimeMenuCanvasController.Instance != null && RuntimeMenuCanvasController.Instance.IsMenuVisible && !inBattle;
 
-            DrawStatusPanel(inBattle);
-            DrawSmokePanel(inBattle);
+            if (!menuVisible)
+            {
+                DrawStatusPanel(inBattle);
+                DrawSmokePanel(inBattle);
+            }
+
             if (!inBattle)
             {
-                DrawActiveWorldPanel();
-                if (_activeMerchant != null)
+                bool useCanvasMenus = RuntimeMenuCanvasController.Instance != null;
+                if (!useCanvasMenus)
                 {
-                    DrawMerchantPanel();
+                    DrawActiveWorldPanel();
+                    if (_activeMerchant != null)
+                    {
+                        DrawMerchantPanel();
+                    }
                 }
             }
 

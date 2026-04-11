@@ -8,6 +8,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Object = UnityEngine.Object;
 
 namespace TPS.Editor
 {
@@ -114,11 +115,112 @@ namespace TPS.Editor
                 if (FindDeep(scene, "MK_PlayerSpawn_Default") == null) errors.Add($"{scenePath} is missing MK_PlayerSpawn_Default.");
                 if (FindDeep(scene, travelName) == null) errors.Add($"{scenePath} is missing {travelName}.");
                 if (FindDeep(scene, encounterName) == null) errors.Add($"{scenePath} is missing {encounterName}.");
+                ValidateSpawnGraph(scene, scenePath, errors);
+                ValidateTravelTargets(scene, scenePath, errors);
             }
             finally
             {
                 EditorSceneManager.CloseScene(scene, true);
             }
+        }
+
+        private static void ValidateSpawnGraph(Scene scene, string scenePath, List<string> errors)
+        {
+            SpawnPoint[] spawnPoints = Object.FindObjectsByType<SpawnPoint>(FindObjectsInactive.Include);
+            var seen = new HashSet<string>(StringComparer.Ordinal);
+            bool foundAny = false;
+            for (int i = 0; i < spawnPoints.Length; i++)
+            {
+                SpawnPoint point = spawnPoints[i];
+                if (point == null || point.gameObject.scene != scene)
+                {
+                    continue;
+                }
+
+                foundAny = true;
+                if (!seen.Add(point.SpawnId))
+                {
+                    errors.Add($"{scenePath} has duplicate spawn id '{point.SpawnId}'.");
+                }
+
+                if (!HasGroundBelow(point.transform.position))
+                {
+                    errors.Add($"{scenePath} spawn '{point.SpawnId}' is not snapped to valid ground.");
+                }
+            }
+
+            if (!foundAny)
+            {
+                errors.Add($"{scenePath} has no SpawnPoint components.");
+            }
+        }
+
+        private static void ValidateTravelTargets(Scene scene, string scenePath, List<string> errors)
+        {
+            SceneTravelAnchor[] travelAnchors = Object.FindObjectsByType<SceneTravelAnchor>(FindObjectsInactive.Include);
+            for (int i = 0; i < travelAnchors.Length; i++)
+            {
+                SceneTravelAnchor anchor = travelAnchors[i];
+                if (anchor == null || anchor.gameObject.scene != scene)
+                {
+                    continue;
+                }
+
+                SerializedObject so = new SerializedObject(anchor);
+                string targetSceneName = so.FindProperty("_targetSceneName").stringValue;
+                string targetSpawnId = so.FindProperty("_targetSpawnId").stringValue;
+                string targetScenePath = ResolveScenePath(targetSceneName);
+                if (string.IsNullOrWhiteSpace(targetScenePath) || !System.IO.File.Exists(targetScenePath))
+                {
+                    errors.Add($"{scenePath} travel anchor '{anchor.name}' points to missing scene '{targetSceneName}'.");
+                    continue;
+                }
+
+                if (!SceneContainsSpawn(targetScenePath, targetSpawnId))
+                {
+                    errors.Add($"{scenePath} travel anchor '{anchor.name}' points to missing spawn '{targetSpawnId}' in '{targetSceneName}'.");
+                }
+            }
+        }
+
+        private static string ResolveScenePath(string sceneName)
+        {
+            string[] guids = AssetDatabase.FindAssets($"{sceneName} t:Scene");
+            if (guids.Length == 0)
+            {
+                return null;
+            }
+
+            return AssetDatabase.GUIDToAssetPath(guids[0]);
+        }
+
+        private static bool SceneContainsSpawn(string scenePath, string spawnId)
+        {
+            Scene scene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Additive);
+            try
+            {
+                SpawnPoint[] spawnPoints = Object.FindObjectsByType<SpawnPoint>(FindObjectsInactive.Include);
+                for (int i = 0; i < spawnPoints.Length; i++)
+                {
+                    SpawnPoint point = spawnPoints[i];
+                    if (point != null && point.gameObject.scene == scene && string.Equals(point.SpawnId, spawnId, StringComparison.Ordinal))
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+            finally
+            {
+                EditorSceneManager.CloseScene(scene, true);
+            }
+        }
+
+        private static bool HasGroundBelow(Vector3 position)
+        {
+            Vector3 origin = position + Vector3.up * 8f;
+            return Physics.Raycast(origin, Vector3.down, out _, 24f, ~0, QueryTriggerInteraction.Ignore);
         }
 
         private static void RebuildExpandedAsterHarbor(WorldExpansionAssets assets)
@@ -447,6 +549,8 @@ namespace TPS.Editor
             GameObject districts = EnsureManagedNode(root.transform, "ENV_Districts", "aster_harbor_expansion");
             GameObject frontier = EnsureManagedNode(root.transform, "ENV_Outskirts", "aster_harbor_expansion");
             GameObject travel = EnsureManagedNode(root.transform, "ENV_TravelLandmarks", "aster_harbor_expansion");
+            GameObject props = EnsureManagedNode(root.transform, "ENV_ExpansionProps", "aster_harbor_expansion");
+            GameObject ambient = EnsureManagedNode(root.transform, "ENV_ExpansionAmbient", "aster_harbor_expansion");
 
             BuildPrimitiveSlot(districts.transform, "DIST_MarketArcade", PrimitiveType.Cube, new Vector3(0f, 0.3f, 12f), new Vector3(20f, 0.4f, 6f), "Expanded market frontage.");
             BuildPrimitiveSlot(districts.transform, "DIST_EastHarbor", PrimitiveType.Cube, new Vector3(21f, 0.2f, 4f), new Vector3(10f, 0.35f, 12f), "Expanded dock district.");
@@ -458,6 +562,25 @@ namespace TPS.Editor
             BuildHouseRow(districts.transform, "ROW_WestResidential", new Vector3(-21f, 0f, 9.5f), 5, 4f, new Vector3(3.2f, 3f, 3.4f));
             BuildHouseRow(districts.transform, "ROW_WestResidential_South", new Vector3(-21f, 0f, -0.5f), 4, 4f, new Vector3(3f, 2.8f, 3f));
             BuildHouseRow(districts.transform, "ROW_EastHarbor_Sheds", new Vector3(19f, 0f, 10.5f), 4, 3.8f, new Vector3(3.6f, 2.6f, 2.8f));
+            BuildHouseRow(districts.transform, "ROW_MarketSouth", new Vector3(-6f, 0f, 8.5f), 4, 4f, new Vector3(2.8f, 2.8f, 2.4f));
+            BuildHouseRow(districts.transform, "ROW_DockStorefronts", new Vector3(16.5f, 0f, 1f), 3, 4.1f, new Vector3(3.4f, 3f, 3f));
+            BuildHouseRow(frontier.transform, "ROW_NorthLookout", new Vector3(-4.5f, 0f, 18.8f), 3, 4.2f, new Vector3(2.8f, 2.8f, 2.6f));
+            BuildHouseRow(frontier.transform, "ROW_SouthGate", new Vector3(-4f, 0f, -17.8f), 3, 4f, new Vector3(2.6f, 2.6f, 2.8f));
+
+            BuildCrateLine(props.transform, "PRP_MarketCarts", new Vector3(3f, 0f, 10.5f), 6, 1.1f);
+            BuildCrateLine(props.transform, "PRP_DockCargoLong", new Vector3(18f, 0f, 6f), 6, 1f);
+            BuildFenceLine(props.transform, "PRP_WestBlocks", new Vector3(-23f, 0f, -4.2f), 9, 1.6f);
+            BuildFenceLine(props.transform, "PRP_EastDocksRail", new Vector3(23f, 0f, -3f), 9, 1.4f);
+            BuildLandmarkCluster(props.transform, "LMK_MarketTower", new Vector3(-1f, 0f, 16.5f));
+            BuildLandmarkCluster(props.transform, "LMK_WestBell", new Vector3(-24f, 0f, 7f));
+            BuildLandmarkCluster(props.transform, "LMK_DockMast", new Vector3(24f, 0f, 8f));
+
+            BuildAmbientPair(ambient.transform, "AMB_NorthMarketPair", new Vector3(0.5f, 0f, 14.2f));
+            BuildAmbientPair(ambient.transform, "AMB_WestFamily", new Vector3(-18.5f, 0f, 6.8f));
+            BuildAmbientSolo(ambient.transform, "AMB_DockGuard", new Vector3(21.6f, 0f, 3.8f));
+            BuildAmbientSolo(ambient.transform, "AMB_GateWatcher", new Vector3(-0.8f, 0f, -14.2f));
+            BuildAmbientCreature(ambient.transform, "AMB_BirdNorth", new Vector3(1.5f, 1.8f, 16.2f));
+            BuildAmbientCreature(ambient.transform, "AMB_DogSouth", new Vector3(-6.5f, 0f, -12.6f));
 
             BuildLandmarkCluster(travel.transform, "LMK_GullwatchRoad", new Vector3(-24f, 0f, 14f));
             BuildLandmarkCluster(travel.transform, "LMK_RedCedarRoad", new Vector3(-24f, 0f, -12f));
@@ -475,13 +598,23 @@ namespace TPS.Editor
 
             BuildPrimitiveSlot(blockout.transform, "PAD_Main", PrimitiveType.Cube, new Vector3(0f, 0.2f, 0f), new Vector3(20f, 0.35f, 22f), description);
             BuildPrimitiveSlot(blockout.transform, "PATH_Center", PrimitiveType.Cube, new Vector3(0f, 0.3f, 0f), new Vector3(4f, 0.12f, 19f), "Main route through settlement.");
+            BuildPrimitiveSlot(blockout.transform, "PAD_SideYard_West", PrimitiveType.Cube, new Vector3(-8.5f, 0.22f, 7f), new Vector3(7f, 0.22f, 7f), "West hamlet yard.");
+            BuildPrimitiveSlot(blockout.transform, "PAD_SideYard_East", PrimitiveType.Cube, new Vector3(8.5f, 0.22f, 2f), new Vector3(7f, 0.22f, 8f), "East hamlet yard.");
             BuildHouseRow(buildings.transform, "ROW_A", new Vector3(-7f, 0f, 6f), 3, 5f, new Vector3(3.2f, 3f, 3f));
             BuildHouseRow(buildings.transform, "ROW_B", new Vector3(6f, 0f, 3f), 3, 5f, new Vector3(3f, 2.8f, 3f));
+            BuildHouseRow(buildings.transform, "ROW_C_Back", new Vector3(-5.5f, 0f, -5f), 3, 5.2f, new Vector3(2.8f, 2.6f, 2.8f));
             BuildCrateLine(props.transform, "PRP_Crates", new Vector3(6f, 0f, -4f), 4, 1f);
+            BuildCrateLine(props.transform, "PRP_Crates_Back", new Vector3(-3f, 0f, -6f), 3, 0.95f);
             BuildFenceLine(props.transform, "PRP_Fence", new Vector3(-9f, 0f, -5f), 8, 1.3f);
+            BuildFenceLine(props.transform, "PRP_Fence_Edge", new Vector3(4.5f, 0f, 9f), 6, 1.3f);
+            BuildLandmarkCluster(props.transform, "LMK_SettlementBeacon", new Vector3(0f, 0f, 10.5f));
+            BuildLandmarkCluster(props.transform, "LMK_RoadMarker", new Vector3(-10.5f, 0f, 0.5f));
             BuildAmbientPair(ambient.transform, "AMB_TownPair", new Vector3(1f, 0f, 2f));
             BuildAmbientSolo(ambient.transform, "AMB_Lookout", new Vector3(7f, 0f, 7f));
             BuildAmbientCreature(ambient.transform, "AMB_Creature", new Vector3(-5f, 0f, -3f));
+            BuildAmbientSolo(ambient.transform, "AMB_Worker", new Vector3(-7f, 0f, 7.5f));
+            BuildAmbientPair(ambient.transform, "AMB_ShelterPair", new Vector3(5.5f, 0f, -4.5f));
+            BuildAmbientCreature(ambient.transform, "AMB_Bird", new Vector3(2f, 1.6f, 8.4f));
         }
 
         private static void BuildDungeonGenerated(Transform worldRoot, string districtName)
@@ -496,10 +629,20 @@ namespace TPS.Editor
             BuildPrimitiveSlot(blockout.transform, "ROOM_Boss", PrimitiveType.Cube, new Vector3(0f, 0.2f, 9f), new Vector3(12f, 0.3f, 9f), "Dungeon endpoint room.");
             BuildPrimitiveSlot(blockout.transform, "PATH_Connector_A", PrimitiveType.Cube, new Vector3(0f, 0.25f, -4f), new Vector3(3f, 0.12f, 3.5f), "Connector path.");
             BuildPrimitiveSlot(blockout.transform, "PATH_Connector_B", PrimitiveType.Cube, new Vector3(0f, 0.25f, 5f), new Vector3(3f, 0.12f, 3.5f), "Connector path.");
+            BuildPrimitiveSlot(blockout.transform, "WALL_EntranceWest", PrimitiveType.Cube, new Vector3(-5.2f, 2.4f, -8f), new Vector3(0.8f, 4.8f, 7.8f), "Entrance west wall.");
+            BuildPrimitiveSlot(blockout.transform, "WALL_EntranceEast", PrimitiveType.Cube, new Vector3(5.2f, 2.4f, -8f), new Vector3(0.8f, 4.8f, 7.8f), "Entrance east wall.");
+            BuildPrimitiveSlot(blockout.transform, "WALL_MidWest", PrimitiveType.Cube, new Vector3(-4.2f, 2.4f, 0f), new Vector3(0.8f, 4.8f, 8.6f), "Mid west wall.");
+            BuildPrimitiveSlot(blockout.transform, "WALL_MidEast", PrimitiveType.Cube, new Vector3(4.2f, 2.4f, 0f), new Vector3(0.8f, 4.8f, 8.6f), "Mid east wall.");
+            BuildPrimitiveSlot(blockout.transform, "WALL_BossWest", PrimitiveType.Cube, new Vector3(-6.1f, 2.6f, 9f), new Vector3(0.8f, 5.2f, 9.4f), "Boss west wall.");
+            BuildPrimitiveSlot(blockout.transform, "WALL_BossEast", PrimitiveType.Cube, new Vector3(6.1f, 2.6f, 9f), new Vector3(0.8f, 5.2f, 9.4f), "Boss east wall.");
 
             BuildLandmarkCluster(props.transform, "PRP_EntranceLandmark", new Vector3(3.5f, 0f, -9f));
             BuildLandmarkCluster(props.transform, "PRP_MidLandmark", new Vector3(-3.5f, 0f, 0f));
             BuildLandmarkCluster(props.transform, "PRP_BossLandmark", new Vector3(0f, 0f, 10.5f));
+            BuildCrateLine(props.transform, "PRP_EntranceDebris", new Vector3(-3.5f, 0f, -10.5f), 4, 1f);
+            BuildCrateLine(props.transform, "PRP_MidDebris", new Vector3(1.8f, 0f, -1.6f), 3, 1f);
+            BuildFenceLine(props.transform, "PRP_BossSpikes_Left", new Vector3(-4f, 0f, 11.8f), 4, 1.1f);
+            BuildFenceLine(props.transform, "PRP_BossSpikes_Right", new Vector3(0.5f, 0f, 11.8f), 4, 1.1f);
             BuildPrimitiveSlot(debug.transform, "DBG_RoomMarker", PrimitiveType.Cylinder, new Vector3(0f, 1.4f, 9f), new Vector3(0.4f, 2.8f, 0.4f), "Boss room readability marker.");
         }
 
@@ -517,6 +660,9 @@ namespace TPS.Editor
             BuildCrateLine(container, "PRP_BattleHarborCrates", new Vector3(8f, 0f, -5f), 4, 1f);
             BuildFenceLine(container, "PRP_BattleBarrier", new Vector3(-9f, 0f, 6f), 6, 1.5f);
             BuildLandmarkCluster(container, "PRP_BattleBeacon", new Vector3(10f, 0f, 6f));
+            BuildLandmarkCluster(container, "PRP_BattleBeacon_West", new Vector3(-10f, 0f, -6f));
+            BuildCrateLine(container, "PRP_BattleCrates_West", new Vector3(-8f, 0f, -5f), 4, 1f);
+            BuildFenceLine(container, "PRP_BattleBarrier_East", new Vector3(5f, 0f, 7.5f), 5, 1.4f);
         }
 
         private static void BuildBattleDebug(Transform container)
@@ -661,6 +807,7 @@ namespace TPS.Editor
             so.FindProperty("_notes").stringValue = notes;
             so.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(marker);
+            PlaceholderScaffoldStyleUtility.ApplyStyle(target, EnvironmentGeneratedCategory.Prop, name, notes);
             return target;
         }
 

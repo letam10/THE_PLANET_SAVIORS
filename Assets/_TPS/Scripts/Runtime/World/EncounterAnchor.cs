@@ -16,6 +16,7 @@ namespace TPS.Runtime.World
         [SerializeField] private bool _triggerOnEnter = true;
         [SerializeField] private bool _triggerOnce = true;
         [SerializeField] private bool _hideWhenCleared = false;
+        [SerializeField] private string _returnSpawnIdOverride = "";
         [SerializeField] private TPS.Runtime.Conditions.ConditionResolver _availabilityConditions = new TPS.Runtime.Conditions.ConditionResolver();
 
         private bool _hasTriggered;
@@ -97,7 +98,12 @@ namespace TPS.Runtime.World
 
             Vector3 position = sourceTransform != null ? sourceTransform.position : transform.position;
             Quaternion rotation = sourceTransform != null ? sourceTransform.rotation : transform.rotation;
-            EncounterService.Instance.BeginEncounter(encounterDefinition, SceneLoader.Instance.CurrentContentScene, position, rotation);
+            EncounterService.Instance.BeginEncounter(
+                encounterDefinition,
+                SceneLoader.Instance.CurrentContentScene,
+                _returnSpawnIdOverride,
+                position,
+                rotation);
             _hasTriggered = true;
 
             if (Phase1RuntimeHUD.Instance != null)

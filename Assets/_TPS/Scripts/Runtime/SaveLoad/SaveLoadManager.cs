@@ -126,6 +126,11 @@ namespace TPS.Runtime.SaveLoad
             // 2. Load Scene
             if (SceneLoader.Instance != null && !string.IsNullOrEmpty(data.CurrentSceneName))
             {
+                if (PlayerSpawnSystem.Instance != null)
+                {
+                    PlayerSpawnSystem.Instance.SetPendingSpawnTransform(data.PlayerPosition, data.PlayerRotation);
+                }
+
                 yield return SceneLoader.Instance.LoadContentSceneAsync(data.CurrentSceneName);
             }
             else
@@ -163,11 +168,6 @@ namespace TPS.Runtime.SaveLoad
             if (StateResolver.Instance != null)
             {
                 StateResolver.Instance.ResolveAll();
-            }
-
-            if (PlayerSpawnSystem.Instance != null)
-            {
-                PlayerSpawnSystem.Instance.TeleportPlayerExact(data.PlayerPosition, data.PlayerRotation);
             }
 
             Debug.Log("[SaveLoad] Load Sequence Complete.");
