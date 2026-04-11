@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using TPS.Runtime.UI;
 
 namespace TPS.Runtime.Interaction
 {
@@ -35,6 +36,13 @@ namespace TPS.Runtime.Interaction
 
         private void Update()
         {
+            if (RuntimeUiInputState.IsUiFocused)
+            {
+                _currentTarget = null;
+                _currentPrompt = null;
+                return;
+            }
+
             ScanForInteractable();
 
             if (_currentTarget != null && _interactAction.WasPressedThisFrame())

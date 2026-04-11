@@ -1,0 +1,16 @@
+Phase 1 automation smoke started.
+Scene flow reached ZN_Town_AsterHarbor.
+Booted into town.
+NPC reached square morning slot.
+NPC reacted to rain and moved indoors.
+Quest accepted.
+Scene flow reached BTL_Standard.
+Requested automated battle victory.
+Scene flow reached ZN_Town_AsterHarbor.
+Boss clear returned to world.
+Encounter table swapped post-boss.
+Quest completed after turn-in.
+Shop transaction completed. Currency: 280
+Sleep advanced to next morning.
+Save/load restored smoke-critical state.
+Automation smoke complete.

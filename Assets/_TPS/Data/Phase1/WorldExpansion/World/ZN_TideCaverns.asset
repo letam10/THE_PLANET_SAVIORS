@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f140b4f1f6ef9f84ca20720d50bd472f, type: 3}
+  m_Name: ZN_TideCaverns
+  m_EditorClassIdentifier: TPS.Runtime::TPS.Runtime.Combat.ZoneDefinition
+  _zoneId: tide_caverns
+  _displayName: Tide Caverns
+  _defaultEncounterTable: {fileID: 11400000, guid: 290da68be7d0dbb43ba97e6441aebea4, type: 2}
+  _encounterTableOverrides: []

@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a2204f02aa924543a655e5d1accd50b, type: 3}
+  m_Name: ITM_StormTonic
+  m_EditorClassIdentifier: TPS.Runtime::TPS.Runtime.Combat.ItemDefinition
+  _itemId: item_storm_tonic
+  _displayName: Storm Tonic
+  _description: Sharp herbal mix used on rough road marches.
+  _buyPrice: 38
+  _sellPrice: 19
+  _restoreHP: 0
+  _restoreMP: 18
+  _curedStatuses: 03000000

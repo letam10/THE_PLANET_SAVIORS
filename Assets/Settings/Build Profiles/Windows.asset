@@ -44,6 +44,30 @@ MonoBehaviour:
   - m_enabled: 1
     m_path: Assets/_TPS/Scenes/Test/Test_Traversal.unity
     m_guid: 6e05690c522262e4681c102285db4e09
+  - m_enabled: 1
+    m_path: Assets/_TPS/Scenes/Test/Test_Traversal.unity
+    m_guid: 6e05690c522262e4681c102285db4e09
+  - m_enabled: 1
+    m_path: Assets/_TPS/Scenes/Test/Test_Traversal.unity
+    m_guid: 6e05690c522262e4681c102285db4e09
+  - m_enabled: 1
+    m_path: Assets/_TPS/Scenes/Test/Test_Traversal.unity
+    m_guid: 6e05690c522262e4681c102285db4e09
+  - m_enabled: 1
+    m_path: Assets/_TPS/Scenes/Test/Test_Traversal.unity
+    m_guid: 6e05690c522262e4681c102285db4e09
+  - m_enabled: 1
+    m_path: Assets/_TPS/Scenes/World/ZN_Settlement_Gullwatch.unity
+    m_guid: 20f77a327f5b37745a3d9fbe1f4be8bd
+  - m_enabled: 1
+    m_path: Assets/_TPS/Scenes/World/ZN_Settlement_RedCedar.unity
+    m_guid: 2a5fc9dfc3d6d0c4492f11bf7986822e
+  - m_enabled: 1
+    m_path: Assets/_TPS/Scenes/Dungeons/DG_TideCaverns.unity
+    m_guid: 0d606f958c5700b47a593a02f32961d6
+  - m_enabled: 1
+    m_path: Assets/_TPS/Scenes/Dungeons/DG_QuarryRuins.unity
+    m_guid: 230dc47fae905c44e8f67ba0599eacaa
   m_HasScriptingDefines: 0
   m_ScriptingDefines: []
   m_PlayerSettingsYaml:

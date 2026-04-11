@@ -1,0 +1,70 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f562783c6bf2b3a44aa599e8814c897a, type: 3}
+  m_Name: CAT_Phase1Content
+  m_EditorClassIdentifier: Assembly-CSharp::TPS.Runtime.Core.Phase1ContentCatalog
+  _progressionCurve: {fileID: 11400000, guid: fe0b6f606c0f46a4ebbbfde45aeb8e17, type: 2}
+  _startingCurrency: 100
+  _startingPartyMembers:
+  - {fileID: 11400000, guid: c4992c6ddfc5d42439cc152f24ebc265, type: 2}
+  - {fileID: 11400000, guid: df475d5647e1d9548a9e46a362ca0359, type: 2}
+  _characters:
+  - {fileID: 11400000, guid: c4992c6ddfc5d42439cc152f24ebc265, type: 2}
+  - {fileID: 11400000, guid: df475d5647e1d9548a9e46a362ca0359, type: 2}
+  - {fileID: 11400000, guid: 41267fcfb3abaad47b2733d595e5f873, type: 2}
+  _enemies:
+  - {fileID: 11400000, guid: b03bf8445de4f9145a5b148320fa7471, type: 2}
+  - {fileID: 11400000, guid: baa2d74359b00434892ea55bccf3c240, type: 2}
+  - {fileID: 11400000, guid: 93c2cee8b6f12ac43a501ee00d48218d, type: 2}
+  _items:
+  - {fileID: 11400000, guid: 7d3398e37df7d854586782dfa2772139, type: 2}
+  - {fileID: 11400000, guid: f496c42b575249f4c919cfff33cf9382, type: 2}
+  _equipment:
+  - {fileID: 11400000, guid: b3161e70441fc7f448eafedce6f24468, type: 2}
+  - {fileID: 11400000, guid: 92eec9af3170c2645862eeb6e645a154, type: 2}
+  - {fileID: 11400000, guid: b6c3171ff72c18d4f8dcff0b06f79929, type: 2}
+  - {fileID: 11400000, guid: 55fa98194390a7d49b5ed04350bd3698, type: 2}
+  _skills:
+  - {fileID: 11400000, guid: b5ee5775d803ee2438b3bb4def222ca7, type: 2}
+  - {fileID: 11400000, guid: dc361767acf38bf40813d31e0ad97f7c, type: 2}
+  - {fileID: 11400000, guid: cc656dce457f70d48b600bafd33e76b9, type: 2}
+  - {fileID: 11400000, guid: 5dac330cb39c9904f90a9c3034940a6c, type: 2}
+  - {fileID: 11400000, guid: 071244ecdd361124c96ac7de9c2c14c7, type: 2}
+  - {fileID: 11400000, guid: ee86dfeb9c8a2d44cac281a2b4630c17, type: 2}
+  _statuses:
+  - {fileID: 11400000, guid: 937ad8a0ba9052b469a345eb72c8777a, type: 2}
+  - {fileID: 11400000, guid: a890124287537f441b474b7b9c62005f, type: 2}
+  - {fileID: 11400000, guid: 70009d9b33d1c7d47aeb98730cd1b7e8, type: 2}
+  - {fileID: 11400000, guid: efab56ffb45cd1e43b9329b45da215e7, type: 2}
+  _rewardTables:
+  - {fileID: 11400000, guid: 23b30c39f5f43c74babad466b93350ff, type: 2}
+  - {fileID: 11400000, guid: 844f475c5bb103a42823f392df3e43c6, type: 2}
+  - {fileID: 11400000, guid: 0f6e16cbd44707746bb07a4c1b9246e1, type: 2}
+  - {fileID: 11400000, guid: 741b797063c34fe42ab984f2ee1500b6, type: 2}
+  _encounters:
+  - {fileID: 11400000, guid: 96b2b2baf6056ee43996eda3f6d9c595, type: 2}
+  - {fileID: 11400000, guid: f124319b9721f0f4f963791604278430, type: 2}
+  - {fileID: 11400000, guid: bc73b8672ce2a064a95db46172f48667, type: 2}
+  - {fileID: 11400000, guid: 24913e63c8f0ad944adcfb14d686758c, type: 2}
+  _encounterTables:
+  - {fileID: 11400000, guid: 5a8dfac5c57b8f7468be44751248615c, type: 2}
+  - {fileID: 11400000, guid: 9d0fa19041b473242a54ef6d5370de2d, type: 2}
+  _zones:
+  - {fileID: 11400000, guid: 6a53f69816aec8e41b4d5301a4f9eb73, type: 2}
+  _shops:
+  - {fileID: 11400000, guid: 471fe2a6041df2041b5cb80cc67fed2c, type: 2}
+  _dialogues:
+  - {fileID: 11400000, guid: 31e91a5fae566d44792a15542a7d92d4, type: 2}
+  - {fileID: 11400000, guid: 0e13ff6ee62c4364bbe1622422fba8bf, type: 2}
+  _quests:
+  - {fileID: 11400000, guid: ed03189c868dd10478cf0ce034d20894, type: 2}
+  - {fileID: 11400000, guid: 9b1e44a2702c29b42a9dd4c8725f6b36, type: 2}

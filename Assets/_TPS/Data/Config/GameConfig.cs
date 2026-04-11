@@ -1,5 +1,4 @@
 using UnityEngine;
-using TPS.Runtime.Weather;
 
 namespace TPS.Data.Config
 {
@@ -23,7 +22,7 @@ namespace TPS.Data.Config
         [Min(0.01f)][SerializeField] private float _worldMinutesPerRealSecond = 1f;
 
         [Header("Weather")]
-        [SerializeField] private WeatherType _startingWeather = WeatherType.Sunny;
+        [SerializeField] private int _startingWeather = 0;
 
         public bool BootToMainMenu => _bootToMainMenu;
         public string CoreSceneName => _coreSceneName;
@@ -38,6 +37,6 @@ namespace TPS.Data.Config
         public int StartMinute => _startMinute;
         public float WorldMinutesPerRealSecond => _worldMinutesPerRealSecond;
 
-        public WeatherType StartingWeather => _startingWeather;
+        public int StartingWeather => _startingWeather;
     }
 }

@@ -1,0 +1,152 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a5f1948c2c4d4d64bb5052729fbf7241, type: 3}
+  m_Name: DLG_HarborCaptain
+  m_EditorClassIdentifier: Assembly-CSharp::TPS.Runtime.Dialogue.DialogueDefinition
+  _dialogueId: dialogue_harbor_captain
+  _variants:
+  - VariantId: completed
+    SpeakerName: Captain Rhea
+    Body: The gate is clear, patrol routes are back online, and Lina is free to join
+      your party. Aster Harbor remembers this.
+    Conditions:
+      Mode: 0
+      Conditions:
+      - Type: 3
+        StartHour: 0
+        EndHour: 0
+        StateKey: 
+        ExpectedBool: 0
+        ExpectedWeather: 0
+        QuestId: quest_clear_harbor_threat
+        ExpectedQuestStatus: 3
+        DialogueFlagId: 
+        EncounterId: 
+        InventoryDefinitionId: 
+        MinimumCount: 0
+        PartyMemberId: 
+        ZoneId: 
+        ZoneFactId: 
+        MinimumCurrency: 0
+      _sharedDefinition: {fileID: 0}
+    OneShot: 0
+    OneShotConsumptionId: 
+    Actions:
+    - ActionType: 1
+      FlagId: dialogue.harbor.completed
+      BoolValue: 0
+      OneShotId: 
+      Quest: {fileID: 11400000, guid: ed03189c868dd10478cf0ce034d20894, type: 2}
+      Character: {fileID: 0}
+      ZoneId: 
+      ZoneFactId: 
+      CurrencyAmount: 0
+      WeatherType: 0
+    Choices: []
+  - VariantId: turn_in
+    SpeakerName: Captain Rhea
+    Body: You broke the raider line. Take this pay, then bring Lina with you while
+      we reset the harbor watch.
+    Conditions:
+      Mode: 0
+      Conditions:
+      - Type: 3
+        StartHour: 0
+        EndHour: 0
+        StateKey: 
+        ExpectedBool: 0
+        ExpectedWeather: 0
+        QuestId: quest_clear_harbor_threat
+        ExpectedQuestStatus: 2
+        DialogueFlagId: 
+        EncounterId: 
+        InventoryDefinitionId: 
+        MinimumCount: 0
+        PartyMemberId: 
+        ZoneId: 
+        ZoneFactId: 
+        MinimumCurrency: 0
+      _sharedDefinition: {fileID: 0}
+    OneShot: 0
+    OneShotConsumptionId: 
+    Actions:
+    - ActionType: 4
+      FlagId: 
+      BoolValue: 0
+      OneShotId: 
+      Quest: {fileID: 11400000, guid: ed03189c868dd10478cf0ce034d20894, type: 2}
+      Character: {fileID: 0}
+      ZoneId: 
+      ZoneFactId: 
+      CurrencyAmount: 0
+      WeatherType: 0
+    Choices: []
+  - VariantId: active
+    SpeakerName: Captain Rhea
+    Body: The raider captain still holds the gate. Once he falls, the harbor encounter
+      routes will shift immediately.
+    Conditions:
+      Mode: 0
+      Conditions:
+      - Type: 3
+        StartHour: 0
+        EndHour: 0
+        StateKey: 
+        ExpectedBool: 0
+        ExpectedWeather: 0
+        QuestId: quest_clear_harbor_threat
+        ExpectedQuestStatus: 1
+        DialogueFlagId: 
+        EncounterId: 
+        InventoryDefinitionId: 
+        MinimumCount: 0
+        PartyMemberId: 
+        ZoneId: 
+        ZoneFactId: 
+        MinimumCurrency: 0
+      _sharedDefinition: {fileID: 0}
+    OneShot: 0
+    OneShotConsumptionId: 
+    Actions:
+    - ActionType: 1
+      FlagId: dialogue.harbor.quest_active
+      BoolValue: 0
+      OneShotId: 
+      Quest: {fileID: 0}
+      Character: {fileID: 0}
+      ZoneId: 
+      ZoneFactId: 
+      CurrencyAmount: 0
+      WeatherType: 0
+    Choices: []
+  - VariantId: start
+    SpeakerName: Captain Rhea
+    Body: I stand in the square from 07:00 to 12:00, but when rain hits I move into
+      the tavern. First, help us break the raider captain at the gate.
+    Conditions:
+      Mode: 0
+      Conditions: []
+      _sharedDefinition: {fileID: 0}
+    OneShot: 0
+    OneShotConsumptionId: 
+    Actions:
+    - ActionType: 3
+      FlagId: 
+      BoolValue: 0
+      OneShotId: 
+      Quest: {fileID: 11400000, guid: ed03189c868dd10478cf0ce034d20894, type: 2}
+      Character: {fileID: 0}
+      ZoneId: 
+      ZoneFactId: 
+      CurrencyAmount: 0
+      WeatherType: 0
+    Choices: []

@@ -1,0 +1,124 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a5f1948c2c4d4d64bb5052729fbf7241, type: 3}
+  m_Name: DLG_DockQuartermaster
+  m_EditorClassIdentifier: TPS.Runtime::TPS.Runtime.Dialogue.DialogueDefinition
+  _dialogueId: dialogue_dock_quartermaster
+  _variants:
+  - VariantId: completed
+    SpeakerName: Quartermaster Ivo
+    Body: The dock stacks are safe again. The crews can unload before noon, and the
+      harbor board is back on schedule.
+    Conditions:
+      Mode: 0
+      Conditions:
+      - Type: 3
+        StartHour: 0
+        EndHour: 0
+        StateKey: 
+        ExpectedBool: 0
+        ExpectedWeather: 0
+        QuestId: quest_secure_dock_supplies
+        ExpectedQuestStatus: 3
+        DialogueFlagId: 
+        EncounterId: 
+        InventoryDefinitionId: 
+        MinimumCount: 0
+        PartyMemberId: 
+        ZoneId: 
+        ZoneFactId: 
+        MinimumCurrency: 0
+      _sharedDefinition: {fileID: 0}
+    OneShot: 0
+    OneShotConsumptionId: 
+    Actions:
+    - ActionType: 1
+      FlagId: dialogue.dock.completed
+      BoolValue: 0
+      OneShotId: 
+      Quest: {fileID: 0}
+      Character: {fileID: 0}
+      ZoneId: 
+      ZoneFactId: 
+      CurrencyAmount: 0
+      WeatherType: 0
+    Choices: []
+  - VariantId: turn_in
+    SpeakerName: Quartermaster Ivo
+    Body: Good. The mites are gone, the stock ledger is back in order, and the supply
+      banner is going up right now.
+    Conditions:
+      Mode: 0
+      Conditions:
+      - Type: 3
+        StartHour: 0
+        EndHour: 0
+        StateKey: 
+        ExpectedBool: 0
+        ExpectedWeather: 0
+        QuestId: quest_secure_dock_supplies
+        ExpectedQuestStatus: 2
+        DialogueFlagId: 
+        EncounterId: 
+        InventoryDefinitionId: 
+        MinimumCount: 0
+        PartyMemberId: 
+        ZoneId: 
+        ZoneFactId: 
+        MinimumCurrency: 0
+      _sharedDefinition: {fileID: 0}
+    OneShot: 0
+    OneShotConsumptionId: 
+    Actions:
+    - ActionType: 4
+      FlagId: 
+      BoolValue: 0
+      OneShotId: 
+      Quest: {fileID: 11400000, guid: 9b1e44a2702c29b42a9dd4c8725f6b36, type: 2}
+      Character: {fileID: 0}
+      ZoneId: 
+      ZoneFactId: 
+      CurrencyAmount: 0
+      WeatherType: 0
+    - ActionType: 6
+      FlagId: 
+      BoolValue: 1
+      OneShotId: 
+      Quest: {fileID: 11400000, guid: 9b1e44a2702c29b42a9dd4c8725f6b36, type: 2}
+      Character: {fileID: 0}
+      ZoneId: aster_harbor
+      ZoneFactId: dock_supplies_secured
+      CurrencyAmount: 0
+      WeatherType: 0
+    Choices: []
+  - VariantId: start_or_active
+    SpeakerName: Quartermaster Ivo
+    Body: Rain mites are chewing through the dock stacks. Clear the supply lane and
+      I'll release the reserve stock for the crews.
+    Conditions:
+      Mode: 0
+      Conditions: []
+      _sharedDefinition: {fileID: 0}
+    OneShot: 0
+    OneShotConsumptionId: 
+    Actions:
+    - ActionType: 3
+      FlagId: 
+      BoolValue: 0
+      OneShotId: 
+      Quest: {fileID: 11400000, guid: 9b1e44a2702c29b42a9dd4c8725f6b36, type: 2}
+      Character: {fileID: 0}
+      ZoneId: 
+      ZoneFactId: 
+      CurrencyAmount: 0
+      WeatherType: 0
+    Choices: []

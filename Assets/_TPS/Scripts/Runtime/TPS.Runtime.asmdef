@@ -1,0 +1,17 @@
+{
+  "name": "TPS.Runtime",
+  "rootNamespace": "TPS.Runtime",
+  "references": [
+    "TPS.Data.Config",
+    "Unity.InputSystem"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

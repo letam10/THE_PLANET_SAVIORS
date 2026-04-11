@@ -2,10 +2,14 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using TPS.Data.Config;
+using TPS.Runtime.Combat;
 using TPS.Runtime.Core;
+using TPS.Runtime.Dialogue;
+using TPS.Runtime.Quest;
 using TPS.Runtime.Time;
 using TPS.Runtime.Weather;
 using TPS.Runtime.Spawn;
+using TPS.Runtime.World;
 
 namespace TPS.Runtime.Bootstrap
 {
@@ -49,6 +53,21 @@ namespace TPS.Runtime.Bootstrap
                 yield break;
             }
 
+            if (QuestService.Instance == null ||
+                DialogueStateService.Instance == null ||
+                PartyService.Instance == null ||
+                InventoryService.Instance == null ||
+                ProgressionService.Instance == null ||
+                EncounterService.Instance == null ||
+                ZoneStateService.Instance == null ||
+                EconomyService.Instance == null ||
+                RewardService.Instance == null ||
+                StateResolver.Instance == null)
+            {
+                Debug.LogError("GameBootstrap: Phase 1 services are not fully present in Core scene.");
+                yield break;
+            }
+
             // 3. Initialize services
             WorldClock.Instance.Initialize(
                 _gameConfig.StartDay,
@@ -57,7 +76,7 @@ namespace TPS.Runtime.Bootstrap
                 _gameConfig.WorldMinutesPerRealSecond
             );
 
-            WeatherSystem.Instance.Initialize(_gameConfig.StartingWeather);
+            WeatherSystem.Instance.Initialize((WeatherType)_gameConfig.StartingWeather);
 
             PlayerSpawnSystem.Instance.Initialize(_gameConfig);
 
@@ -68,6 +87,11 @@ namespace TPS.Runtime.Bootstrap
                 : _gameConfig.StartingWorldSceneName;
 
             yield return SceneLoader.Instance.LoadContentSceneAsync(firstScene);
+
+            if (StateResolver.Instance != null)
+            {
+                StateResolver.Instance.ResolveAll();
+            }
         }
 
         private static IEnumerator EnsureCoreSceneLoaded(string coreSceneName)

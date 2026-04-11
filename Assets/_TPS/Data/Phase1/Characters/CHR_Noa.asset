@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2d3ea287a4b3c064bbf781371850c540, type: 3}
+  m_Name: CHR_Noa
+  m_EditorClassIdentifier: Assembly-CSharp::TPS.Runtime.Combat.CharacterDefinition
+  _characterId: char_noa
+  _displayName: Noa
+  _archetype: {fileID: 11400000, guid: 3e2e93d3e6919e94f86fddbcffd7ee7f, type: 2}
+  _startingLevel: 1
+  _startingWeapon: {fileID: 11400000, guid: 92eec9af3170c2645862eeb6e645a154, type: 2}
+  _startingSkills:
+  - {fileID: 11400000, guid: dc361767acf38bf40813d31e0ad97f7c, type: 2}
+  _resistanceModifier:
+    Physical: 1
+    Fire: 1
+    Ice: 1
+    Lightning: 1

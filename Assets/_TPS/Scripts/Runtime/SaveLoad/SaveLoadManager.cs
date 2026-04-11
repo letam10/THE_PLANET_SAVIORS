@@ -1,11 +1,14 @@
 using System.Collections;
 using System.IO;
-using System.Linq;
 using UnityEngine;
+using TPS.Runtime.Combat;
 using TPS.Runtime.Core;
+using TPS.Runtime.Dialogue;
+using TPS.Runtime.Quest;
 using TPS.Runtime.Time;
 using TPS.Runtime.Weather;
 using TPS.Runtime.Spawn;
+using TPS.Runtime.World;
 
 namespace TPS.Runtime.SaveLoad
 {
@@ -67,21 +70,14 @@ namespace TPS.Runtime.SaveLoad
                 data.CurrentWeather = WeatherSystem.Instance.CurrentWeather;
             }
 
-            // 5. Game State
-            if (GameStateManager.Instance != null)
-            {
-                var bools = GameStateManager.Instance.GetAllBoolStates();
-                foreach (var kvp in bools) data.GameState.BoolStates.Add(new BoolStateEntry { Key = kvp.Key, Value = kvp.Value });
-
-                var ints = GameStateManager.Instance.GetAllIntStates();
-                foreach (var kvp in ints) data.GameState.IntStates.Add(new IntStateEntry { Key = kvp.Key, Value = kvp.Value });
-
-                var floats = GameStateManager.Instance.GetAllFloatStates();
-                foreach (var kvp in floats) data.GameState.FloatStates.Add(new FloatStateEntry { Key = kvp.Key, Value = kvp.Value });
-
-                var strings = GameStateManager.Instance.GetAllStringStates();
-                foreach (var kvp in strings) data.GameState.StringStates.Add(new StringStateEntry { Key = kvp.Key, Value = kvp.Value });
-            }
+            if (DialogueStateService.Instance != null) data.DialogueState = DialogueStateService.Instance.CaptureState();
+            if (QuestService.Instance != null) data.QuestState = QuestService.Instance.CaptureState();
+            if (PartyService.Instance != null) data.PartyState = PartyService.Instance.CaptureState();
+            if (InventoryService.Instance != null) data.InventoryState = InventoryService.Instance.CaptureState();
+            if (ProgressionService.Instance != null) data.ProgressionState = ProgressionService.Instance.CaptureState();
+            if (EncounterService.Instance != null) data.EncounterState = EncounterService.Instance.CaptureState();
+            if (ZoneStateService.Instance != null) data.ZoneState = ZoneStateService.Instance.CaptureState();
+            if (EconomyService.Instance != null) data.EconomyState = EconomyService.Instance.CaptureState();
 
             try
             {
@@ -115,10 +111,26 @@ namespace TPS.Runtime.SaveLoad
             // 1. Read JSON
             string json = File.ReadAllText(SaveFilePath);
             SaveData data = JsonUtility.FromJson<SaveData>(json);
+            if (data == null)
+            {
+                Debug.LogError("[SaveLoad] Save file is invalid JSON. Load aborted.");
+                yield break;
+            }
+
+            if (data.SaveVersion != SaveData.CurrentVersion)
+            {
+                Debug.LogWarning($"[SaveLoad] Unsupported save version {data.SaveVersion}. Expected {SaveData.CurrentVersion}. Save ignored.");
+                yield break;
+            }
 
             // 2. Load Scene
             if (SceneLoader.Instance != null && !string.IsNullOrEmpty(data.CurrentSceneName))
             {
+                if (PlayerSpawnSystem.Instance != null)
+                {
+                    PlayerSpawnSystem.Instance.SetPendingSpawnTransform(data.PlayerPosition, data.PlayerRotation);
+                }
+
                 yield return SceneLoader.Instance.LoadContentSceneAsync(data.CurrentSceneName);
             }
             else
@@ -132,7 +144,7 @@ namespace TPS.Runtime.SaveLoad
             // 3. Restore WorldClock
             if (WorldClock.Instance != null)
             {
-                WorldClock.Instance.Initialize(data.WorldDay, data.WorldHour, data.WorldMinute, 1f);
+                WorldClock.Instance.SetDateTime(data.WorldDay, data.WorldHour, data.WorldMinute);
             }
 
             // 4. Restore WeatherSystem
@@ -141,25 +153,21 @@ namespace TPS.Runtime.SaveLoad
                 WeatherSystem.Instance.SetWeather(data.CurrentWeather, force: true);
             }
 
-            // 5. Restore GameStateManager
-            if (GameStateManager.Instance != null)
-            {
-                var boolDict = data.GameState.BoolStates.ToDictionary(e => e.Key, e => e.Value);
-                var intDict = data.GameState.IntStates.ToDictionary(e => e.Key, e => e.Value);
-                var floatDict = data.GameState.FloatStates.ToDictionary(e => e.Key, e => e.Value);
-                var stringDict = data.GameState.StringStates.ToDictionary(e => e.Key, e => e.Value);
+            if (InventoryService.Instance != null) InventoryService.Instance.RestoreState(data.InventoryState);
+            if (ProgressionService.Instance != null) ProgressionService.Instance.RestoreState(data.ProgressionState);
+            if (PartyService.Instance != null) PartyService.Instance.RestoreState(data.PartyState);
+            if (DialogueStateService.Instance != null) DialogueStateService.Instance.RestoreState(data.DialogueState);
+            if (EncounterService.Instance != null) EncounterService.Instance.RestoreState(data.EncounterState);
+            if (ZoneStateService.Instance != null) ZoneStateService.Instance.RestoreState(data.ZoneState);
+            if (EconomyService.Instance != null) EconomyService.Instance.RestoreState(data.EconomyState);
+            if (QuestService.Instance != null) QuestService.Instance.RestoreState(data.QuestState);
 
-                GameStateManager.Instance.RestoreAllStates(boolDict, intDict, floatDict, stringDict);
-            }
-
-            // 6. Publish OnGameLoaded (So ConditionalActivator and NPCSchedule evaluated immediately)
             Debug.Log("[SaveLoad] Publishing OnGameLoaded...");
             GameEventBus.PublishGameLoaded();
 
-            // 7. Spawn/Teleport Player
-            if (PlayerSpawnSystem.Instance != null)
+            if (StateResolver.Instance != null)
             {
-                PlayerSpawnSystem.Instance.TeleportPlayerExact(data.PlayerPosition, data.PlayerRotation);
+                StateResolver.Instance.ResolveAll();
             }
 
             Debug.Log("[SaveLoad] Load Sequence Complete.");
