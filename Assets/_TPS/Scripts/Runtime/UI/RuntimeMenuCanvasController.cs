@@ -81,12 +81,16 @@ namespace TPS.Runtime.UI
 
             Instance = this;
             DontDestroyOnLoad(gameObject);
+            GameEventBus.OnGameLoaded += HandleRuntimeReset;
+            SceneManager.activeSceneChanged += HandleActiveSceneChanged;
             BuildUiShell();
             ApplyPersistedSettings();
         }
 
         private void OnDestroy()
         {
+            GameEventBus.OnGameLoaded -= HandleRuntimeReset;
+            SceneManager.activeSceneChanged -= HandleActiveSceneChanged;
             if (Instance == this)
             {
                 Instance = null;
@@ -211,10 +215,6 @@ namespace TPS.Runtime.UI
 
             EnsureEventSystem();
             RefreshHintText();
-            if (IsBattlePanelActive())
-            {
-                _hintText.text = "Battle mode: click actions and targets in the panel. Esc opens system. Tab returns to the battle panel.";
-            }
             RefreshVisibility();
         }
 
@@ -326,7 +326,7 @@ namespace TPS.Runtime.UI
             }
 
             MerchantAnchor merchant = GetActiveMerchant();
-            if (merchant != null && _activePanel != PanelType.Shop)
+            if (merchant != null && _activePanel == PanelType.None)
             {
                 OpenPanel(PanelType.Shop);
                 return;
@@ -383,6 +383,19 @@ namespace TPS.Runtime.UI
 
         private void OpenPanel(PanelType panel)
         {
+            if (panel == PanelType.Inventory ||
+                panel == PanelType.Character ||
+                panel == PanelType.Quest ||
+                panel == PanelType.Equipment ||
+                panel == PanelType.Shop)
+            {
+                BattleWorldBridge bridge = BattleWorldBridge.Instance;
+                if (bridge != null && bridge.HasActiveEncounter)
+                {
+                    return;
+                }
+            }
+
             _activePanel = panel;
             RuntimeUiInputState.SetUiFocused(true);
             RebuildContent();
@@ -443,14 +456,6 @@ namespace TPS.Runtime.UI
 
             ClearChildren(_contentColumn);
             _titleText.text = GetPanelTitle(_activePanel);
-            if (_activePanel == PanelType.Battle)
-            {
-                _titleText.text = "Battle";
-            }
-            else if (_activePanel == PanelType.BattleEnd)
-            {
-                _titleText.text = "Battle Summary";
-            }
             _contentScroll.normalizedPosition = Vector2.one;
             switch (_activePanel)
             {
@@ -637,6 +642,7 @@ namespace TPS.Runtime.UI
 
         private void BuildSystemPanel()
         {
+            bool battleActive = BattleWorldBridge.Instance != null && BattleWorldBridge.Instance.HasActiveEncounter;
             AddHeader(T("Session", "Phiên chơi"));
             AddInfoLine($"{T("Mode", "Chế độ")}: {RuntimeUiInputState.CurrentMode}");
             AddInfoLine($"{T("Scene", "Màn")}: {SceneManager.GetActiveScene().name}");
@@ -666,8 +672,15 @@ namespace TPS.Runtime.UI
             CreateActionButton(audioRow, "SFX +", () => AdjustVolume(SfxVolumeKey, 0.1f, "SFX"), 82f);
 
             RectTransform actionRow = CreateRow(62f);
-            CreateActionButton(actionRow, T("Save Game", "Lưu game"), SaveGame, 140f);
-            CreateActionButton(actionRow, T("Load Game", "Tải game"), LoadGame, 140f);
+            if (battleActive)
+            {
+                AddInfoLine(T("Save/load is disabled while a battle is active.", "Khong cho phep save/load khi dang trong tran dau."));
+            }
+            if (!battleActive)
+            {
+                CreateActionButton(actionRow, T("Save Game", "Lưu game"), SaveGame, 140f);
+                CreateActionButton(actionRow, T("Load Game", "Tải game"), LoadGame, 140f);
+            }
             CreateActionButton(actionRow, T("Return", "Quay lại"), ClosePanels, 140f);
         }
 
@@ -1035,6 +1048,33 @@ namespace TPS.Runtime.UI
             }
         }
 
+        private void HandleRuntimeReset()
+        {
+            BattleWorldBridge bridge = BattleWorldBridge.Instance;
+            if (bridge != null && bridge.HasActiveEncounter)
+            {
+                _activePanel = bridge.IsBattleEnded ? PanelType.BattleEnd : PanelType.Battle;
+                RuntimeUiInputState.SetUiFocused(true);
+            }
+            else
+            {
+                if (Phase1RuntimeHUD.Instance != null)
+                {
+                    Phase1RuntimeHUD.Instance.CloseShop();
+                }
+
+                _activePanel = PanelType.None;
+                RuntimeUiInputState.RestoreGameplayFocus();
+            }
+
+            RefreshVisibility();
+        }
+
+        private void HandleActiveSceneChanged(Scene previousScene, Scene nextScene)
+        {
+            HandleRuntimeReset();
+        }
+
         private string GetPanelTitle(PanelType panel)
         {
             switch (panel)
@@ -1054,6 +1094,10 @@ namespace TPS.Runtime.UI
                     return merchant != null && merchant.ShopDefinition != null ? merchant.ShopDefinition.DisplayName : "Shop";
                 case PanelType.Help:
                     return T("Help", "Trợ giúp");
+                case PanelType.Battle:
+                    return T("Battle", "Chiến đấu");
+                case PanelType.BattleEnd:
+                    return T("Battle Summary", "Tổng kết trận đấu");
                 default:
                     return T("Runtime Menu", "Menu Runtime");
             }
@@ -1187,6 +1231,14 @@ namespace TPS.Runtime.UI
         {
             if (_hintText == null)
             {
+                return;
+            }
+
+            if (IsBattlePanelActive())
+            {
+                _hintText.text = T(
+                    "Battle mode: choose targets and actions in the panel. Esc opens system. Tab returns to the battle view.",
+                    "Battle mode: chọn mục tiêu và hành động trong panel. Esc mở system. Tab quay về battle view.");
                 return;
             }
 

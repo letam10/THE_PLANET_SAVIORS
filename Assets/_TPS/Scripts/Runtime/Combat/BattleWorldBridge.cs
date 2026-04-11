@@ -82,6 +82,7 @@ namespace TPS.Runtime.Combat
             }
 
             Instance = this;
+            RuntimeMenuCanvasController.EnsureExists();
             if (EncounterService.Instance == null || !EncounterService.Instance.TryGetPendingEncounter(out _context))
             {
                 AppendLog("No pending encounter. Battle bridge idle.");
@@ -706,6 +707,7 @@ namespace TPS.Runtime.Combat
             yield return SceneLoader.Instance.LoadContentSceneAsync(_context.ReturnSceneName);
             yield return null;
 
+            RuntimeUiInputState.RestoreGameplayFocus();
             ToggleWorldControls(true);
             if (EncounterService.Instance != null)
             {

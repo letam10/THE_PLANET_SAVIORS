@@ -123,12 +123,12 @@ namespace TPS.Editor
             ConfigureQuest(assets.GullwatchRouteQuest,
                 "quest_secure_tide_route",
                 "Secure the Tide Route",
-                "Travel from Aster Harbor to Gullwatch, investigate Tide Caverns, and defeat the matriarch blocking the coastal route.",
+                "Leave Aster Harbor for Gullwatch, speak with Mira, then push through Tide Caverns and break the matriarch holding the coastal route shut.",
                 assets.GullwatchRouteReward,
                 null,
                 assets.TideCavernsBoss.EncounterId,
                 "defeat_tide_matriarch",
-                "Defeat the Tide Caverns Matriarch beyond the flooded chambers.");
+                "Go through Gullwatch, follow the spray markers into Tide Caverns, and defeat the Tide Caverns Matriarch beyond the flooded chambers.");
             ConfigureGullwatchRouteDialogue(assets.GullwatchDialogue, assets.GullwatchRouteQuest, assets.Base.SideQuest, assets.TideCavernsBoss.EncounterId);
             ConfigureSettlementDialogue(assets.RedCedarDialogue, "dialogue_redcedar_watcher", "Renn of Red Cedar",
                 "The old road is calm again. Traders are willing to risk the climb.",
@@ -386,10 +386,10 @@ namespace TPS.Editor
                 ConditionType.QuestState, routeQuest.QuestId, QuestStatus.ReadyToTurnIn, null, null, DialogueActionType.TryCompleteQuest, routeQuest, null,
                 setZoneFact: true, setZoneId: "gullwatch", setZoneFactId: "tide_route_secured");
             ConfigureGullwatchVariant(variants.GetArrayElementAtIndex(2), "active", "Mira of Gullwatch",
-                "Follow the spray markers into Tide Caverns. The matriarch nests beyond the second flooded chamber.",
+                "Follow the spray markers into Tide Caverns. Clear the patrol at the mouth if it blocks you, then push past the second flooded chamber to reach the matriarch.",
                 ConditionType.QuestState, routeQuest.QuestId, QuestStatus.Active, null, null, DialogueActionType.SetFlag, null, "dialogue.gullwatch.route_active");
             ConfigureGullwatchVariant(variants.GetArrayElementAtIndex(3), "start", "Mira of Gullwatch",
-                "Quartermaster Ivo said you were coming. Clear Tide Caverns and we'll reopen the full coastal route by dusk.",
+                "Quartermaster Ivo said you were coming. Start at the Gullwatch lane, push through Tide Caverns, and we will reopen the full coastal route by dusk.",
                 ConditionType.ZoneFactBoolEquals, null, QuestStatus.NotStarted, "aster_harbor", "dock_supplies_secured", DialogueActionType.AcceptQuest, routeQuest, null);
             ConfigureFallbackVariant(variants.GetArrayElementAtIndex(4), "fallback", "Mira of Gullwatch",
                 "The gulls are quieter, but we still watch the tide line. Handle the harbor first, then we'll talk routes.");

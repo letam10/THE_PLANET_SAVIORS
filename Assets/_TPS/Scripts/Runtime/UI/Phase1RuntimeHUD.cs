@@ -55,12 +55,17 @@ namespace TPS.Runtime.UI
             RuntimeMenuCanvasController.EnsureExists();
             WeatherPresentationController.EnsureExists();
             RuntimeUiInputState.RestoreGameplayFocus();
+            GameEventBus.OnGameLoaded += HandleRuntimeReset;
+            SceneManager.activeSceneChanged += HandleActiveSceneChanged;
             _activePanel = RuntimePanelType.None;
+            _activeMerchant = null;
             EnsureSelectedMember();
         }
 
         private void OnDisable()
         {
+            GameEventBus.OnGameLoaded -= HandleRuntimeReset;
+            SceneManager.activeSceneChanged -= HandleActiveSceneChanged;
             if (Instance == this)
             {
                 RuntimeUiInputState.RestoreGameplayFocus();
@@ -163,6 +168,18 @@ namespace TPS.Runtime.UI
             {
                 RuntimeUiInputState.RestoreGameplayFocus();
             }
+        }
+
+        private void HandleRuntimeReset()
+        {
+            _activeMerchant = null;
+            _activePanel = RuntimePanelType.None;
+            RuntimeUiInputState.RestoreGameplayFocus();
+        }
+
+        private void HandleActiveSceneChanged(Scene previousScene, Scene nextScene)
+        {
+            HandleRuntimeReset();
         }
 
         public ItemDefinition FindFirstUsableConsumable()

@@ -6,6 +6,7 @@ using TPS.Runtime.Core;
 using TPS.Runtime.Dialogue;
 using TPS.Runtime.Quest;
 using TPS.Runtime.Time;
+using TPS.Runtime.UI;
 using TPS.Runtime.Weather;
 using TPS.Runtime.Spawn;
 using TPS.Runtime.World;
@@ -170,6 +171,7 @@ namespace TPS.Runtime.SaveLoad
                 StateResolver.Instance.ResolveAll();
             }
 
+            RuntimeUiInputState.RestoreGameplayFocus();
             Debug.Log("[SaveLoad] Load Sequence Complete.");
         }
     }
