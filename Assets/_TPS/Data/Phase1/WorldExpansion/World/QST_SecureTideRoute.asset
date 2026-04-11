@@ -14,11 +14,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: TPS.Runtime::TPS.Runtime.Quest.QuestDefinition
   _questId: quest_secure_tide_route
   _title: Secure the Tide Route
-  _summary: Travel from Aster Harbor to Gullwatch, investigate Tide Caverns, and
-    defeat the matriarch blocking the coastal route.
+  _summary: Prepare in Aster Harbor, report to Mira in Gullwatch, then clear Tide
+    Caverns and reopen the coastal route.
   _objectives:
   - ObjectiveId: defeat_tide_matriarch
-    Description: Defeat the Tide Caverns Matriarch beyond the flooded chambers.
+    Description: Travel to Gullwatch, speak with Mira at the beacon frame, follow
+      the spray markers into Tide Caverns, and defeat the Matriarch beyond the flooded
+      chambers.
     CompletionConditions:
       Mode: 0
       Conditions:

@@ -35,7 +35,9 @@ namespace TPS.Runtime.UI
         private RuntimePanelType _activePanel;
         private string _selectedMemberId;
 
-        public MerchantAnchor ActiveMerchant => _activeMerchant;
+        public MerchantAnchor ActiveMerchant => RuntimeMenuCanvasController.Instance != null
+            ? RuntimeMenuCanvasController.Instance.ActiveMerchant
+            : _activeMerchant;
         public Phase1ContentCatalog ContentCatalog => _contentCatalog;
 
         private void Awake()
@@ -152,6 +154,12 @@ namespace TPS.Runtime.UI
 
         public void ToggleShop(MerchantAnchor merchantAnchor)
         {
+            if (RuntimeMenuCanvasController.Instance != null)
+            {
+                RuntimeMenuCanvasController.Instance.ToggleMerchantShop(merchantAnchor);
+                return;
+            }
+
             _activeMerchant = _activeMerchant == merchantAnchor ? null : merchantAnchor;
             if (_activeMerchant != null)
             {
@@ -163,6 +171,12 @@ namespace TPS.Runtime.UI
 
         public void CloseShop()
         {
+            if (RuntimeMenuCanvasController.Instance != null)
+            {
+                RuntimeMenuCanvasController.Instance.CloseMerchantShop();
+                return;
+            }
+
             _activeMerchant = null;
             if (_activePanel == RuntimePanelType.None)
             {
@@ -174,7 +188,10 @@ namespace TPS.Runtime.UI
         {
             _activeMerchant = null;
             _activePanel = RuntimePanelType.None;
-            RuntimeUiInputState.RestoreGameplayFocus();
+            if (RuntimeMenuCanvasController.Instance == null)
+            {
+                RuntimeUiInputState.RestoreGameplayFocus();
+            }
         }
 
         private void HandleActiveSceneChanged(Scene previousScene, Scene nextScene)

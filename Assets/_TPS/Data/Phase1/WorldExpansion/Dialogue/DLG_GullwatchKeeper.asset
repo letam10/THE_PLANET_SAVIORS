@@ -102,8 +102,9 @@ MonoBehaviour:
     Choices: []
   - VariantId: active
     SpeakerName: Mira of Gullwatch
-    Body: Follow the spray markers into Tide Caverns. The matriarch nests beyond
-      the second flooded chamber.
+    Body: Follow the spray markers into Tide Caverns. Clear the patrol at the mouth
+      if it blocks you, then push past the second flooded chamber to reach the matriarch.
+      Open your quest log if you lose the route.
     Conditions:
       Mode: 0
       Conditions:
@@ -140,8 +141,9 @@ MonoBehaviour:
     Choices: []
   - VariantId: start
     SpeakerName: Mira of Gullwatch
-    Body: Quartermaster Ivo said you were coming. Clear Tide Caverns and we'll reopen
-      the full coastal route by dusk.
+    Body: Quartermaster Ivo said you were coming. Stock up in Aster Harbor if you
+      need to, then start at the Gullwatch lane, push through Tide Caverns, and we
+      will reopen the full coastal route by dusk.
     Conditions:
       Mode: 0
       Conditions:

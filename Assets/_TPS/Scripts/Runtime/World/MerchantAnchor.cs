@@ -22,12 +22,21 @@ namespace TPS.Runtime.World
 
         public void Interact(GameObject interactor)
         {
-            if (EconomyService.Instance == null || !EconomyService.Instance.CanAccessShop(_shopDefinition) || Phase1RuntimeHUD.Instance == null)
+            if (EconomyService.Instance == null || !EconomyService.Instance.CanAccessShop(_shopDefinition))
             {
                 return;
             }
 
-            Phase1RuntimeHUD.Instance.ToggleShop(this);
+            if (RuntimeMenuCanvasController.Instance != null)
+            {
+                RuntimeMenuCanvasController.Instance.ToggleMerchantShop(this);
+                return;
+            }
+
+            if (Phase1RuntimeHUD.Instance != null)
+            {
+                Phase1RuntimeHUD.Instance.ToggleShop(this);
+            }
         }
 
         private void OnEnable()

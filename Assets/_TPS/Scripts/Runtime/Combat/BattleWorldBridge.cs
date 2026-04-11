@@ -322,6 +322,7 @@ namespace TPS.Runtime.Combat
         {
             if (InventoryService.Instance == null || Phase1RuntimeHUD.Instance == null)
             {
+                AppendLog("Consumables are unavailable.");
                 return;
             }
 
@@ -329,8 +330,6 @@ namespace TPS.Runtime.Combat
             if (item == null || !InventoryService.Instance.RemoveItem(item, 1))
             {
                 AppendLog("No usable consumable available.");
-                _awaitingPlayerInput = false;
-                AdvanceTurn();
                 return;
             }
 

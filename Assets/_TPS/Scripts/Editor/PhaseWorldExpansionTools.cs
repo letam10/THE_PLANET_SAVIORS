@@ -601,12 +601,15 @@ namespace TPS.Editor
         private static void BuildAsterHarborGoldenPathFocus(Transform worldRoot)
         {
             GameObject root = EnsureManagedNode(worldRoot, "ENV_GoldenPathFocus", "aster_harbor_focus");
+            GameObject lanes = EnsureManagedNode(root.transform, "ENV_Lanes", "aster_harbor_focus");
             GameObject pathProps = EnsureManagedNode(root.transform, "ENV_PathProps", "aster_harbor_focus");
             GameObject landmarks = EnsureManagedNode(root.transform, "ENV_Landmarks", "aster_harbor_focus");
             GameObject ambient = EnsureManagedNode(root.transform, "ENV_Ambient", "aster_harbor_focus");
 
-            BuildCrateLine(pathProps.transform, "PRP_DockLaneMarkers", new Vector3(5f, 0f, 2.5f), 5, 0.95f);
-            BuildFenceLine(pathProps.transform, "PRP_GullwatchRoutePosts", new Vector3(-20f, 0f, 13f), 5, 1.35f);
+            BuildPrimitiveSlot(lanes.transform, "PAD_DockObjectiveApproach", PrimitiveType.Cube, new Vector3(6f, 0.12f, 2.8f), new Vector3(7.2f, 0.12f, 4.2f), "Clear approach to the dock board and shopfront interaction lane.");
+            BuildPrimitiveSlot(lanes.transform, "PAD_GullwatchRouteLane", PrimitiveType.Cube, new Vector3(-19.5f, 0.12f, 13.8f), new Vector3(8.4f, 0.12f, 3.6f), "Readable outbound lane toward Gullwatch.");
+            BuildCrateLine(pathProps.transform, "PRP_DockLaneMarkers", new Vector3(5f, 0f, 4.2f), 5, 0.95f);
+            BuildFenceLine(pathProps.transform, "PRP_GullwatchRoutePosts", new Vector3(-20f, 0f, 15f), 5, 1.35f);
             BuildLandmarkCluster(landmarks.transform, "LMK_DockObjectiveBoard", new Vector3(6.5f, 0f, 3f));
             BuildLandmarkCluster(landmarks.transform, "LMK_GullwatchGuide", new Vector3(-22f, 0f, 14f));
             BuildAmbientSolo(ambient.transform, "AMB_PathRunner", new Vector3(4.2f, 0f, 3.8f));
@@ -645,14 +648,17 @@ namespace TPS.Editor
         private static void BuildGullwatchFocusedPass(Transform worldRoot)
         {
             GameObject root = EnsureManagedNode(worldRoot, "ENV_GullwatchFocus", "gullwatch_focus");
+            GameObject lanes = EnsureManagedNode(root.transform, "ENV_Lanes", "gullwatch_focus");
             GameObject props = EnsureManagedNode(root.transform, "ENV_Props", "gullwatch_focus");
             GameObject ambient = EnsureManagedNode(root.transform, "ENV_Ambient", "gullwatch_focus");
             GameObject interiors = EnsureManagedNode(root.transform, "ENV_Interiors", "gullwatch_focus");
             GameObject consequence = EnsureManagedNode(root.transform, "ENV_Consequence", "gullwatch_focus");
 
+            BuildPrimitiveSlot(lanes.transform, "PAD_BeaconWalk", PrimitiveType.Cube, new Vector3(4.5f, 0.12f, 7.6f), new Vector3(8.5f, 0.12f, 3.6f), "Shore walk toward the beacon house.");
+            BuildPrimitiveSlot(lanes.transform, "PAD_HouseApproach", PrimitiveType.Cube, new Vector3(6.1f, 0.12f, 6.9f), new Vector3(3.2f, 0.12f, 4.4f), "Clear landing in front of the beacon house.");
             BuildLandmarkCluster(props.transform, "LMK_ShoreBeaconFrame", new Vector3(9.2f, 0f, 9.8f));
-            BuildFenceLine(props.transform, "PRP_ShoreWalkPosts", new Vector3(6.2f, 0f, 6.8f), 6, 1.2f);
-            BuildCrateLine(props.transform, "PRP_FishingGear", new Vector3(-4.2f, 0f, 5.5f), 4, 0.95f);
+            BuildFenceLine(props.transform, "PRP_ShoreWalkPosts", new Vector3(6.2f, 0f, 8.5f), 6, 1.2f);
+            BuildCrateLine(props.transform, "PRP_FishingGear", new Vector3(-5.4f, 0f, 5.5f), 4, 0.95f);
             BuildAmbientPair(ambient.transform, "AMB_FisherFamily", new Vector3(1.6f, 0f, 5.2f));
             BuildAmbientSolo(ambient.transform, "AMB_WatchMira", new Vector3(8.1f, 0f, 7.6f));
             BuildAmbientCreature(ambient.transform, "AMB_ShoreBirds", new Vector3(5.2f, 1.8f, 10.2f));
@@ -708,12 +714,15 @@ namespace TPS.Editor
         {
             GameObject root = EnsureManagedNode(worldRoot, "ENV_TideFocus", "tide_caverns_focus");
             GameObject leadIn = EnsureManagedNode(root.transform, "ENV_LeadIn", "tide_caverns_focus");
+            GameObject lanes = EnsureManagedNode(root.transform, "ENV_Lanes", "tide_caverns_focus");
             GameObject props = EnsureManagedNode(root.transform, "ENV_Props", "tide_caverns_focus");
             GameObject ambient = EnsureManagedNode(root.transform, "ENV_Ambient", "tide_caverns_focus");
 
+            BuildPrimitiveSlot(lanes.transform, "PAD_EntranceApproach", PrimitiveType.Cube, new Vector3(0f, 0.12f, -8.1f), new Vector3(5.8f, 0.12f, 4.5f), "Clear lead-in lane from dungeon entry toward the first encounter.");
+            BuildPrimitiveSlot(lanes.transform, "PAD_BossApproach", PrimitiveType.Cube, new Vector3(0f, 0.12f, 7.6f), new Vector3(6.2f, 0.12f, 4.8f), "Clear approach into the final chamber.");
             BuildLandmarkCluster(leadIn.transform, "LMK_TideGate", new Vector3(0f, 0f, -10.8f));
-            BuildFenceLine(leadIn.transform, "PRP_TideMarkers", new Vector3(-3.4f, 0f, -7.4f), 6, 1.25f);
-            BuildCrateLine(props.transform, "PRP_WetDebris", new Vector3(-4.5f, 0f, -2.4f), 5, 0.95f);
+            BuildFenceLine(leadIn.transform, "PRP_TideMarkers", new Vector3(-4.8f, 0f, -7.4f), 6, 1.25f);
+            BuildCrateLine(props.transform, "PRP_WetDebris", new Vector3(-6f, 0f, -2.4f), 5, 0.95f);
             BuildLandmarkCluster(props.transform, "LMK_MatriarchNest", new Vector3(0f, 0f, 12.2f));
             BuildAmbientCreature(ambient.transform, "AMB_TideDriftA", new Vector3(-2.5f, 0.2f, -5.2f));
             BuildAmbientCreature(ambient.transform, "AMB_TideDriftB", new Vector3(2.8f, 0.2f, 4.4f));
@@ -763,7 +772,8 @@ namespace TPS.Editor
 
             ClearManagedChildren(slot.transform, GetGenerationId(parent));
             CreatePrimitiveVisual(slot.transform, "GEN_Body", PrimitiveType.Cube, new Vector3(0f, scale.y * 0.5f, 0f), scale, GetGenerationId(parent), "Building shell");
-            CreatePrimitiveVisual(slot.transform, "GEN_Roof", PrimitiveType.Cube, new Vector3(0f, scale.y + 0.3f, 0f), new Vector3(scale.x + 0.4f, 0.35f, scale.z + 0.5f), GetGenerationId(parent), "Roof shell");
+            GameObject roof = CreatePrimitiveVisual(slot.transform, "GEN_Roof", PrimitiveType.Cube, new Vector3(0f, scale.y + 0.3f, 0f), new Vector3(scale.x + 0.4f, 0.35f, scale.z + 0.5f), GetGenerationId(parent), "Roof shell");
+            SetGeneratedColliderEnabled(roof, false);
         }
 
         private static void BuildCrateLine(Transform parent, string name, Vector3 startPosition, int count, float spacing)
@@ -775,7 +785,8 @@ namespace TPS.Editor
             ClearManagedChildren(slot.transform, GetGenerationId(parent));
             for (int i = 0; i < count; i++)
             {
-                CreatePrimitiveVisual(slot.transform, $"GEN_Crate_{i + 1}", PrimitiveType.Cube, new Vector3(i * spacing, 0.35f, 0f), new Vector3(0.7f, 0.7f, 0.7f), GetGenerationId(parent), "Cargo crate");
+                GameObject crate = CreatePrimitiveVisual(slot.transform, $"GEN_Crate_{i + 1}", PrimitiveType.Cube, new Vector3(i * spacing, 0.35f, 0f), new Vector3(0.7f, 0.7f, 0.7f), GetGenerationId(parent), "Cargo crate");
+                SetGeneratedColliderEnabled(crate, false);
             }
         }
 
@@ -788,7 +799,8 @@ namespace TPS.Editor
             ClearManagedChildren(slot.transform, GetGenerationId(parent));
             for (int i = 0; i < count; i++)
             {
-                CreatePrimitiveVisual(slot.transform, $"GEN_Post_{i + 1}", PrimitiveType.Cylinder, new Vector3(i * spacing, 0.55f, 0f), new Vector3(0.16f, 0.55f, 0.16f), GetGenerationId(parent), "Fence post");
+                GameObject post = CreatePrimitiveVisual(slot.transform, $"GEN_Post_{i + 1}", PrimitiveType.Cylinder, new Vector3(i * spacing, 0.55f, 0f), new Vector3(0.16f, 0.55f, 0.16f), GetGenerationId(parent), "Fence post");
+                SetGeneratedColliderEnabled(post, false);
             }
         }
 
@@ -799,8 +811,10 @@ namespace TPS.Editor
             if (HasManualChildren(slot, GetGenerationId(parent))) return;
 
             ClearManagedChildren(slot.transform, GetGenerationId(parent));
-            CreatePrimitiveVisual(slot.transform, "GEN_Base", PrimitiveType.Cube, new Vector3(0f, 0.6f, 0f), new Vector3(1.2f, 1.2f, 1.2f), GetGenerationId(parent), "Landmark base");
-            CreatePrimitiveVisual(slot.transform, "GEN_Spire", PrimitiveType.Cylinder, new Vector3(0f, 2.2f, 0f), new Vector3(0.25f, 2f, 0.25f), GetGenerationId(parent), "Landmark spire");
+            GameObject landmarkBase = CreatePrimitiveVisual(slot.transform, "GEN_Base", PrimitiveType.Cube, new Vector3(0f, 0.6f, 0f), new Vector3(1.2f, 1.2f, 1.2f), GetGenerationId(parent), "Landmark base");
+            GameObject spire = CreatePrimitiveVisual(slot.transform, "GEN_Spire", PrimitiveType.Cylinder, new Vector3(0f, 2.2f, 0f), new Vector3(0.25f, 2f, 0.25f), GetGenerationId(parent), "Landmark spire");
+            SetGeneratedColliderEnabled(landmarkBase, false);
+            SetGeneratedColliderEnabled(spire, false);
         }
 
         private static void BuildAmbientPair(Transform parent, string name, Vector3 position)
@@ -808,8 +822,10 @@ namespace TPS.Editor
             GameObject slot = EnsureManagedNode(parent, name, GetGenerationId(parent));
             slot.transform.localPosition = position;
             ClearManagedChildren(slot.transform, GetGenerationId(parent));
-            CreatePrimitiveVisual(slot.transform, "GEN_A", PrimitiveType.Capsule, new Vector3(-0.45f, 1f, 0f), new Vector3(0.8f, 1f, 0.8f), GetGenerationId(parent), "Ambient actor");
-            CreatePrimitiveVisual(slot.transform, "GEN_B", PrimitiveType.Capsule, new Vector3(0.45f, 1f, 0f), new Vector3(0.8f, 1f, 0.8f), GetGenerationId(parent), "Ambient actor");
+            GameObject actorA = CreatePrimitiveVisual(slot.transform, "GEN_A", PrimitiveType.Capsule, new Vector3(-0.45f, 1f, 0f), new Vector3(0.8f, 1f, 0.8f), GetGenerationId(parent), "Ambient actor");
+            GameObject actorB = CreatePrimitiveVisual(slot.transform, "GEN_B", PrimitiveType.Capsule, new Vector3(0.45f, 1f, 0f), new Vector3(0.8f, 1f, 0.8f), GetGenerationId(parent), "Ambient actor");
+            SetGeneratedColliderEnabled(actorA, false);
+            SetGeneratedColliderEnabled(actorB, false);
         }
 
         private static void BuildAmbientSolo(Transform parent, string name, Vector3 position)
@@ -817,7 +833,8 @@ namespace TPS.Editor
             GameObject slot = EnsureManagedNode(parent, name, GetGenerationId(parent));
             slot.transform.localPosition = position;
             ClearManagedChildren(slot.transform, GetGenerationId(parent));
-            CreatePrimitiveVisual(slot.transform, "GEN_A", PrimitiveType.Capsule, new Vector3(0f, 1f, 0f), new Vector3(0.8f, 1f, 0.8f), GetGenerationId(parent), "Ambient actor");
+            GameObject actor = CreatePrimitiveVisual(slot.transform, "GEN_A", PrimitiveType.Capsule, new Vector3(0f, 1f, 0f), new Vector3(0.8f, 1f, 0.8f), GetGenerationId(parent), "Ambient actor");
+            SetGeneratedColliderEnabled(actor, false);
         }
 
         private static void BuildAmbientCreature(Transform parent, string name, Vector3 position)
@@ -825,7 +842,8 @@ namespace TPS.Editor
             GameObject slot = EnsureManagedNode(parent, name, GetGenerationId(parent));
             slot.transform.localPosition = position;
             ClearManagedChildren(slot.transform, GetGenerationId(parent));
-            CreatePrimitiveVisual(slot.transform, "GEN_Creature", PrimitiveType.Sphere, Vector3.zero, new Vector3(0.45f, 0.3f, 0.45f), GetGenerationId(parent), "Ambient creature");
+            GameObject creature = CreatePrimitiveVisual(slot.transform, "GEN_Creature", PrimitiveType.Sphere, Vector3.zero, new Vector3(0.45f, 0.3f, 0.45f), GetGenerationId(parent), "Ambient creature");
+            SetGeneratedColliderEnabled(creature, false);
         }
 
         private static void BuildFocusedInteriorRoom(Transform container, string name, Vector3 interiorPosition, Vector3 roomSize, Vector3 exteriorDoorPosition)
@@ -848,9 +866,12 @@ namespace TPS.Editor
             CreatePrimitiveVisual(slot.transform, "GEN_Wall_South_Right", PrimitiveType.Cube, new Vector3(roomSize.x * 0.28f, roomSize.y * 0.5f, -roomSize.z * 0.5f), new Vector3(roomSize.x * 0.44f, roomSize.y, 0.2f), GetGenerationId(container), "Settlement interior wall.");
             CreatePrimitiveVisual(slot.transform, "GEN_Wall_West", PrimitiveType.Cube, new Vector3(-roomSize.x * 0.5f, roomSize.y * 0.5f, 0f), new Vector3(0.2f, roomSize.y, roomSize.z), GetGenerationId(container), "Settlement interior wall.");
             CreatePrimitiveVisual(slot.transform, "GEN_Wall_East", PrimitiveType.Cube, new Vector3(roomSize.x * 0.5f, roomSize.y * 0.5f, 0f), new Vector3(0.2f, roomSize.y, roomSize.z), GetGenerationId(container), "Settlement interior wall.");
-            CreatePrimitiveVisual(slot.transform, "GEN_Table", PrimitiveType.Cube, new Vector3(0f, 0.62f, 1.2f), new Vector3(2.1f, 0.2f, 1.1f), GetGenerationId(container), "Settlement table.");
-            CreatePrimitiveVisual(slot.transform, "GEN_Bunk", PrimitiveType.Cube, new Vector3(-2f, 0.4f, -1.1f), new Vector3(1.8f, 0.45f, 1f), GetGenerationId(container), "Settlement bunk.");
-            CreatePrimitiveVisual(slot.transform, "GEN_Crates", PrimitiveType.Cube, new Vector3(2.1f, 0.4f, -1.2f), new Vector3(0.9f, 0.8f, 0.9f), GetGenerationId(container), "Settlement cargo.");
+            GameObject table = CreatePrimitiveVisual(slot.transform, "GEN_Table", PrimitiveType.Cube, new Vector3(0f, 0.62f, 1.2f), new Vector3(2.1f, 0.2f, 1.1f), GetGenerationId(container), "Settlement table.");
+            GameObject bunk = CreatePrimitiveVisual(slot.transform, "GEN_Bunk", PrimitiveType.Cube, new Vector3(-2f, 0.4f, -1.1f), new Vector3(1.8f, 0.45f, 1f), GetGenerationId(container), "Settlement bunk.");
+            GameObject cargo = CreatePrimitiveVisual(slot.transform, "GEN_Crates", PrimitiveType.Cube, new Vector3(2.1f, 0.4f, -1.2f), new Vector3(0.9f, 0.8f, 0.9f), GetGenerationId(container), "Settlement cargo.");
+            SetGeneratedColliderEnabled(table, false);
+            SetGeneratedColliderEnabled(bunk, false);
+            SetGeneratedColliderEnabled(cargo, false);
 
             Transform interiorEntry = EnsureMarker(slot.transform, "MK_InteriorEntry", new Vector3(0f, 0.15f, -roomSize.z * 0.33f), Quaternion.identity);
             Transform interiorExit = EnsureMarker(slot.transform, "MK_InteriorExit", new Vector3(0f, 0.15f, -roomSize.z * 0.45f), Quaternion.identity);
@@ -915,6 +936,7 @@ namespace TPS.Editor
             leaf.transform.localPosition = new Vector3(0f, 0.95f, 0f);
             leaf.transform.localScale = new Vector3(1f, 1.9f, 0.16f);
             PlaceholderScaffoldStyleUtility.ApplyStyle(leaf, EnvironmentGeneratedCategory.Building, "GEN_Door", "Simple settlement door scaffold.");
+            SetGeneratedColliderEnabled(leaf, false);
 
             SerializedObject so = new SerializedObject(travelDoor);
             so.FindProperty("_doorId").stringValue = name.ToLowerInvariant();
@@ -1004,6 +1026,20 @@ namespace TPS.Editor
             EditorUtility.SetDirty(marker);
             PlaceholderScaffoldStyleUtility.ApplyStyle(target, EnvironmentGeneratedCategory.Prop, name, notes);
             return target;
+        }
+
+        private static void SetGeneratedColliderEnabled(GameObject target, bool enabled)
+        {
+            if (target == null)
+            {
+                return;
+            }
+
+            Collider collider = target.GetComponent<Collider>();
+            if (collider != null)
+            {
+                collider.enabled = enabled;
+            }
         }
 
         private static bool HasManualChildren(GameObject slot, string generationId)

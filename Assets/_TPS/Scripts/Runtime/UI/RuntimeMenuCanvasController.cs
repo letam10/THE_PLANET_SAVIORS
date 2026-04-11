@@ -26,7 +26,8 @@ namespace TPS.Runtime.UI
             Shop = 6,
             Help = 7,
             Battle = 8,
-            BattleEnd = 9
+            BattleEnd = 9,
+            Sleep = 10
         }
 
         public static RuntimeMenuCanvasController Instance { get; private set; }
@@ -36,6 +37,11 @@ namespace TPS.Runtime.UI
         private const string MusicVolumeKey = "TPS.Runtime.Audio.Music";
         private const string SfxVolumeKey = "TPS.Runtime.Audio.Sfx";
         private const string FullscreenKey = "TPS.Runtime.Display.Fullscreen";
+        private const string TideRouteQuestId = "quest_secure_tide_route";
+        private const string DockSuppliesZoneId = "aster_harbor";
+        private const string DockSuppliesFactId = "dock_supplies_secured";
+        private const string TideRouteZoneId = "gullwatch";
+        private const string TideRouteSecuredFactId = "tide_route_secured";
 
         private Canvas _canvas;
         private GraphicRaycaster _raycaster;
@@ -56,9 +62,12 @@ namespace TPS.Runtime.UI
         private Font _font;
         private PanelType _activePanel;
         private string _selectedMemberId;
+        private MerchantAnchor _activeMerchant;
+        private InnAnchor _activeInn;
         private float _lastRefreshAt = -1f;
 
         public bool IsMenuVisible => _activePanel != PanelType.None;
+        public MerchantAnchor ActiveMerchant => _activeMerchant;
 
         public static void EnsureExists()
         {
@@ -105,6 +114,66 @@ namespace TPS.Runtime.UI
             SyncMerchantPanelState();
             HandleHotkeys();
             RefreshCurrentPanelIfNeeded();
+        }
+
+        public void ToggleMerchantShop(MerchantAnchor merchant)
+        {
+            if (merchant == null)
+            {
+                CloseMerchantShop();
+                return;
+            }
+
+            if (_activeMerchant == merchant && _activePanel == PanelType.Shop)
+            {
+                CloseMerchantShop();
+                return;
+            }
+
+            _activeMerchant = merchant;
+            _activeInn = null;
+            OpenPanel(PanelType.Shop);
+        }
+
+        public void CloseMerchantShop()
+        {
+            _activeMerchant = null;
+            if (_activePanel == PanelType.Shop)
+            {
+                _activePanel = PanelType.None;
+                RuntimeUiInputState.RestoreGameplayFocus();
+                RefreshVisibility();
+            }
+        }
+
+        public void OpenSleepPanel(InnAnchor inn)
+        {
+            if (inn == null)
+            {
+                return;
+            }
+
+            _activeInn = inn;
+            _activeMerchant = null;
+            OpenPanel(PanelType.Sleep);
+        }
+
+        public void PrepareForSceneTransition(string message = null)
+        {
+            _activeMerchant = null;
+            _activeInn = null;
+
+            if (!IsBattlePanelActive())
+            {
+                _activePanel = PanelType.None;
+                RuntimeUiInputState.RestoreGameplayFocus();
+                RefreshVisibility();
+            }
+
+            if (!string.IsNullOrWhiteSpace(message))
+            {
+                Notify(message);
+            }
         }
 
         private void BuildUiShell()
@@ -320,19 +389,18 @@ namespace TPS.Runtime.UI
 
         private void SyncMerchantPanelState()
         {
-            if (IsBattlePanelActive())
+            if (IsBattlePanelActive() || _activeInn != null)
             {
                 return;
             }
 
-            MerchantAnchor merchant = GetActiveMerchant();
-            if (merchant != null && _activePanel == PanelType.None)
+            if (_activeMerchant != null && _activePanel == PanelType.None)
             {
                 OpenPanel(PanelType.Shop);
                 return;
             }
 
-            if (merchant == null && _activePanel == PanelType.Shop)
+            if (_activeMerchant == null && _activePanel == PanelType.Shop)
             {
                 ClosePanels();
             }
@@ -387,13 +455,27 @@ namespace TPS.Runtime.UI
                 panel == PanelType.Character ||
                 panel == PanelType.Quest ||
                 panel == PanelType.Equipment ||
-                panel == PanelType.Shop)
+                panel == PanelType.Shop ||
+                panel == PanelType.Sleep)
             {
                 BattleWorldBridge bridge = BattleWorldBridge.Instance;
                 if (bridge != null && bridge.HasActiveEncounter)
                 {
                     return;
                 }
+            }
+
+            if (panel == PanelType.Shop)
+            {
+                _activeInn = null;
+            }
+            else if (panel == PanelType.Sleep)
+            {
+                _activeMerchant = null;
+            }
+            else if (panel != PanelType.None)
+            {
+                _activeInn = null;
             }
 
             _activePanel = panel;
@@ -413,12 +495,18 @@ namespace TPS.Runtime.UI
                 return;
             }
 
-            MerchantAnchor merchant = GetActiveMerchant();
-            if (merchant != null && Phase1RuntimeHUD.Instance != null)
+            if (_activePanel != PanelType.Shop && _activeMerchant != null)
             {
-                Phase1RuntimeHUD.Instance.CloseShop();
+                _activeInn = null;
+                _activePanel = PanelType.Shop;
+                RuntimeUiInputState.SetUiFocused(true);
+                RebuildContent();
+                RefreshVisibility();
+                return;
             }
 
+            _activeInn = null;
+            _activeMerchant = null;
             _activePanel = PanelType.None;
             RuntimeUiInputState.RestoreGameplayFocus();
             RefreshVisibility();
@@ -480,6 +568,9 @@ namespace TPS.Runtime.UI
                 case PanelType.Help:
                     BuildHelpPanel();
                     break;
+                case PanelType.Sleep:
+                    BuildSleepPanel();
+                    break;
                 case PanelType.Battle:
                     BuildBattlePanel();
                     break;
@@ -496,6 +587,16 @@ namespace TPS.Runtime.UI
             {
                 AddInfoLine("Inventory unavailable.");
                 return;
+            }
+
+            if (PartyService.Instance != null)
+            {
+                AddMemberSelector();
+                CharacterStatSnapshot snapshot = GetSelectedSnapshot();
+                if (snapshot != null)
+                {
+                    AddInfoLine($"{snapshot.DisplayName} | HP {PartyService.Instance.GetCurrentHP(snapshot.CharacterId)}/{snapshot.Stats.MaxHP} | MP {PartyService.Instance.GetCurrentMP(snapshot.CharacterId)}/{snapshot.Stats.MaxMP}");
+                }
             }
 
             AddHeader("Consumables");
@@ -590,6 +691,10 @@ namespace TPS.Runtime.UI
             }
 
             AddInfoLine($"{snapshot.DisplayName} Lv{snapshot.Level}");
+            if (ProgressionService.Instance != null)
+            {
+                AddInfoLine($"EXP {ProgressionService.Instance.GetCurrentExp(snapshot.CharacterId)} | {T("Unlocked skills", "Ky nang da mo")}: {snapshot.Skills.Count}");
+            }
             AddInfoLine($"HP {PartyService.Instance.GetCurrentHP(snapshot.CharacterId)}/{snapshot.Stats.MaxHP} | MP {PartyService.Instance.GetCurrentMP(snapshot.CharacterId)}/{snapshot.Stats.MaxMP}");
             AddInfoLine($"ATK {snapshot.Stats.Attack} | MAG {snapshot.Stats.Magic} | DEF {snapshot.Stats.Defense} | RES {snapshot.Stats.Resistance} | SPD {snapshot.Stats.Speed}");
             AddInfoLine($"{T("Weapon", "Vũ khí")}: {(snapshot.EquippedWeapon != null ? snapshot.EquippedWeapon.DisplayName : T("No Weapon", "Chưa có"))}");
@@ -620,6 +725,7 @@ namespace TPS.Runtime.UI
                 return;
             }
 
+            AddRouteGuidanceSection();
             for (int i = 0; i < catalog.Quests.Count; i++)
             {
                 QuestDefinition quest = catalog.Quests[i];
@@ -638,6 +744,53 @@ namespace TPS.Runtime.UI
                     AddInfoLine(objective);
                 }
             }
+        }
+
+        private void AddRouteGuidanceSection()
+        {
+            AddHeader(T("Next Steps", "Buoc tiep theo"));
+            List<string> lines = GetRouteGuidanceLines();
+            for (int i = 0; i < lines.Count; i++)
+            {
+                AddInfoLine(lines[i]);
+            }
+        }
+
+        private List<string> GetRouteGuidanceLines()
+        {
+            var lines = new List<string>();
+            QuestStatus routeStatus = QuestService.Instance != null ? QuestService.Instance.GetQuestStatus(TideRouteQuestId) : QuestStatus.NotStarted;
+            bool dockSuppliesSecured = ZoneStateService.Instance != null && ZoneStateService.Instance.GetBoolFact(DockSuppliesZoneId, DockSuppliesFactId);
+            bool tideRouteSecured = ZoneStateService.Instance != null && ZoneStateService.Instance.GetBoolFact(TideRouteZoneId, TideRouteSecuredFactId);
+
+            if (!dockSuppliesSecured)
+            {
+                lines.Add(T("Start in Aster Harbor: check the dock quarter, use the general store, and read the board near the harbor lane.", "Bat dau o Aster Harbor: ghe khu cau cang, vao cua hang tong hop, va doc bang huong dan gan lane ben cang."));
+            }
+            else if (routeStatus == QuestStatus.NotStarted)
+            {
+                lines.Add(T("Travel west to Gullwatch and speak with Mira at the beacon frame to open the coastal route task.", "Di ve phia tay den Gullwatch va noi chuyen voi Mira o khung hai dang de mo nhiem vu tuyen duong ven bien."));
+            }
+            else if (routeStatus == QuestStatus.Active)
+            {
+                lines.Add(T("Follow the spray markers from Gullwatch into Tide Caverns, clear the patrol, then push to the matriarch.", "Di theo cac coc moc phun song tu Gullwatch vao Tide Caverns, don toan to tuan tra, sau do tien den matriarch."));
+            }
+            else if (routeStatus == QuestStatus.ReadyToTurnIn)
+            {
+                lines.Add(T("Return to Mira in Gullwatch to turn in Secure the Tide Route and light the beacon.", "Quay lai Mira o Gullwatch de nop nhiem vu Secure the Tide Route va thap sang hai dang."));
+            }
+            else if (routeStatus == QuestStatus.Completed || tideRouteSecured)
+            {
+                lines.Add(T("The Tide Route is secure. Use the inn, shop, and travel lanes to prepare for the next outing.", "Tuyen Tide Route da an toan. Dung nha tro, cua hang, va cac duong di de chuan bi cho chuyen di tiep theo."));
+            }
+            else
+            {
+                lines.Add(T("Open the quest log and follow the highest unfinished objective.", "Mo quest log va lam objective chua hoan thanh gan nhat."));
+            }
+
+            lines.Add(T("Use the inn to restore the party and advance to morning before a dungeon push.", "Dung nha tro de hoi day party va sang buoi sang truoc khi vao dungeon."));
+            lines.Add(T("Inventory handles consumables, Equipment handles gear, and Character shows stats plus unlocked skill summary.", "Inventory dung cho do tieu hao, Equipment dung cho trang bi, va Character hien stat cung tong ket ky nang da mo."));
+            return lines;
         }
 
         private void BuildSystemPanel()
@@ -686,8 +839,7 @@ namespace TPS.Runtime.UI
 
         private void BuildShopPanel()
         {
-            MerchantAnchor merchant = GetActiveMerchant();
-            ShopDefinition shop = merchant != null ? merchant.ShopDefinition : null;
+            ShopDefinition shop = _activeMerchant != null ? _activeMerchant.ShopDefinition : null;
             if (shop == null || EconomyService.Instance == null)
             {
                 AddInfoLine(T("Shop is unavailable.", "Cửa hàng chưa khả dụng."));
@@ -695,6 +847,7 @@ namespace TPS.Runtime.UI
             }
 
             AddInfoLine($"{T("Currency", "Tiền")}: {EconomyService.Instance.Currency}");
+            AddHeader(T("Buy Stock", "Hang dang ban"));
             for (int i = 0; i < shop.Entries.Count; i++)
             {
                 ShopEntryDefinition entry = shop.Entries[i];
@@ -716,12 +869,162 @@ namespace TPS.Runtime.UI
                 CreateActionButton(row, T("Buy", "Mua"), () => BuyEntry(shop, entry, label), 94f);
             }
 
+            Phase1ContentCatalog catalog = GetCatalog();
+            if (catalog != null && InventoryService.Instance != null)
+            {
+                bool showedSellHeader = false;
+                for (int i = 0; i < catalog.Items.Count; i++)
+                {
+                    ItemDefinition item = catalog.Items[i];
+                    if (item == null)
+                    {
+                        continue;
+                    }
+
+                    int count = InventoryService.Instance.GetItemCount(item.ItemId);
+                    if (count <= 0)
+                    {
+                        continue;
+                    }
+
+                    if (!showedSellHeader)
+                    {
+                        AddHeader(T("Sell From Bag", "Ban tu tui do"));
+                        showedSellHeader = true;
+                    }
+
+                    RectTransform sellRow = CreateRow(70f);
+                    CreateText("SellItemLabel", sellRow, $"{item.DisplayName} x{count}\n{T("Sell", "Ban")} {item.SellPrice}", 16, TextAnchor.MiddleLeft, FontStyle.Normal, true, 52f);
+                    CreateActionButton(sellRow, T("Sell", "Ban"), () => SellItem(item), 94f);
+                }
+
+                for (int i = 0; i < catalog.Equipment.Count; i++)
+                {
+                    EquipmentDefinition equipment = catalog.Equipment[i];
+                    if (equipment == null)
+                    {
+                        continue;
+                    }
+
+                    int count = InventoryService.Instance.GetEquipmentCount(equipment.EquipmentId);
+                    if (count <= 0)
+                    {
+                        continue;
+                    }
+
+                    if (!showedSellHeader)
+                    {
+                        AddHeader(T("Sell From Bag", "Ban tu tui do"));
+                        showedSellHeader = true;
+                    }
+
+                    RectTransform sellRow = CreateRow(70f);
+                    CreateText("SellEquipmentLabel", sellRow, $"{equipment.DisplayName} x{count}\n{T("Sell", "Ban")} {equipment.SellPrice}", 16, TextAnchor.MiddleLeft, FontStyle.Normal, true, 52f);
+                    CreateActionButton(sellRow, T("Sell", "Ban"), () => SellEquipment(equipment), 94f);
+                }
+
+                if (!showedSellHeader)
+                {
+                    AddInfoLine(T("Nothing in the bag can be sold yet.", "Chua co vat pham nao de ban."));
+                }
+            }
+
             RectTransform closeRow = CreateRow(62f);
             CreateActionButton(closeRow, T("Close Shop", "Đóng cửa hàng"), ClosePanels, 180f);
         }
 
+/*
+            Phase1ContentCatalog catalog = GetCatalog();
+            if (catalog != null && InventoryService.Instance != null)
+            {
+                bool hasSellableItems = false;
+                for (int i = 0; i < catalog.Items.Count; i++)
+                {
+                    ItemDefinition item = catalog.Items[i];
+                    if (item == null)
+                    {
+                        continue;
+                    }
+
+                    int count = InventoryService.Instance.GetItemCount(item.ItemId);
+                    if (count <= 0)
+                    {
+                        continue;
+                    }
+
+                    if (!hasSellableItems)
+                    {
+                        AddHeader(T("Sell Consumables", "Ban vat pham"));
+                        hasSellableItems = true;
+                    }
+
+                    RectTransform sellRow = CreateRow(70f);
+                    CreateText("SellItemLabel", sellRow, $"{item.DisplayName} x{count}\n{T("Sell", "Ban")} {item.SellPrice}", 16, TextAnchor.MiddleLeft, FontStyle.Normal, true, 52f);
+                    CreateActionButton(sellRow, T("Sell", "Ban"), () => SellItem(item), 94f);
+                }
+
+                bool hasSellableEquipment = false;
+                for (int i = 0; i < catalog.Equipment.Count; i++)
+                {
+                    EquipmentDefinition equipment = catalog.Equipment[i];
+                    if (equipment == null)
+                    {
+                        continue;
+                    }
+
+                    int count = InventoryService.Instance.GetEquipmentCount(equipment.EquipmentId);
+                    if (count <= 0)
+                    {
+                        continue;
+                    }
+
+                    if (!hasSellableEquipment)
+                    {
+                        AddHeader(T("Sell Equipment", "Ban trang bi"));
+                        hasSellableEquipment = true;
+                    }
+
+                    RectTransform sellRow = CreateRow(70f);
+                    CreateText("SellEquipmentLabel", sellRow, $"{equipment.DisplayName} x{count}\n{T("Sell", "Ban")} {equipment.SellPrice}", 16, TextAnchor.MiddleLeft, FontStyle.Normal, true, 52f);
+                    CreateActionButton(sellRow, T("Sell", "Ban"), () => SellEquipment(equipment), 94f);
+                }
+
+                if (!hasSellableItems && !hasSellableEquipment)
+                {
+                    AddInfoLine(T("Nothing in the bag can be sold yet.", "Chua co vat pham nao de ban."));
+                }
+            }
+
+            RectTransform closeRow = CreateRow(62f);
+            CreateActionButton(closeRow, T("Close Shop", "ÄÃ³ng cá»­a hÃ ng"), ClosePanels, 180f);
+        }
+
+*/
+        private void BuildSleepPanel()
+        {
+            if (_activeInn == null)
+            {
+                AddInfoLine(T("Rest is unavailable here.", "Khong the nghi tai day."));
+                return;
+            }
+
+            AddHeader(T("Rest Until Morning", "Nghi den sang"));
+            AddInfoLine(string.Format(
+                T("Wake time: {0:00}:{1:00}", "Gio thuc day: {0:00}:{1:00}"),
+                _activeInn.WakeHour,
+                _activeInn.WakeMinute));
+            AddInfoLine(T(
+                "Sleeping restores the party, advances the day, and refreshes shop stock and schedules.",
+                "Ngu hoi phuc doi hinh, sang ngay moi, va lam moi cua hang cung lich sinh hoat."));
+
+            RectTransform row = CreateRow(62f);
+            CreateActionButton(row, T("Sleep", "Ngu"), ConfirmSleep, 140f);
+            CreateActionButton(row, T("Cancel", "Huy"), ClosePanels, 140f);
+        }
+
         private void BuildHelpPanel()
         {
+            AddRouteGuidanceSection();
             AddHeader(T("Controls", "Điều khiển"));
             AddInfoLine(T("Tab: Toggle UI mode / cursor", "Tab: Bật/tắt chế độ UI / chuột"));
             AddInfoLine("I: " + T("Inventory", "Túi đồ"));
@@ -780,6 +1083,10 @@ namespace TPS.Runtime.UI
 
             AddHeader(T("Actions", "HÃ nh Ä‘á»™ng"));
             IReadOnlyList<BattleWorldBridge.BattleActionView> actions = bridge.GetAvailableActions();
+            if (actions.Count == 0)
+            {
+                AddInfoLine(T("Waiting for the next battle update...", "Dang cho cap nhat tran dau..."));
+            }
             for (int i = 0; i < actions.Count; i++)
             {
                 BattleWorldBridge.BattleActionView action = actions[i];
@@ -1048,8 +1355,25 @@ namespace TPS.Runtime.UI
             }
         }
 
+        private void ConfirmSleep()
+        {
+            InnAnchor inn = _activeInn;
+            _activeInn = null;
+            _activeMerchant = null;
+            _activePanel = PanelType.None;
+            RuntimeUiInputState.RestoreGameplayFocus();
+            RefreshVisibility();
+
+            if (inn != null)
+            {
+                inn.SleepNow();
+            }
+        }
+
         private void HandleRuntimeReset()
         {
+            _activeMerchant = null;
+            _activeInn = null;
             BattleWorldBridge bridge = BattleWorldBridge.Instance;
             if (bridge != null && bridge.HasActiveEncounter)
             {
@@ -1058,13 +1382,13 @@ namespace TPS.Runtime.UI
             }
             else
             {
-                if (Phase1RuntimeHUD.Instance != null)
-                {
-                    Phase1RuntimeHUD.Instance.CloseShop();
-                }
-
                 _activePanel = PanelType.None;
                 RuntimeUiInputState.RestoreGameplayFocus();
+            }
+
+            if (_activePanel != PanelType.None)
+            {
+                RebuildContent();
             }
 
             RefreshVisibility();
@@ -1077,6 +1401,11 @@ namespace TPS.Runtime.UI
 
         private string GetPanelTitle(PanelType panel)
         {
+            if (panel == PanelType.Sleep)
+            {
+                return T("Rest", "Nghi ngo");
+            }
+
             switch (panel)
             {
                 case PanelType.Inventory:
@@ -1090,8 +1419,7 @@ namespace TPS.Runtime.UI
                 case PanelType.System:
                     return T("System", "Hệ thống");
                 case PanelType.Shop:
-                    MerchantAnchor merchant = GetActiveMerchant();
-                    return merchant != null && merchant.ShopDefinition != null ? merchant.ShopDefinition.DisplayName : "Shop";
+                    return _activeMerchant != null && _activeMerchant.ShopDefinition != null ? _activeMerchant.ShopDefinition.DisplayName : "Shop";
                 case PanelType.Help:
                     return T("Help", "Trợ giúp");
                 case PanelType.Battle:
@@ -1105,7 +1433,7 @@ namespace TPS.Runtime.UI
 
         private MerchantAnchor GetActiveMerchant()
         {
-            return Phase1RuntimeHUD.Instance != null ? Phase1RuntimeHUD.Instance.ActiveMerchant : null;
+            return _activeMerchant;
         }
 
         private Phase1ContentCatalog GetCatalog()
