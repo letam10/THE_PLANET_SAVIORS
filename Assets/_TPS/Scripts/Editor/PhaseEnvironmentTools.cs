@@ -256,6 +256,14 @@ namespace TPS.Editor
             BuildPrimitiveSlot(container, "DOCK_MainPier", EnvironmentGeneratedCategory.Blockout, new Vector3(15f, 0.16f, 1.5f), new Vector3(4f, 0.25f, 9f), PrimitiveType.Cube, "Main pier placeholder.");
             BuildPrimitiveSlot(container, "DOCK_SidePier", EnvironmentGeneratedCategory.Blockout, new Vector3(17f, 0.16f, 6.5f), new Vector3(3f, 0.25f, 5f), PrimitiveType.Cube, "Side pier placeholder.");
             BuildPrimitiveSlot(container, "DOCK_LongPier", EnvironmentGeneratedCategory.Blockout, new Vector3(21f, 0.16f, 2.5f), new Vector3(3.5f, 0.25f, 11f), PrimitiveType.Cube, "Outer long pier placeholder.");
+            BuildPrimitiveSlot(container, "PAD_FarNorthWard", EnvironmentGeneratedCategory.Blockout, new Vector3(0f, 0.05f, 24f), new Vector3(24f, 0.2f, 12f), PrimitiveType.Cube, "Far north placeholder district.");
+            BuildPrimitiveSlot(container, "PAD_FarSouthWard", EnvironmentGeneratedCategory.Blockout, new Vector3(0f, 0.05f, -22f), new Vector3(24f, 0.2f, 12f), PrimitiveType.Cube, "Far south placeholder district.");
+            BuildPrimitiveSlot(container, "PAD_FarWestWard", EnvironmentGeneratedCategory.Blockout, new Vector3(-31f, 0.05f, 3f), new Vector3(14f, 0.2f, 20f), PrimitiveType.Cube, "Far west placeholder district.");
+            BuildPrimitiveSlot(container, "PAD_FarEastWard", EnvironmentGeneratedCategory.Blockout, new Vector3(31f, 0.05f, 3f), new Vector3(14f, 0.2f, 20f), PrimitiveType.Cube, "Far east placeholder district.");
+            BuildPrimitiveSlot(container, "PATH_FarNorth", EnvironmentGeneratedCategory.Blockout, new Vector3(0f, 0.11f, 18f), new Vector3(4f, 0.12f, 14f), PrimitiveType.Cube, "Route to far north district.");
+            BuildPrimitiveSlot(container, "PATH_FarSouth", EnvironmentGeneratedCategory.Blockout, new Vector3(0f, 0.11f, -15f), new Vector3(4f, 0.12f, 16f), PrimitiveType.Cube, "Route to far south district.");
+            BuildPrimitiveSlot(container, "PATH_FarWest", EnvironmentGeneratedCategory.Blockout, new Vector3(-23f, 0.11f, 3f), new Vector3(13f, 0.12f, 4f), PrimitiveType.Cube, "Route to far west district.");
+            BuildPrimitiveSlot(container, "PATH_FarEast", EnvironmentGeneratedCategory.Blockout, new Vector3(23f, 0.11f, 3f), new Vector3(13f, 0.12f, 4f), PrimitiveType.Cube, "Route to far east district.");
         }
 
         private static void BuildBuildings(Transform container)
@@ -274,6 +282,18 @@ namespace TPS.Editor
             BuildHouseSlot(container, "BLD_EastDockHouse_B", new Vector3(21.5f, 0f, 6.2f), new Vector3(3f, 2.6f, 2.8f), "East dock worker housing scaffold.");
             BuildHouseSlot(container, "BLD_WestLane_A", new Vector3(-20.5f, 0f, 9.5f), new Vector3(3.4f, 3f, 3.2f), "Expanded west lane housing.");
             BuildHouseSlot(container, "BLD_WestLane_B", new Vector3(-21f, 0f, -1.2f), new Vector3(3.2f, 2.8f, 3f), "Expanded west lane housing.");
+            BuildHouseSlot(container, "BLD_FarNorth_A", new Vector3(-8f, 0f, 24f), new Vector3(3.2f, 3f, 3f), "Far north district housing.");
+            BuildHouseSlot(container, "BLD_FarNorth_B", new Vector3(-2f, 0f, 24f), new Vector3(3.2f, 3f, 3f), "Far north district housing.");
+            BuildHouseSlot(container, "BLD_FarNorth_C", new Vector3(4f, 0f, 24f), new Vector3(3.2f, 3f, 3f), "Far north district housing.");
+            BuildHouseSlot(container, "BLD_FarSouth_A", new Vector3(-8f, 0f, -22f), new Vector3(3f, 2.8f, 3f), "Far south district housing.");
+            BuildHouseSlot(container, "BLD_FarSouth_B", new Vector3(-2f, 0f, -22f), new Vector3(3f, 2.8f, 3f), "Far south district housing.");
+            BuildHouseSlot(container, "BLD_FarSouth_C", new Vector3(4f, 0f, -22f), new Vector3(3f, 2.8f, 3f), "Far south district housing.");
+            BuildHouseSlot(container, "BLD_FarWest_A", new Vector3(-31f, 0f, 9f), new Vector3(3.2f, 2.8f, 3f), "Far west district housing.");
+            BuildHouseSlot(container, "BLD_FarWest_B", new Vector3(-31f, 0f, 2f), new Vector3(3.2f, 2.8f, 3f), "Far west district housing.");
+            BuildHouseSlot(container, "BLD_FarWest_C", new Vector3(-31f, 0f, -5f), new Vector3(3.2f, 2.8f, 3f), "Far west district housing.");
+            BuildHouseSlot(container, "BLD_FarEast_A", new Vector3(31f, 0f, 9f), new Vector3(3.2f, 2.8f, 3f), "Far east district housing.");
+            BuildHouseSlot(container, "BLD_FarEast_B", new Vector3(31f, 0f, 2f), new Vector3(3.2f, 2.8f, 3f), "Far east district housing.");
+            BuildHouseSlot(container, "BLD_FarEast_C", new Vector3(31f, 0f, -5f), new Vector3(3.2f, 2.8f, 3f), "Far east district housing.");
         }
 
         private static void BuildProps(Transform container, EnvironmentContext context)
@@ -294,6 +314,14 @@ namespace TPS.Editor
             BuildCrateCluster(container, "PRP_MarketCrates_A", new Vector3(4.2f, 0f, 11.2f), 3, "Market clutter cluster.");
             BuildFenceRun(container, "PRP_WestLaneFence", new Vector3(-17.5f, 0f, -3.2f), 6, 1.45f, Quaternion.identity, "West lane fence line.");
             BuildLandmark(container, "PRP_NorthBellFrame", new Vector3(0f, 0f, 15.5f), "Town-top bell frame landmark.");
+            BuildLandmark(container, "PRP_FarNorthBeacon", new Vector3(0f, 0f, 28f), "Far north district landmark.");
+            BuildLandmark(container, "PRP_FarSouthGate", new Vector3(0f, 0f, -27f), "Far south district landmark.");
+            BuildLandmark(container, "PRP_FarWestTotem", new Vector3(-34f, 0f, 6f), "Far west district landmark.");
+            BuildLandmark(container, "PRP_FarEastTotem", new Vector3(34f, 0f, 6f), "Far east district landmark.");
+            BuildFenceRun(container, "PRP_FarNorthFence", new Vector3(-8f, 0f, 30f), 10, 1.6f, Quaternion.identity, "Far north boundary fence.");
+            BuildFenceRun(container, "PRP_FarSouthFence", new Vector3(-8f, 0f, -30f), 10, 1.6f, Quaternion.identity, "Far south boundary fence.");
+            BuildCrateCluster(container, "PRP_FarWestCrates", new Vector3(-32f, 0f, -2.5f), 4, "Far west cargo clutter.");
+            BuildCrateCluster(container, "PRP_FarEastCrates", new Vector3(32f, 0f, -2.5f), 4, "Far east cargo clutter.");
         }
 
         private static void BuildVegetation(Transform container, EnvironmentContext context)
@@ -304,7 +332,10 @@ namespace TPS.Editor
                 new Vector3(-18f, 0f, 8.5f), new Vector3(-18f, 0f, 1.5f), new Vector3(-8.5f, 0f, 9f),
                 new Vector3(8.5f, 0f, 9.5f), new Vector3(19f, 0f, 7f), new Vector3(19f, 0f, -1f),
                 new Vector3(-22f, 0f, 11f), new Vector3(-22f, 0f, -2f), new Vector3(21f, 0f, 11.5f),
-                new Vector3(22f, 0f, -4f), new Vector3(0f, 0f, 18.5f)
+                new Vector3(22f, 0f, -4f), new Vector3(0f, 0f, 18.5f),
+                new Vector3(0f, 0f, 27.5f), new Vector3(0f, 0f, -27.5f),
+                new Vector3(-31f, 0f, 10.5f), new Vector3(-31f, 0f, 0.5f), new Vector3(-31f, 0f, -8.5f),
+                new Vector3(31f, 0f, 10.5f), new Vector3(31f, 0f, 0.5f), new Vector3(31f, 0f, -8.5f)
             };
 
             for (int i = 0; i < treeSlots.Length; i++)
@@ -322,7 +353,10 @@ namespace TPS.Editor
                 new Vector3(18.5f, 0f, 4.5f), new Vector3(18.2f, 0f, -2.5f), new Vector3(7f, 0f, -2f),
                 new Vector3(-8.5f, 0f, -1.5f), new Vector3(-16.5f, 0f, -2.2f), new Vector3(-13.2f, 0f, 6.2f),
                 new Vector3(-22f, 0f, 7f), new Vector3(-22.4f, 0f, -0.8f), new Vector3(-2.5f, 0f, 15.2f),
-                new Vector3(6.5f, 0f, 14.6f), new Vector3(21.2f, 0f, 9.2f), new Vector3(22f, 0f, 1.2f)
+                new Vector3(6.5f, 0f, 14.6f), new Vector3(21.2f, 0f, 9.2f), new Vector3(22f, 0f, 1.2f),
+                new Vector3(-30f, 0f, 11f), new Vector3(-28.5f, 0f, 2.4f), new Vector3(-29f, 0f, -7.5f),
+                new Vector3(30f, 0f, 11f), new Vector3(28.5f, 0f, 2.4f), new Vector3(29f, 0f, -7.5f),
+                new Vector3(-2.5f, 0f, 27.2f), new Vector3(2.5f, 0f, 27.8f), new Vector3(-2.5f, 0f, -27.2f), new Vector3(2.5f, 0f, -27.8f)
             };
 
             int clutterIndex = 1;
@@ -352,6 +386,12 @@ namespace TPS.Editor
             BuildAmbientSolo(container, "AMB_WestLane_A", new Vector3(-19.4f, 0f, 6.2f), "Ambient resident along the west lane.");
             BuildAmbientSolo(container, "AMB_DockWorker_A", new Vector3(20.6f, 0f, 8.6f), "Ambient dock worker placeholder.");
             BuildAmbientCreature(container, "AMB_Dog_West", new Vector3(-15.2f, 0f, 2.1f), PrimitiveType.Sphere, "Ambient stray dog placeholder.");
+            BuildAmbientPair(container, "AMB_FarNorth_A", new Vector3(-2.2f, 0f, 24.2f), Quaternion.Euler(0f, 180f, 0f), "Ambient pair in far north ward.");
+            BuildAmbientPair(container, "AMB_FarSouth_A", new Vector3(2.2f, 0f, -24.2f), Quaternion.Euler(0f, 0f, 0f), "Ambient pair in far south ward.");
+            BuildAmbientSolo(container, "AMB_FarWest_A", new Vector3(-31.2f, 0f, 4.8f), "Ambient resident in far west ward.");
+            BuildAmbientSolo(container, "AMB_FarEast_A", new Vector3(31.2f, 0f, 4.8f), "Ambient resident in far east ward.");
+            BuildAmbientCreature(container, "AMB_FarNorthBird", new Vector3(0f, 1.8f, 29.5f), PrimitiveType.Sphere, "Ambient bird marker over far north.");
+            BuildAmbientCreature(container, "AMB_FarSouthDog", new Vector3(-4.2f, 0f, -27.4f), PrimitiveType.Sphere, "Ambient animal marker in far south.");
         }
 
         private static void BuildInteriors(Transform container, EnvironmentContext context)
@@ -580,15 +620,18 @@ namespace TPS.Editor
         {
             GameObject slot = EnsureSlot(container, name, EnvironmentGeneratedCategory.Ambient, position, notes, rotation);
             ClearManagedChildren(slot.transform);
-            CreatePrimitiveVisual(slot.transform, "GEN_Actor_A", PrimitiveType.Capsule, new Vector3(-0.5f, 1f, 0f), new Vector3(0.8f, 1f, 0.8f), EnvironmentGeneratedCategory.Ambient, "Ambient actor placeholder.");
-            CreatePrimitiveVisual(slot.transform, "GEN_Actor_B", PrimitiveType.Capsule, new Vector3(0.5f, 1f, 0f), new Vector3(0.8f, 1f, 0.8f), EnvironmentGeneratedCategory.Ambient, "Ambient actor placeholder.");
+            GameObject actorA = CreatePrimitiveVisual(slot.transform, "GEN_Actor_A", PrimitiveType.Capsule, new Vector3(-0.5f, 1f, 0f), new Vector3(0.8f, 1f, 0.8f), EnvironmentGeneratedCategory.Ambient, "Ambient actor placeholder.");
+            GameObject actorB = CreatePrimitiveVisual(slot.transform, "GEN_Actor_B", PrimitiveType.Capsule, new Vector3(0.5f, 1f, 0f), new Vector3(0.8f, 1f, 0.8f), EnvironmentGeneratedCategory.Ambient, "Ambient actor placeholder.");
+            EnsureAmbientMotion(actorA, 0.06f, 1.5f, 20f);
+            EnsureAmbientMotion(actorB, 0.06f, 1.75f, -16f);
         }
 
         private static void BuildAmbientSolo(Transform container, string name, Vector3 position, string notes)
         {
             GameObject slot = EnsureSlot(container, name, EnvironmentGeneratedCategory.Ambient, position, notes);
             ClearManagedChildren(slot.transform);
-            CreatePrimitiveVisual(slot.transform, "GEN_Actor", PrimitiveType.Capsule, new Vector3(0f, 1f, 0f), new Vector3(0.8f, 1f, 0.8f), EnvironmentGeneratedCategory.Ambient, "Ambient actor placeholder.");
+            GameObject actor = CreatePrimitiveVisual(slot.transform, "GEN_Actor", PrimitiveType.Capsule, new Vector3(0f, 1f, 0f), new Vector3(0.8f, 1f, 0.8f), EnvironmentGeneratedCategory.Ambient, "Ambient actor placeholder.");
+            EnsureAmbientMotion(actor, 0.04f, 1.2f, 12f);
         }
 
         private static void BuildAmbientCreature(Transform container, string name, Vector3 position, PrimitiveType type, string notes)
@@ -596,7 +639,8 @@ namespace TPS.Editor
             GameObject slot = EnsureSlot(container, name, EnvironmentGeneratedCategory.Ambient, position, notes);
             ClearManagedChildren(slot.transform);
             Vector3 scale = type == PrimitiveType.Sphere ? new Vector3(0.35f, 0.35f, 0.35f) : new Vector3(0.5f, 0.5f, 0.5f);
-            CreatePrimitiveVisual(slot.transform, "GEN_Creature", type, Vector3.zero, scale, EnvironmentGeneratedCategory.Ambient, notes);
+            GameObject creature = CreatePrimitiveVisual(slot.transform, "GEN_Creature", type, Vector3.zero, scale, EnvironmentGeneratedCategory.Ambient, notes);
+            EnsureAmbientMotion(creature, 0.02f, 2.2f, 34f);
         }
 
         private static void BuildPrimitiveSlot(Transform container, string name, EnvironmentGeneratedCategory category, Vector3 position, Vector3 primitiveScale, PrimitiveType primitiveType, string notes)
@@ -666,6 +710,35 @@ namespace TPS.Editor
             EditorUtility.SetDirty(marker);
             PlaceholderScaffoldStyleUtility.ApplyStyle(target, category, name, notes);
             return target;
+        }
+
+        private static void EnsureAmbientMotion(GameObject target, float bobAmplitude, float bobFrequency, float yawSpeed)
+        {
+            if (target == null)
+            {
+                return;
+            }
+
+            System.Type motionType = System.Type.GetType("TPS.Runtime.World.PlaceholderAmbientMotion, TPS.Runtime");
+            if (motionType == null)
+            {
+                return;
+            }
+
+            Component motion = target.GetComponent(motionType);
+            if (motion == null)
+            {
+                motion = target.AddComponent(motionType);
+            }
+
+            SerializedObject so = new SerializedObject(motion);
+            so.FindProperty("_bobAmplitude").floatValue = bobAmplitude;
+            so.FindProperty("_bobFrequency").floatValue = bobFrequency;
+            so.FindProperty("_yawSpeed").floatValue = yawSpeed;
+            so.FindProperty("_enableBob").boolValue = true;
+            so.FindProperty("_enableYaw").boolValue = true;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(motion);
         }
 
         private static bool HasManualChildren(GameObject slot)

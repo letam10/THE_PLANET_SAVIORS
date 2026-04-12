@@ -13,6 +13,18 @@ namespace TPS.Runtime.Combat
 {
     public sealed class BattleWorldBridge : MonoBehaviour
     {
+        public sealed class BattleActionView
+        {
+            public string Label;
+            public string Detail;
+            public bool CanUse;
+            public bool UsesAllyTarget;
+            public bool UsesEnemyTarget;
+            public int SkillIndex = -1;
+            public bool IsBasicAttack;
+            public bool IsConsumable;
+        }
+
         private sealed class BattleUnitState
         {
             public bool IsPartyMember;
@@ -37,6 +49,7 @@ namespace TPS.Runtime.Combat
         private readonly List<BattleUnitState> _enemyUnits = new List<BattleUnitState>();
         private readonly List<BattleUnitState> _turnOrder = new List<BattleUnitState>();
         private readonly List<string> _combatLog = new List<string>();
+        private readonly List<BattleActionView> _cachedActions = new List<BattleActionView>();
 
         private EncounterService.PendingEncounterContext _context;
         private BattleUnitState _currentActor;
@@ -45,10 +58,32 @@ namespace TPS.Runtime.Combat
         private int _turnCount;
         private BattleResult _battleResult;
         private bool _returnTriggered;
+        private int _selectedEnemyTargetIndex;
+        private int _selectedAllyTargetIndex;
+        [SerializeField] private bool _debugOnGuiFallback;
         private const string AutoWinFileName = ".phase1_battle_autowin.txt";
+
+        public static BattleWorldBridge Instance { get; private set; }
+        public bool HasActiveEncounter => _context != null && _context.EncounterDefinition != null;
+        public bool IsAwaitingPlayerInput => _awaitingPlayerInput;
+        public bool IsBattleEnded => _battleEnded;
+        public bool IsReturnTriggered => _returnTriggered;
+        public string EncounterTitle => HasActiveEncounter ? _context.EncounterDefinition.DisplayName : string.Empty;
+        public string CurrentActorLabel => _currentActor != null ? $"{_currentActor.DisplayName} Turn" : "Resolving...";
+        public string ResultTitle => _battleResult != null && _battleResult.Victory ? "Victory" : "Defeat";
+        public string RewardSummary => _battleResult != null ? _battleResult.RewardSummary : string.Empty;
+        public string ReturnSceneName => _context != null ? _context.ReturnSceneName : string.Empty;
 
         private void Start()
         {
+            if (Instance != null && Instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+
+            Instance = this;
+            RuntimeMenuCanvasController.EnsureExists();
             if (EncounterService.Instance == null || !EncounterService.Instance.TryGetPendingEncounter(out _context))
             {
                 AppendLog("No pending encounter. Battle bridge idle.");
@@ -62,11 +97,26 @@ namespace TPS.Runtime.Combat
 
         private void OnDisable()
         {
+            if (Instance == this)
+            {
+                Instance = null;
+            }
+
             ToggleWorldControls(true);
         }
 
         private void OnGUI()
         {
+            if (!_debugOnGuiFallback)
+            {
+                return;
+            }
+
+            if (RuntimeMenuCanvasController.Instance != null)
+            {
+                return;
+            }
+
             if (_context == null || _context.EncounterDefinition == null)
             {
                 return;
@@ -217,6 +267,7 @@ namespace TPS.Runtime.Combat
             _turnCount++;
             if (_currentActor.IsPartyMember)
             {
+                ResetTargetSelection();
                 _awaitingPlayerInput = true;
             }
             else
@@ -262,38 +313,33 @@ namespace TPS.Runtime.Combat
 
         private void ExecutePlayerAttack()
         {
-            BattleUnitState target = GetFirstLiving(_enemyUnits);
+            BattleUnitState target = GetSelectedEnemyTarget() ?? GetFirstLiving(_enemyUnits);
             ExecuteAction(_currentActor, target, null);
         }
 
         private void ExecutePlayerSkill(SkillDefinition skillDefinition)
         {
-            BattleUnitState target = skillDefinition != null && skillDefinition.TargetType == CombatTargetType.Self
-                ? _currentActor
-                : (skillDefinition != null && (skillDefinition.TargetType == CombatTargetType.SingleAlly || skillDefinition.TargetType == CombatTargetType.AllAllies)
-                    ? GetLowestHealthUnit(_partyUnits)
-                    : GetFirstLiving(_enemyUnits));
+            BattleUnitState target = ResolveUiTargetForSkill(skillDefinition);
 
             ExecuteAction(_currentActor, target, skillDefinition);
         }
 
         private void ExecutePlayerItem()
         {
-            if (InventoryService.Instance == null || Phase1RuntimeHUD.Instance == null)
+            if (InventoryService.Instance == null)
             {
+                AppendLog("Consumables are unavailable.");
                 return;
             }
 
-            ItemDefinition item = Phase1RuntimeHUD.Instance.FindFirstUsableConsumable();
+            ItemDefinition item = FindFirstUsableConsumable();
             if (item == null || !InventoryService.Instance.RemoveItem(item, 1))
             {
                 AppendLog("No usable consumable available.");
-                _awaitingPlayerInput = false;
-                AdvanceTurn();
                 return;
             }
 
-            BattleUnitState target = GetLowestHealthUnit(_partyUnits) ?? _currentActor;
+            BattleUnitState target = GetSelectedAllyTarget() ?? GetLowestHealthUnit(_partyUnits) ?? _currentActor;
             int healedHP = item.RestoreHP;
             int healedMP = item.RestoreMP;
             target.CurrentHP = Mathf.Clamp(target.CurrentHP + healedHP, 0, target.Stats.MaxHP);
@@ -666,6 +712,7 @@ namespace TPS.Runtime.Combat
             yield return SceneLoader.Instance.LoadContentSceneAsync(_context.ReturnSceneName);
             yield return null;
 
+            RuntimeUiInputState.RestoreGameplayFocus();
             ToggleWorldControls(true);
             if (EncounterService.Instance != null)
             {
@@ -706,6 +753,150 @@ namespace TPS.Runtime.Combat
 
             EndBattle(true, "Automation Victory.");
             if (!_returnTriggered && SceneLoader.Instance != null)
+            {
+                _returnTriggered = true;
+                SceneLoader.Instance.StartCoroutine(ReturnToWorldRoutine());
+            }
+        }
+
+        public IReadOnlyList<string> GetTurnOrderLabels()
+        {
+            var labels = new List<string>();
+            if (_currentActor != null && !_currentActor.IsDefeated)
+            {
+                labels.Add($"Now: {_currentActor.DisplayName}");
+            }
+
+            for (int i = 0; i < _turnOrder.Count; i++)
+            {
+                BattleUnitState unit = _turnOrder[i];
+                if (unit != null && !unit.IsDefeated)
+                {
+                    labels.Add(unit.DisplayName);
+                }
+            }
+
+            return labels;
+        }
+
+        public IReadOnlyList<string> GetPartyStatusLines()
+        {
+            return BuildStatusLines(_partyUnits, includeMp: true);
+        }
+
+        public IReadOnlyList<string> GetEnemyStatusLines()
+        {
+            return BuildStatusLines(_enemyUnits, includeMp: false);
+        }
+
+        public IReadOnlyList<string> GetCombatLogLines()
+        {
+            return new List<string>(_combatLog);
+        }
+
+        public IReadOnlyList<BattleActionView> GetAvailableActions()
+        {
+            _cachedActions.Clear();
+            if (!_awaitingPlayerInput || _currentActor == null || _currentActor.IsDefeated)
+            {
+                return _cachedActions;
+            }
+
+            _cachedActions.Add(new BattleActionView
+            {
+                Label = "Attack",
+                Detail = $"Target {(_currentActor != null ? GetTargetDisplayName(GetSelectedEnemyTarget() ?? GetFirstLiving(_enemyUnits)) : "-")}",
+                CanUse = GetSelectedEnemyTarget() != null || GetFirstLiving(_enemyUnits) != null,
+                UsesEnemyTarget = true,
+                IsBasicAttack = true
+            });
+
+            for (int i = 0; i < _currentActor.Skills.Count; i++)
+            {
+                SkillDefinition skill = _currentActor.Skills[i];
+                if (skill == null)
+                {
+                    continue;
+                }
+
+                bool usesAlly = skill.TargetType == CombatTargetType.SingleAlly || skill.TargetType == CombatTargetType.AllAllies || skill.TargetType == CombatTargetType.Self;
+                bool usesEnemy = !usesAlly;
+                bool canUse = skill.ResourceType != ResourceType.MP || _currentActor.CurrentMP >= skill.ResourceCost;
+                string targetLabel = usesAlly
+                    ? GetTargetDisplayName(ResolveUiTargetForSkill(skill))
+                    : GetTargetDisplayName(GetSelectedEnemyTarget() ?? GetFirstLiving(_enemyUnits));
+                _cachedActions.Add(new BattleActionView
+                {
+                    Label = skill.DisplayName,
+                    Detail = $"{skill.ResourceCost} MP | {(usesAlly ? "Target" : "Target")} {targetLabel}",
+                    CanUse = canUse,
+                    UsesAllyTarget = usesAlly,
+                    UsesEnemyTarget = usesEnemy,
+                    SkillIndex = i
+                });
+            }
+
+            ItemDefinition bestConsumable = FindFirstUsableConsumable();
+            _cachedActions.Add(new BattleActionView
+            {
+                Label = bestConsumable != null ? $"Use {bestConsumable.DisplayName}" : "Use Consumable",
+                Detail = $"Target {GetTargetDisplayName(GetSelectedAllyTarget() ?? GetLowestHealthUnit(_partyUnits) ?? _currentActor)}",
+                CanUse = bestConsumable != null,
+                UsesAllyTarget = true,
+                IsConsumable = true
+            });
+
+            return _cachedActions;
+        }
+
+        public string GetEnemyTargetLabel()
+        {
+            return GetTargetDisplayName(GetSelectedEnemyTarget() ?? GetFirstLiving(_enemyUnits));
+        }
+
+        public string GetAllyTargetLabel()
+        {
+            return GetTargetDisplayName(GetSelectedAllyTarget() ?? GetLowestHealthUnit(_partyUnits) ?? _currentActor);
+        }
+
+        public void CycleEnemyTarget(int direction)
+        {
+            _selectedEnemyTargetIndex = AdvanceTargetIndex(_enemyUnits, _selectedEnemyTargetIndex, direction);
+        }
+
+        public void CycleAllyTarget(int direction)
+        {
+            _selectedAllyTargetIndex = AdvanceTargetIndex(_partyUnits, _selectedAllyTargetIndex, direction);
+        }
+
+        public void ExecuteActionFromUi(BattleActionView actionView)
+        {
+            if (actionView == null || !_awaitingPlayerInput || _currentActor == null)
+            {
+                return;
+            }
+
+            if (actionView.IsBasicAttack)
+            {
+                ExecutePlayerAttack();
+                return;
+            }
+
+            if (actionView.IsConsumable)
+            {
+                ExecutePlayerItem();
+                return;
+            }
+
+            if (actionView.SkillIndex >= 0 && actionView.SkillIndex < _currentActor.Skills.Count)
+            {
+                ExecutePlayerSkill(_currentActor.Skills[actionView.SkillIndex]);
+            }
+        }
+
+        public void ReturnToWorldFromUi()
+        {
+            if (_battleEnded && !_returnTriggered && SceneLoader.Instance != null)
             {
                 _returnTriggered = true;
                 SceneLoader.Instance.StartCoroutine(ReturnToWorldRoutine());
@@ -771,6 +962,163 @@ namespace TPS.Runtime.Combat
             {
                 _combatLog.RemoveAt(0);
             }
+        }
+
+        private static IReadOnlyList<string> BuildStatusLines(List<BattleUnitState> units, bool includeMp)
+        {
+            var labels = new List<string>();
+            for (int i = 0; i < units.Count; i++)
+            {
+                BattleUnitState unit = units[i];
+                if (unit == null)
+                {
+                    continue;
+                }
+
+                string line = includeMp
+                    ? $"{unit.DisplayName} HP {Mathf.Max(0, unit.CurrentHP)}/{unit.Stats.MaxHP} MP {Mathf.Max(0, unit.CurrentMP)}/{unit.Stats.MaxMP}"
+                    : $"{unit.DisplayName} HP {Mathf.Max(0, unit.CurrentHP)}/{unit.Stats.MaxHP}";
+                if (unit.IsDefeated)
+                {
+                    line += " [KO]";
+                }
+
+                labels.Add(line);
+            }
+
+            return labels;
+        }
+
+        private void ResetTargetSelection()
+        {
+            _selectedEnemyTargetIndex = GetFirstLivingIndex(_enemyUnits);
+            _selectedAllyTargetIndex = GetFirstLivingIndex(_partyUnits);
+        }
+
+        private BattleUnitState ResolveUiTargetForSkill(SkillDefinition skillDefinition)
+        {
+            if (skillDefinition == null)
+            {
+                return GetSelectedEnemyTarget() ?? GetFirstLiving(_enemyUnits);
+            }
+
+            switch (skillDefinition.TargetType)
+            {
+                case CombatTargetType.Self:
+                    return _currentActor;
+                case CombatTargetType.SingleAlly:
+                case CombatTargetType.AllAllies:
+                    return GetSelectedAllyTarget() ?? GetLowestHealthUnit(_partyUnits) ?? _currentActor;
+                default:
+                    return GetSelectedEnemyTarget() ?? GetFirstLiving(_enemyUnits);
+            }
+        }
+
+        private BattleUnitState GetSelectedEnemyTarget()
+        {
+            return GetTargetByIndex(_enemyUnits, _selectedEnemyTargetIndex);
+        }
+
+        private BattleUnitState GetSelectedAllyTarget()
+        {
+            return GetTargetByIndex(_partyUnits, _selectedAllyTargetIndex);
+        }
+
+        private static BattleUnitState GetTargetByIndex(List<BattleUnitState> units, int index)
+        {
+            if (units == null || units.Count == 0)
+            {
+                return null;
+            }
+
+            if (index < 0 || index >= units.Count || units[index] == null || units[index].IsDefeated)
+            {
+                index = GetFirstLivingIndex(units);
+            }
+
+            return index >= 0 && index < units.Count ? units[index] : null;
+        }
+
+        private static int GetFirstLivingIndex(List<BattleUnitState> units)
+        {
+            for (int i = 0; i < units.Count; i++)
+            {
+                if (units[i] != null && !units[i].IsDefeated)
+                {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
+        private static int AdvanceTargetIndex(List<BattleUnitState> units, int currentIndex, int direction)
+        {
+            if (units == null || units.Count == 0)
+            {
+                return -1;
+            }
+
+            int livingCount = 0;
+            for (int i = 0; i < units.Count; i++)
+            {
+                if (units[i] != null && !units[i].IsDefeated)
+                {
+                    livingCount++;
+                }
+            }
+
+            if (livingCount == 0)
+            {
+                return -1;
+            }
+
+            int index = currentIndex;
+            if (index < 0 || index >= units.Count || units[index] == null || units[index].IsDefeated)
+            {
+                index = GetFirstLivingIndex(units);
+            }
+
+            for (int i = 0; i < units.Count; i++)
+            {
+                index = (index + direction + units.Count) % units.Count;
+                if (units[index] != null && !units[index].IsDefeated)
+                {
+                    return index;
+                }
+            }
+
+            return currentIndex;
+        }
+
+        private static string GetTargetDisplayName(BattleUnitState target)
+        {
+            return target != null ? target.DisplayName : "-";
+        }
+
+        private static ItemDefinition FindFirstUsableConsumable()
+        {
+            if (InventoryService.Instance == null || Phase1RuntimeHUD.Instance == null || Phase1RuntimeHUD.Instance.ContentCatalog == null)
+            {
+                return null;
+            }
+
+            IReadOnlyList<ItemDefinition> items = Phase1RuntimeHUD.Instance.ContentCatalog.Items;
+            for (int i = 0; i < items.Count; i++)
+            {
+                ItemDefinition item = items[i];
+                if (item == null || (item.RestoreHP <= 0 && item.RestoreMP <= 0))
+                {
+                    continue;
+                }
+
+                if (InventoryService.Instance.GetItemCount(item.ItemId) > 0)
+                {
+                    return item;
+                }
+            }
+
+            return null;
         }
     }
 }

@@ -130,6 +130,66 @@ namespace TPS.Runtime.Combat
             return result;
         }
 
+        public List<string> GetRecruitedMemberIds()
+        {
+            var result = new List<string>();
+            foreach (var pair in _members)
+            {
+                if (pair.Value != null && pair.Value.Recruited)
+                {
+                    result.Add(pair.Key);
+                }
+            }
+
+            result.Sort((left, right) =>
+            {
+                int leftSlot = _members[left].ActiveSlot;
+                int rightSlot = _members[right].ActiveSlot;
+                if (leftSlot < 0 && rightSlot >= 0) return 1;
+                if (rightSlot < 0 && leftSlot >= 0) return -1;
+                if (leftSlot != rightSlot) return leftSlot.CompareTo(rightSlot);
+                return string.CompareOrdinal(left, right);
+            });
+            return result;
+        }
+
+        public bool SetMemberActiveSlot(string characterId, int slot)
+        {
+            if (slot < 0 || slot > 2 || !_members.TryGetValue(characterId, out PartyMemberRuntimeState state) || !state.Recruited)
+            {
+                return false;
+            }
+
+            foreach (var pair in _members)
+            {
+                if (pair.Key != characterId && pair.Value != null && pair.Value.Recruited && pair.Value.ActiveSlot == slot)
+                {
+                    pair.Value.ActiveSlot = -1;
+                }
+            }
+
+            state.ActiveSlot = slot;
+            GameEventBus.PublishPartyChanged(characterId);
+            return true;
+        }
+
+        public bool BenchMember(string characterId)
+        {
+            if (!_members.TryGetValue(characterId, out PartyMemberRuntimeState state) || !state.Recruited || state.ActiveSlot < 0)
+            {
+                return false;
+            }
+
+            if (CountActiveMembers() <= 1)
+            {
+                return false;
+            }
+
+            state.ActiveSlot = -1;
+            GameEventBus.PublishPartyChanged(characterId);
+            return true;
+        }
+
         public CharacterDefinition GetCharacterDefinition(string characterId)
         {
             return _members.TryGetValue(characterId, out PartyMemberRuntimeState state) ? state.Definition : null;
@@ -400,6 +460,20 @@ namespace TPS.Runtime.Combat
             }
 
             return -1;
+        }
+
+        private int CountActiveMembers()
+        {
+            int count = 0;
+            foreach (var pair in _members)
+            {
+                if (pair.Value != null && pair.Value.Recruited && pair.Value.ActiveSlot >= 0)
+                {
+                    count++;
+                }
+            }
+
+            return count;
         }
 
         private void RestoreToFull(PartyMemberRuntimeState state)

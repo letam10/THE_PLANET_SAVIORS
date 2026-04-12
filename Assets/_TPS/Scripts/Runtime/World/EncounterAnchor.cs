@@ -106,7 +106,11 @@ namespace TPS.Runtime.World
                 rotation);
             _hasTriggered = true;
 
-            if (Phase1RuntimeHUD.Instance != null)
+            if (RuntimeMenuCanvasController.Instance != null)
+            {
+                RuntimeMenuCanvasController.Instance.PrepareForSceneTransition($"Entering {encounterDefinition.DisplayName}...");
+            }
+            else if (Phase1RuntimeHUD.Instance != null)
             {
                 Phase1RuntimeHUD.Instance.CloseShop();
                 Phase1RuntimeHUD.Instance.ShowMessage($"Entering {encounterDefinition.DisplayName}...");

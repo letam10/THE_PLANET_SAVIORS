@@ -28,6 +28,7 @@ namespace TPS.Runtime.UI
         public static Phase1RuntimeHUD Instance { get; private set; }
 
         [SerializeField] private Phase1ContentCatalog _contentCatalog;
+        [SerializeField] private bool _enableLegacyFallbackPanels;
 
         private MerchantAnchor _activeMerchant;
         private string _lastMessage = "";
@@ -35,7 +36,9 @@ namespace TPS.Runtime.UI
         private RuntimePanelType _activePanel;
         private string _selectedMemberId;
 
-        public MerchantAnchor ActiveMerchant => _activeMerchant;
+        public MerchantAnchor ActiveMerchant => RuntimeMenuCanvasController.Instance != null
+            ? RuntimeMenuCanvasController.Instance.ActiveMerchant
+            : _activeMerchant;
         public Phase1ContentCatalog ContentCatalog => _contentCatalog;
 
         private void Awake()
@@ -55,12 +58,17 @@ namespace TPS.Runtime.UI
             RuntimeMenuCanvasController.EnsureExists();
             WeatherPresentationController.EnsureExists();
             RuntimeUiInputState.RestoreGameplayFocus();
+            GameEventBus.OnGameLoaded += HandleRuntimeReset;
+            SceneManager.activeSceneChanged += HandleActiveSceneChanged;
             _activePanel = RuntimePanelType.None;
+            _activeMerchant = null;
             EnsureSelectedMember();
         }
 
         private void OnDisable()
         {
+            GameEventBus.OnGameLoaded -= HandleRuntimeReset;
+            SceneManager.activeSceneChanged -= HandleActiveSceneChanged;
             if (Instance == this)
             {
                 RuntimeUiInputState.RestoreGameplayFocus();
@@ -69,7 +77,7 @@ namespace TPS.Runtime.UI
 
         private void Update()
         {
-            if (RuntimeMenuCanvasController.Instance != null)
+            if (RuntimeMenuCanvasController.Instance != null || !_enableLegacyFallbackPanels)
             {
                 return;
             }
@@ -147,6 +155,12 @@ namespace TPS.Runtime.UI
 
         public void ToggleShop(MerchantAnchor merchantAnchor)
         {
+            if (RuntimeMenuCanvasController.Instance != null)
+            {
+                RuntimeMenuCanvasController.Instance.ToggleMerchantShop(merchantAnchor);
+                return;
+            }
+
             _activeMerchant = _activeMerchant == merchantAnchor ? null : merchantAnchor;
             if (_activeMerchant != null)
             {
@@ -158,11 +172,32 @@ namespace TPS.Runtime.UI
 
         public void CloseShop()
         {
+            if (RuntimeMenuCanvasController.Instance != null)
+            {
+                RuntimeMenuCanvasController.Instance.CloseMerchantShop();
+                return;
+            }
+
             _activeMerchant = null;
             if (_activePanel == RuntimePanelType.None)
             {
                 RuntimeUiInputState.RestoreGameplayFocus();
             }
+        }
+
+        private void HandleRuntimeReset()
+        {
+            _activeMerchant = null;
+            _activePanel = RuntimePanelType.None;
+            if (RuntimeMenuCanvasController.Instance == null)
+            {
+                RuntimeUiInputState.RestoreGameplayFocus();
+            }
+        }
+
+        private void HandleActiveSceneChanged(Scene previousScene, Scene nextScene)
+        {
+            HandleRuntimeReset();
         }
 
         public ItemDefinition FindFirstUsableConsumable()
@@ -188,7 +223,7 @@ namespace TPS.Runtime.UI
         private void OnGUI()
         {
             bool inBattle = SceneLoader.Instance != null && SceneLoader.Instance.CurrentContentScene == "BTL_Standard";
-            bool menuVisible = RuntimeMenuCanvasController.Instance != null && RuntimeMenuCanvasController.Instance.IsMenuVisible && !inBattle;
+            bool menuVisible = RuntimeMenuCanvasController.Instance != null && (RuntimeMenuCanvasController.Instance.IsMenuVisible || inBattle);
 
             if (!menuVisible)
             {
@@ -198,8 +233,7 @@ namespace TPS.Runtime.UI
 
             if (!inBattle)
             {
-                bool useCanvasMenus = RuntimeMenuCanvasController.Instance != null;
-                if (!useCanvasMenus)
+                if (_enableLegacyFallbackPanels && RuntimeMenuCanvasController.Instance == null)
                 {
                     DrawActiveWorldPanel();
                     if (_activeMerchant != null)

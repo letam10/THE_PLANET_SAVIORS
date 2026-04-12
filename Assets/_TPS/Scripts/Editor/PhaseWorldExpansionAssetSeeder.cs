@@ -3,6 +3,7 @@ using TPS.Runtime.Combat;
 using TPS.Runtime.Conditions;
 using TPS.Runtime.Core;
 using TPS.Runtime.Dialogue;
+using TPS.Runtime.Quest;
 using UnityEditor;
 using UnityEngine;
 
@@ -20,6 +21,7 @@ namespace TPS.Editor
         public RewardTableDefinition RedCedarReward;
         public RewardTableDefinition TideCavernsReward;
         public RewardTableDefinition QuarryRuinsReward;
+        public RewardTableDefinition GullwatchRouteReward;
         public EncounterDefinition GullwatchEncounter;
         public EncounterDefinition RedCedarEncounter;
         public EncounterDefinition TideCavernsPatrol;
@@ -36,6 +38,7 @@ namespace TPS.Editor
         public ZoneDefinition QuarryRuinsZone;
         public DialogueDefinition GullwatchDialogue;
         public DialogueDefinition RedCedarDialogue;
+        public QuestDefinition GullwatchRouteQuest;
     }
 
     internal static class PhaseWorldExpansionAssetSeeder
@@ -76,10 +79,12 @@ namespace TPS.Editor
             assets.RedCedarReward = Phase1InstallerShared.LoadOrCreateAsset<RewardTableDefinition>("Assets/_TPS/Data/Phase1/WorldExpansion/Combat/RWD_RedCedar.asset");
             assets.TideCavernsReward = Phase1InstallerShared.LoadOrCreateAsset<RewardTableDefinition>("Assets/_TPS/Data/Phase1/WorldExpansion/Combat/RWD_TideCaverns.asset");
             assets.QuarryRuinsReward = Phase1InstallerShared.LoadOrCreateAsset<RewardTableDefinition>("Assets/_TPS/Data/Phase1/WorldExpansion/Combat/RWD_QuarryRuins.asset");
+            assets.GullwatchRouteReward = Phase1InstallerShared.LoadOrCreateAsset<RewardTableDefinition>("Assets/_TPS/Data/Phase1/WorldExpansion/Combat/RWD_GullwatchRoute.asset");
             ConfigureReward(assets.GullwatchReward, "reward_gullwatch_patrol", 34, 28, assets.SaltedRation, 1, null, 0);
             ConfigureReward(assets.RedCedarReward, "reward_redcedar_patrol", 38, 30, assets.StormTonic, 1, null, 0);
             ConfigureReward(assets.TideCavernsReward, "reward_tide_caverns", 65, 48, assets.SaltedRation, 2, assets.Base.Ether, 1);
             ConfigureReward(assets.QuarryRuinsReward, "reward_quarry_ruins", 92, 62, assets.StormTonic, 1, null, 0, assets.QuarryHalberd, 1);
+            ConfigureReward(assets.GullwatchRouteReward, "reward_gullwatch_route", 58, 36, assets.StormTonic, 1, assets.SaltedRation, 2);
 
             assets.GullwatchEncounter = Phase1InstallerShared.LoadOrCreateAsset<EncounterDefinition>("Assets/_TPS/Data/Phase1/WorldExpansion/World/ENC_GullwatchShoreline.asset");
             assets.RedCedarEncounter = Phase1InstallerShared.LoadOrCreateAsset<EncounterDefinition>("Assets/_TPS/Data/Phase1/WorldExpansion/World/ENC_RedCedarRoadside.asset");
@@ -114,10 +119,17 @@ namespace TPS.Editor
 
             assets.GullwatchDialogue = Phase1InstallerShared.LoadOrCreateAsset<DialogueDefinition>("Assets/_TPS/Data/Phase1/WorldExpansion/Dialogue/DLG_GullwatchKeeper.asset");
             assets.RedCedarDialogue = Phase1InstallerShared.LoadOrCreateAsset<DialogueDefinition>("Assets/_TPS/Data/Phase1/WorldExpansion/Dialogue/DLG_RedCedarWatcher.asset");
-            ConfigureSettlementDialogue(assets.GullwatchDialogue, "dialogue_gullwatch_keeper", "Mira of Gullwatch",
-                "The harbor road is open again. Even the gulls are less frantic now.",
-                "Crabs keep crawling out at low tide. Clear the shoreline and the village can work in peace.",
-                assets.GullwatchEncounter.EncounterId);
+            assets.GullwatchRouteQuest = Phase1InstallerShared.LoadOrCreateAsset<QuestDefinition>("Assets/_TPS/Data/Phase1/WorldExpansion/World/QST_SecureTideRoute.asset");
+            ConfigureQuest(assets.GullwatchRouteQuest,
+                "quest_secure_tide_route",
+                "Secure the Tide Route",
+                "Prepare in Aster Harbor, report to Mira in Gullwatch, then clear Tide Caverns and reopen the coastal route.",
+                assets.GullwatchRouteReward,
+                null,
+                assets.TideCavernsBoss.EncounterId,
+                "defeat_tide_matriarch",
+                "Travel to Gullwatch, speak with Mira at the beacon frame, follow the spray markers into Tide Caverns, and defeat the Matriarch beyond the flooded chambers.");
+            ConfigureGullwatchRouteDialogue(assets.GullwatchDialogue, assets.GullwatchRouteQuest, assets.Base.SideQuest, assets.TideCavernsBoss.EncounterId);
             ConfigureSettlementDialogue(assets.RedCedarDialogue, "dialogue_redcedar_watcher", "Renn of Red Cedar",
                 "The old road is calm again. Traders are willing to risk the climb.",
                 "The ridge still spits raiders onto the road. We need a stronger hand out there.",
@@ -328,8 +340,140 @@ namespace TPS.Editor
             AppendUniqueObjects(so.FindProperty("_encounterTables"), assets.GullwatchTable, assets.RedCedarTable, assets.TideCavernsTable, assets.QuarryRuinsTable);
             AppendUniqueObjects(so.FindProperty("_zones"), assets.GullwatchZone, assets.RedCedarZone, assets.TideCavernsZone, assets.QuarryRuinsZone);
             AppendUniqueObjects(so.FindProperty("_dialogues"), assets.GullwatchDialogue, assets.RedCedarDialogue);
+            AppendUniqueObjects(so.FindProperty("_quests"), assets.GullwatchRouteQuest);
+            AppendUniqueObjects(so.FindProperty("_rewardTables"), assets.GullwatchRouteReward);
             so.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(assets.Base.Catalog);
+        }
+
+        private static void ConfigureQuest(QuestDefinition asset, string questId, string title, string summary, RewardTableDefinition reward, CharacterDefinition recruitReward, string clearedEncounterId, string objectiveId, string objectiveDescription)
+        {
+            SerializedObject so = new SerializedObject(asset);
+            so.FindProperty("_questId").stringValue = questId;
+            so.FindProperty("_title").stringValue = title;
+            so.FindProperty("_summary").stringValue = summary;
+            so.FindProperty("_completionReward").objectReferenceValue = reward;
+            so.FindProperty("_recruitedMemberReward").objectReferenceValue = recruitReward;
+            SerializedProperty objectives = so.FindProperty("_objectives");
+            objectives.arraySize = 1;
+            SerializedProperty objective = objectives.GetArrayElementAtIndex(0);
+            objective.FindPropertyRelative("ObjectiveId").stringValue = objectiveId;
+            objective.FindPropertyRelative("Description").stringValue = objectiveDescription;
+            SerializedProperty conditions = objective.FindPropertyRelative("CompletionConditions");
+            conditions.FindPropertyRelative("Mode").enumValueIndex = (int)ConditionGroupMode.All;
+            SerializedProperty conditionList = conditions.FindPropertyRelative("Conditions");
+            conditionList.arraySize = 1;
+            SerializedProperty condition = conditionList.GetArrayElementAtIndex(0);
+            condition.FindPropertyRelative("Type").enumValueIndex = (int)ConditionType.EncounterCleared;
+            condition.FindPropertyRelative("EncounterId").stringValue = clearedEncounterId;
+            condition.FindPropertyRelative("ExpectedBool").boolValue = true;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(asset);
+        }
+
+        private static void ConfigureGullwatchRouteDialogue(DialogueDefinition asset, QuestDefinition routeQuest, QuestDefinition prerequisiteQuest, string clearedEncounterId)
+        {
+            SerializedObject so = new SerializedObject(asset);
+            so.FindProperty("_dialogueId").stringValue = "dialogue_gullwatch_keeper";
+            SerializedProperty variants = so.FindProperty("_variants");
+            variants.arraySize = 5;
+
+            ConfigureGullwatchVariant(variants.GetArrayElementAtIndex(0), "completed", "Mira of Gullwatch",
+                "The beacon is lit, the surf path is safe, and the ferry hands are back on schedule.",
+                ConditionType.QuestState, routeQuest.QuestId, QuestStatus.Completed, null, null, DialogueActionType.SetFlag, null, "dialogue.gullwatch.completed");
+            ConfigureGullwatchVariant(variants.GetArrayElementAtIndex(1), "turn_in", "Mira of Gullwatch",
+                "You broke the matriarch's hold on the caverns. Take this, and watch the shoreline flare back to life.",
+                ConditionType.QuestState, routeQuest.QuestId, QuestStatus.ReadyToTurnIn, null, null, DialogueActionType.TryCompleteQuest, routeQuest, null,
+                setZoneFact: true, setZoneId: "gullwatch", setZoneFactId: "tide_route_secured");
+            ConfigureGullwatchVariant(variants.GetArrayElementAtIndex(2), "active", "Mira of Gullwatch",
+                "Follow the spray markers into Tide Caverns. Clear the patrol at the mouth if it blocks you, then push past the second flooded chamber to reach the matriarch. Open your quest log if you lose the route.",
+                ConditionType.QuestState, routeQuest.QuestId, QuestStatus.Active, null, null, DialogueActionType.SetFlag, null, "dialogue.gullwatch.route_active");
+            ConfigureGullwatchVariant(variants.GetArrayElementAtIndex(3), "start", "Mira of Gullwatch",
+                "Quartermaster Ivo said you were coming. Stock up in Aster Harbor if you need to, then start at the Gullwatch lane, push through Tide Caverns, and we will reopen the full coastal route by dusk.",
+                ConditionType.ZoneFactBoolEquals, null, QuestStatus.NotStarted, "aster_harbor", "dock_supplies_secured", DialogueActionType.AcceptQuest, routeQuest, null);
+            ConfigureFallbackVariant(variants.GetArrayElementAtIndex(4), "fallback", "Mira of Gullwatch",
+                "The gulls are quieter, but we still watch the tide line. Handle the harbor first, then we'll talk routes.");
+
+            so.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(asset);
+        }
+
+        private static void ConfigureGullwatchVariant(
+            SerializedProperty variant,
+            string variantId,
+            string speakerName,
+            string body,
+            ConditionType primaryConditionType,
+            string questId,
+            QuestStatus expectedQuestStatus,
+            string zoneId,
+            string zoneFactId,
+            DialogueActionType actionType,
+            QuestDefinition quest,
+            string flagId,
+            bool setZoneFact = false,
+            string setZoneId = "gullwatch",
+            string setZoneFactId = "tide_route_secured")
+        {
+            variant.FindPropertyRelative("VariantId").stringValue = variantId;
+            variant.FindPropertyRelative("SpeakerName").stringValue = speakerName;
+            variant.FindPropertyRelative("Body").stringValue = body;
+            variant.FindPropertyRelative("OneShot").boolValue = false;
+            variant.FindPropertyRelative("OneShotConsumptionId").stringValue = string.Empty;
+            variant.FindPropertyRelative("Choices").arraySize = 0;
+
+            SerializedProperty conditions = variant.FindPropertyRelative("Conditions");
+            conditions.FindPropertyRelative("Mode").enumValueIndex = (int)ConditionGroupMode.All;
+            SerializedProperty conditionList = conditions.FindPropertyRelative("Conditions");
+            conditionList.arraySize = 1;
+            if (conditionList.arraySize == 1)
+            {
+                SerializedProperty condition = conditionList.GetArrayElementAtIndex(0);
+                condition.FindPropertyRelative("Type").enumValueIndex = (int)primaryConditionType;
+                condition.FindPropertyRelative("QuestId").stringValue = questId ?? string.Empty;
+                condition.FindPropertyRelative("ExpectedQuestStatus").enumValueIndex = (int)expectedQuestStatus;
+                condition.FindPropertyRelative("ExpectedBool").boolValue = true;
+                condition.FindPropertyRelative("ZoneId").stringValue = zoneId ?? string.Empty;
+                condition.FindPropertyRelative("ZoneFactId").stringValue = zoneFactId ?? string.Empty;
+            }
+
+            SerializedProperty actions = variant.FindPropertyRelative("Actions");
+            actions.arraySize = actionType == DialogueActionType.None ? 0 : (setZoneFact ? 2 : 1);
+            if (actions.arraySize >= 1)
+            {
+                SerializedProperty action = actions.GetArrayElementAtIndex(0);
+                action.FindPropertyRelative("ActionType").enumValueIndex = (int)actionType;
+                action.FindPropertyRelative("Quest").objectReferenceValue = quest;
+                action.FindPropertyRelative("FlagId").stringValue = flagId ?? string.Empty;
+                action.FindPropertyRelative("BoolValue").boolValue = true;
+                action.FindPropertyRelative("ZoneId").stringValue = string.Empty;
+                action.FindPropertyRelative("ZoneFactId").stringValue = string.Empty;
+            }
+
+            if (setZoneFact && actions.arraySize > 1)
+            {
+                SerializedProperty action = actions.GetArrayElementAtIndex(1);
+                action.FindPropertyRelative("ActionType").enumValueIndex = (int)DialogueActionType.SetZoneFact;
+                action.FindPropertyRelative("Quest").objectReferenceValue = null;
+                action.FindPropertyRelative("FlagId").stringValue = string.Empty;
+                action.FindPropertyRelative("BoolValue").boolValue = true;
+                action.FindPropertyRelative("ZoneId").stringValue = setZoneId;
+                action.FindPropertyRelative("ZoneFactId").stringValue = setZoneFactId;
+            }
+        }
+
+        private static void ConfigureFallbackVariant(SerializedProperty variant, string variantId, string speakerName, string body)
+        {
+            variant.FindPropertyRelative("VariantId").stringValue = variantId;
+            variant.FindPropertyRelative("SpeakerName").stringValue = speakerName;
+            variant.FindPropertyRelative("Body").stringValue = body;
+            variant.FindPropertyRelative("OneShot").boolValue = false;
+            variant.FindPropertyRelative("OneShotConsumptionId").stringValue = string.Empty;
+            variant.FindPropertyRelative("Choices").arraySize = 0;
+            SerializedProperty conditions = variant.FindPropertyRelative("Conditions");
+            conditions.FindPropertyRelative("Mode").enumValueIndex = (int)ConditionGroupMode.All;
+            conditions.FindPropertyRelative("Conditions").arraySize = 0;
+            variant.FindPropertyRelative("Actions").arraySize = 0;
         }
 
         private static void AppendUniqueObjects(SerializedProperty property, params Object[] additions)

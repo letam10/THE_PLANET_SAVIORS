@@ -334,6 +334,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TPS.Runtime.UI.Phase1RuntimeHUD
   _contentCatalog: {fileID: 11400000, guid: 6223ac84ac8a0704d961686f3f098254, type: 2}
+  _enableLegacyFallbackPanels: 0
 --- !u!114 &177854916
 MonoBehaviour:
   m_ObjectHideFlags: 0

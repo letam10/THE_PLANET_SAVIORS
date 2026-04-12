@@ -24,7 +24,10 @@ namespace TPS.Runtime.UI
             Equipment = 4,
             System = 5,
             Shop = 6,
-            Help = 7
+            Help = 7,
+            Battle = 8,
+            BattleEnd = 9,
+            Sleep = 10
         }
 
         public static RuntimeMenuCanvasController Instance { get; private set; }
@@ -34,6 +37,13 @@ namespace TPS.Runtime.UI
         private const string MusicVolumeKey = "TPS.Runtime.Audio.Music";
         private const string SfxVolumeKey = "TPS.Runtime.Audio.Sfx";
         private const string FullscreenKey = "TPS.Runtime.Display.Fullscreen";
+        private const string ResolutionWidthKey = "TPS.Runtime.Display.Width";
+        private const string ResolutionHeightKey = "TPS.Runtime.Display.Height";
+        private const string TideRouteQuestId = "quest_secure_tide_route";
+        private const string DockSuppliesZoneId = "aster_harbor";
+        private const string DockSuppliesFactId = "dock_supplies_secured";
+        private const string TideRouteZoneId = "gullwatch";
+        private const string TideRouteSecuredFactId = "tide_route_secured";
 
         private Canvas _canvas;
         private GraphicRaycaster _raycaster;
@@ -54,9 +64,13 @@ namespace TPS.Runtime.UI
         private Font _font;
         private PanelType _activePanel;
         private string _selectedMemberId;
+        private MerchantAnchor _activeMerchant;
+        private InnAnchor _activeInn;
         private float _lastRefreshAt = -1f;
+        private bool _battleWasActive;
 
         public bool IsMenuVisible => _activePanel != PanelType.None;
+        public MerchantAnchor ActiveMerchant => _activeMerchant;
 
         public static void EnsureExists()
         {
@@ -79,12 +93,16 @@ namespace TPS.Runtime.UI
 
             Instance = this;
             DontDestroyOnLoad(gameObject);
+            GameEventBus.OnGameLoaded += HandleRuntimeReset;
+            SceneManager.activeSceneChanged += HandleActiveSceneChanged;
             BuildUiShell();
             ApplyPersistedSettings();
         }
 
         private void OnDestroy()
         {
+            GameEventBus.OnGameLoaded -= HandleRuntimeReset;
+            SceneManager.activeSceneChanged -= HandleActiveSceneChanged;
             if (Instance == this)
             {
                 Instance = null;
@@ -95,9 +113,71 @@ namespace TPS.Runtime.UI
         {
             EnsureSelectedMember();
             EnsureEventSystem();
+            SyncBattlePanelState();
             SyncMerchantPanelState();
             HandleHotkeys();
             RefreshCurrentPanelIfNeeded();
+        }
+
+        public void ToggleMerchantShop(MerchantAnchor merchant)
+        {
+            if (merchant == null)
+            {
+                CloseMerchantShop();
+                return;
+            }
+
+            if (_activeMerchant == merchant && _activePanel == PanelType.Shop)
+            {
+                CloseMerchantShop();
+                return;
+            }
+
+            _activeMerchant = merchant;
+            _activeInn = null;
+            OpenPanel(PanelType.Shop);
+        }
+
+        public void CloseMerchantShop()
+        {
+            _activeMerchant = null;
+            if (_activePanel == PanelType.Shop)
+            {
+                _activePanel = PanelType.None;
+                RuntimeUiInputState.RestoreGameplayFocus();
+                RefreshVisibility();
+            }
+        }
+
+        public void OpenSleepPanel(InnAnchor inn)
+        {
+            if (inn == null)
+            {
+                return;
+            }
+
+            _activeInn = inn;
+            _activeMerchant = null;
+            OpenPanel(PanelType.Sleep);
+        }
+
+        public void PrepareForSceneTransition(string message = null)
+        {
+            _activeMerchant = null;
+            _activeInn = null;
+            _battleWasActive = false;
+
+            if (!IsBattlePanelActive())
+            {
+                _activePanel = PanelType.None;
+                RuntimeUiInputState.RestoreGameplayFocus();
+                RefreshVisibility();
+            }
+
+            if (!string.IsNullOrWhiteSpace(message))
+            {
+                Notify(message);
+            }
         }
 
         private void BuildUiShell()
@@ -243,9 +323,23 @@ namespace TPS.Runtime.UI
                 return;
             }
 
+             BattleWorldBridge battleBridge = BattleWorldBridge.Instance;
+             bool battleActive = battleBridge != null && battleBridge.HasActiveEncounter;
+
             if (keyboard.tabKey.wasPressedThisFrame)
             {
-                if (_activePanel == PanelType.None)
+                if (battleActive)
+                {
+                    if (_activePanel == PanelType.System)
+                    {
+                        ClosePanels();
+                    }
+                    else
+                    {
+                        OpenPanel(PanelType.System);
+                    }
+                }
+                else if (_activePanel == PanelType.None)
                 {
                     OpenPanel(PanelType.System);
                 }
@@ -258,7 +352,7 @@ namespace TPS.Runtime.UI
 
             if (keyboard.escapeKey.wasPressedThisFrame)
             {
-                if (_activePanel != PanelType.None || GetActiveMerchant() != null)
+                if (_activePanel != PanelType.None || GetActiveMerchant() != null || battleActive)
                 {
                     ClosePanels();
                 }
@@ -266,6 +360,16 @@ namespace TPS.Runtime.UI
                 {
                     OpenPanel(PanelType.System);
                 }
+                return;
+            }
+
+            if (battleActive)
+            {
+                if (keyboard.hKey.wasPressedThisFrame)
+                {
+                    OpenPanel(PanelType.Help);
+                }
+
                 return;
             }
 
@@ -289,16 +393,56 @@ namespace TPS.Runtime.UI
 
         private void SyncMerchantPanelState()
         {
-            MerchantAnchor merchant = GetActiveMerchant();
-            if (merchant != null && _activePanel != PanelType.Shop)
+            if (IsBattlePanelActive() || _activeInn != null)
+            {
+                return;
+            }
+
+            if (_activeMerchant != null && _activePanel == PanelType.None)
             {
                 OpenPanel(PanelType.Shop);
                 return;
             }
 
-            if (merchant == null && _activePanel == PanelType.Shop)
+            if (_activeMerchant == null && _activePanel == PanelType.Shop)
             {
                 ClosePanels();
+            }
+        }
+
+        private void SyncBattlePanelState()
+        {
+            BattleWorldBridge bridge = BattleWorldBridge.Instance;
+            bool battleActive = bridge != null && bridge.HasActiveEncounter;
+            if (battleActive)
+            {
+                RuntimeUiInputState.SetUiFocused(true);
+                PanelType desired = bridge.IsBattleEnded ? PanelType.BattleEnd : PanelType.Battle;
+                if (!_battleWasActive)
+                {
+                    _activeMerchant = null;
+                    _activeInn = null;
+                    _activePanel = desired;
+                    RebuildContent();
+                    RefreshVisibility();
+                }
+                else if (_activePanel != desired && _activePanel != PanelType.System && _activePanel != PanelType.Help)
+                {
+                    _activePanel = desired;
+                    RebuildContent();
+                    RefreshVisibility();
+                }
+
+                _battleWasActive = true;
+                return;
+            }
+
+            _battleWasActive = false;
+            if (_activePanel == PanelType.Battle || _activePanel == PanelType.BattleEnd)
+            {
+                _activePanel = PanelType.None;
+                RuntimeUiInputState.RestoreGameplayFocus();
+                RefreshVisibility();
             }
         }
 
@@ -321,6 +465,33 @@ namespace TPS.Runtime.UI
 
         private void OpenPanel(PanelType panel)
         {
+            if (panel == PanelType.Inventory ||
+                panel == PanelType.Character ||
+                panel == PanelType.Quest ||
+                panel == PanelType.Equipment ||
+                panel == PanelType.Shop ||
+                panel == PanelType.Sleep)
+            {
+                BattleWorldBridge bridge = BattleWorldBridge.Instance;
+                if (bridge != null && bridge.HasActiveEncounter)
+                {
+                    return;
+                }
+            }
+
+            if (panel == PanelType.Shop)
+            {
+                _activeInn = null;
+            }
+            else if (panel == PanelType.Sleep)
+            {
+                _activeMerchant = null;
+            }
+            else if (panel != PanelType.None)
+            {
+                _activeInn = null;
+            }
+
             _activePanel = panel;
             RuntimeUiInputState.SetUiFocused(true);
             RebuildContent();
@@ -329,12 +500,27 @@ namespace TPS.Runtime.UI
 
         private void ClosePanels()
         {
-            MerchantAnchor merchant = GetActiveMerchant();
-            if (merchant != null && Phase1RuntimeHUD.Instance != null)
+            BattleWorldBridge bridge = BattleWorldBridge.Instance;
+            if (bridge != null && bridge.HasActiveEncounter)
             {
-                Phase1RuntimeHUD.Instance.CloseShop();
+                _activePanel = bridge.IsBattleEnded ? PanelType.BattleEnd : PanelType.Battle;
+                RuntimeUiInputState.SetUiFocused(true);
+                RefreshVisibility();
+                return;
             }
 
+            if (_activePanel != PanelType.Shop && _activeMerchant != null)
+            {
+                _activeInn = null;
+                _activePanel = PanelType.Shop;
+                RuntimeUiInputState.SetUiFocused(true);
+                RebuildContent();
+                RefreshVisibility();
+                return;
+            }
+
+            _activeInn = null;
+            _activeMerchant = null;
             _activePanel = PanelType.None;
             RuntimeUiInputState.RestoreGameplayFocus();
             RefreshVisibility();
@@ -353,6 +539,11 @@ namespace TPS.Runtime.UI
             if (dimmer != null)
             {
                 dimmer.gameObject.SetActive(visible);
+            }
+
+            if (_buttonBar != null)
+            {
+                _buttonBar.gameObject.SetActive(!IsBattlePanelActive());
             }
 
             RefreshHintText();
@@ -391,6 +582,15 @@ namespace TPS.Runtime.UI
                 case PanelType.Help:
                     BuildHelpPanel();
                     break;
+                case PanelType.Sleep:
+                    BuildSleepPanel();
+                    break;
+                case PanelType.Battle:
+                    BuildBattlePanel();
+                    break;
+                case PanelType.BattleEnd:
+                    BuildBattleEndPanel();
+                    break;
             }
         }
 
@@ -401,6 +601,16 @@ namespace TPS.Runtime.UI
             {
                 AddInfoLine("Inventory unavailable.");
                 return;
+            }
+
+            if (PartyService.Instance != null)
+            {
+                AddMemberSelector();
+                CharacterStatSnapshot snapshot = GetSelectedSnapshot();
+                if (snapshot != null)
+                {
+                    AddInfoLine($"{snapshot.DisplayName} | HP {PartyService.Instance.GetCurrentHP(snapshot.CharacterId)}/{snapshot.Stats.MaxHP} | MP {PartyService.Instance.GetCurrentMP(snapshot.CharacterId)}/{snapshot.Stats.MaxMP}");
+                }
             }
 
             AddHeader("Consumables");
@@ -495,6 +705,10 @@ namespace TPS.Runtime.UI
             }
 
             AddInfoLine($"{snapshot.DisplayName} Lv{snapshot.Level}");
+            if (ProgressionService.Instance != null)
+            {
+                AddInfoLine($"EXP {ProgressionService.Instance.GetCurrentExp(snapshot.CharacterId)} | {T("Unlocked skills", "Ky nang da mo")}: {snapshot.Skills.Count}");
+            }
             AddInfoLine($"HP {PartyService.Instance.GetCurrentHP(snapshot.CharacterId)}/{snapshot.Stats.MaxHP} | MP {PartyService.Instance.GetCurrentMP(snapshot.CharacterId)}/{snapshot.Stats.MaxMP}");
             AddInfoLine($"ATK {snapshot.Stats.Attack} | MAG {snapshot.Stats.Magic} | DEF {snapshot.Stats.Defense} | RES {snapshot.Stats.Resistance} | SPD {snapshot.Stats.Speed}");
             AddInfoLine($"{T("Weapon", "Vũ khí")}: {(snapshot.EquippedWeapon != null ? snapshot.EquippedWeapon.DisplayName : T("No Weapon", "Chưa có"))}");
@@ -514,6 +728,28 @@ namespace TPS.Runtime.UI
                     }
                 }
             }
+
+            AddHeader(T("Party Formation", "Party formation"));
+            List<string> recruited = PartyService.Instance.GetRecruitedMemberIds();
+            if (recruited.Count == 0)
+            {
+                AddInfoLine(T("No recruited members.", "No recruited members."));
+                return;
+            }
+
+            for (int i = 0; i < recruited.Count; i++)
+            {
+                string memberId = recruited[i];
+                CharacterStatSnapshot memberSnapshot = PartyService.Instance.GetMemberSnapshot(memberId);
+                string displayName = memberSnapshot != null ? memberSnapshot.DisplayName : memberId;
+                bool isActive = PartyService.Instance.GetActiveMemberIds().Contains(memberId);
+                RectTransform row = CreateRow(62f);
+                CreateText("PartyMemberLabel", row, $"{displayName} ({memberId}) {(isActive ? "[Active]" : "[Bench]")}", 15, TextAnchor.MiddleLeft, FontStyle.Normal, false);
+                CreateActionButton(row, "Slot 1", () => SetMemberSlot(memberId, 0), 80f);
+                CreateActionButton(row, "Slot 2", () => SetMemberSlot(memberId, 1), 80f);
+                CreateActionButton(row, "Slot 3", () => SetMemberSlot(memberId, 2), 80f);
+                CreateActionButton(row, T("Bench", "Bench"), () => BenchMember(memberId), 86f);
+            }
         }
 
         private void BuildQuestPanel()
@@ -525,6 +761,7 @@ namespace TPS.Runtime.UI
                 return;
             }
 
+            AddRouteGuidanceSection();
             for (int i = 0; i < catalog.Quests.Count; i++)
             {
                 QuestDefinition quest = catalog.Quests[i];
@@ -545,13 +782,62 @@ namespace TPS.Runtime.UI
             }
         }
 
+        private void AddRouteGuidanceSection()
+        {
+            AddHeader(T("Next Steps", "Buoc tiep theo"));
+            List<string> lines = GetRouteGuidanceLines();
+            for (int i = 0; i < lines.Count; i++)
+            {
+                AddInfoLine(lines[i]);
+            }
+        }
+
+        private List<string> GetRouteGuidanceLines()
+        {
+            var lines = new List<string>();
+            QuestStatus routeStatus = QuestService.Instance != null ? QuestService.Instance.GetQuestStatus(TideRouteQuestId) : QuestStatus.NotStarted;
+            bool dockSuppliesSecured = ZoneStateService.Instance != null && ZoneStateService.Instance.GetBoolFact(DockSuppliesZoneId, DockSuppliesFactId);
+            bool tideRouteSecured = ZoneStateService.Instance != null && ZoneStateService.Instance.GetBoolFact(TideRouteZoneId, TideRouteSecuredFactId);
+
+            if (!dockSuppliesSecured)
+            {
+                lines.Add(T("Start in Aster Harbor: check the dock quarter, use the general store, and read the board near the harbor lane.", "Bat dau o Aster Harbor: ghe khu cau cang, vao cua hang tong hop, va doc bang huong dan gan lane ben cang."));
+            }
+            else if (routeStatus == QuestStatus.NotStarted)
+            {
+                lines.Add(T("Travel west to Gullwatch and speak with Mira at the beacon frame to open the coastal route task.", "Di ve phia tay den Gullwatch va noi chuyen voi Mira o khung hai dang de mo nhiem vu tuyen duong ven bien."));
+            }
+            else if (routeStatus == QuestStatus.Active)
+            {
+                lines.Add(T("Follow the spray markers from Gullwatch into Tide Caverns, clear the patrol, then push to the matriarch.", "Di theo cac coc moc phun song tu Gullwatch vao Tide Caverns, don toan to tuan tra, sau do tien den matriarch."));
+            }
+            else if (routeStatus == QuestStatus.ReadyToTurnIn)
+            {
+                lines.Add(T("Return to Mira in Gullwatch to turn in Secure the Tide Route and light the beacon.", "Quay lai Mira o Gullwatch de nop nhiem vu Secure the Tide Route va thap sang hai dang."));
+            }
+            else if (routeStatus == QuestStatus.Completed || tideRouteSecured)
+            {
+                lines.Add(T("The Tide Route is secure. Use the inn, shop, and travel lanes to prepare for the next outing.", "Tuyen Tide Route da an toan. Dung nha tro, cua hang, va cac duong di de chuan bi cho chuyen di tiep theo."));
+            }
+            else
+            {
+                lines.Add(T("Open the quest log and follow the highest unfinished objective.", "Mo quest log va lam objective chua hoan thanh gan nhat."));
+            }
+
+            lines.Add(T("Use the inn to restore the party and advance to morning before a dungeon push.", "Dung nha tro de hoi day party va sang buoi sang truoc khi vao dungeon."));
+            lines.Add(T("Inventory handles consumables, Equipment handles gear, and Character shows stats plus unlocked skill summary.", "Inventory dung cho do tieu hao, Equipment dung cho trang bi, va Character hien stat cung tong ket ky nang da mo."));
+            return lines;
+        }
+
         private void BuildSystemPanel()
         {
+            bool battleActive = BattleWorldBridge.Instance != null && BattleWorldBridge.Instance.HasActiveEncounter;
             AddHeader(T("Session", "Phiên chơi"));
             AddInfoLine($"{T("Mode", "Chế độ")}: {RuntimeUiInputState.CurrentMode}");
             AddInfoLine($"{T("Scene", "Màn")}: {SceneManager.GetActiveScene().name}");
             AddInfoLine($"{T("Language", "Ngôn ngữ")}: {(IsVietnamese ? "Vietnamese" : "English")}");
             AddInfoLine($"{T("Graphics", "Đồ họa")}: {GetQualityName()} | {T("Fullscreen", "Toàn màn hình")}: {(Screen.fullScreen ? T("On", "Bật") : T("Off", "Tắt"))}");
+            AddInfoLine($"{T("Resolution", "Độ phân giải")}: {Screen.width}x{Screen.height}");
             AddInfoLine($"{T("Audio", "Âm thanh")}: Master {Mathf.RoundToInt(GetVolume(MasterVolumeKey) * 100f)} | Music {Mathf.RoundToInt(GetVolume(MusicVolumeKey) * 100f)} | SFX {Mathf.RoundToInt(GetVolume(SfxVolumeKey) * 100f)}");
 
             RectTransform languageRow = CreateRow(62f);
@@ -566,6 +852,12 @@ namespace TPS.Runtime.UI
             CreateActionButton(graphicsRow, "High", () => SetQualityPreset(Mathf.Min(2, QualitySettings.names.Length - 1)), 86f);
             CreateActionButton(graphicsRow, T("Fullscreen", "Toàn màn hình"), ToggleFullscreen, 118f);
 
+            RectTransform resolutionRow = CreateRow(62f);
+            CreateText("ResolutionLabel", resolutionRow, T("Resolution", "Độ phân giải"), 16, TextAnchor.MiddleLeft, FontStyle.Bold, false);
+            CreateActionButton(resolutionRow, "1280x720", () => ApplyResolution(1280, 720), 102f);
+            CreateActionButton(resolutionRow, "1600x900", () => ApplyResolution(1600, 900), 102f);
+            CreateActionButton(resolutionRow, "1920x1080", () => ApplyResolution(1920, 1080), 110f);
+
             RectTransform audioRow = CreateRow(62f);
             CreateText("AudioLabel", audioRow, T("Audio", "Âm thanh"), 16, TextAnchor.MiddleLeft, FontStyle.Bold, false);
             CreateActionButton(audioRow, "Master -", () => AdjustVolume(MasterVolumeKey, -0.1f, "Master"), 94f);
@@ -576,15 +868,21 @@ namespace TPS.Runtime.UI
             CreateActionButton(audioRow, "SFX +", () => AdjustVolume(SfxVolumeKey, 0.1f, "SFX"), 82f);
 
             RectTransform actionRow = CreateRow(62f);
-            CreateActionButton(actionRow, T("Save Game", "Lưu game"), SaveGame, 140f);
-            CreateActionButton(actionRow, T("Load Game", "Tải game"), LoadGame, 140f);
+            if (battleActive)
+            {
+                AddInfoLine(T("Save/load is disabled while a battle is active.", "Khong cho phep save/load khi dang trong tran dau."));
+            }
+            if (!battleActive)
+            {
+                CreateActionButton(actionRow, T("Save Game", "Lưu game"), SaveGame, 140f);
+                CreateActionButton(actionRow, T("Load Game", "Tải game"), LoadGame, 140f);
+            }
             CreateActionButton(actionRow, T("Return", "Quay lại"), ClosePanels, 140f);
         }
 
         private void BuildShopPanel()
         {
-            MerchantAnchor merchant = GetActiveMerchant();
-            ShopDefinition shop = merchant != null ? merchant.ShopDefinition : null;
+            ShopDefinition shop = _activeMerchant != null ? _activeMerchant.ShopDefinition : null;
             if (shop == null || EconomyService.Instance == null)
             {
                 AddInfoLine(T("Shop is unavailable.", "Cửa hàng chưa khả dụng."));
@@ -592,6 +890,7 @@ namespace TPS.Runtime.UI
             }
 
             AddInfoLine($"{T("Currency", "Tiền")}: {EconomyService.Instance.Currency}");
+            AddHeader(T("Buy Stock", "Hang dang ban"));
             for (int i = 0; i < shop.Entries.Count; i++)
             {
                 ShopEntryDefinition entry = shop.Entries[i];
@@ -613,12 +912,162 @@ namespace TPS.Runtime.UI
                 CreateActionButton(row, T("Buy", "Mua"), () => BuyEntry(shop, entry, label), 94f);
             }
 
+            Phase1ContentCatalog catalog = GetCatalog();
+            if (catalog != null && InventoryService.Instance != null)
+            {
+                bool showedSellHeader = false;
+                for (int i = 0; i < catalog.Items.Count; i++)
+                {
+                    ItemDefinition item = catalog.Items[i];
+                    if (item == null)
+                    {
+                        continue;
+                    }
+
+                    int count = InventoryService.Instance.GetItemCount(item.ItemId);
+                    if (count <= 0)
+                    {
+                        continue;
+                    }
+
+                    if (!showedSellHeader)
+                    {
+                        AddHeader(T("Sell From Bag", "Ban tu tui do"));
+                        showedSellHeader = true;
+                    }
+
+                    RectTransform sellRow = CreateRow(70f);
+                    CreateText("SellItemLabel", sellRow, $"{item.DisplayName} x{count}\n{T("Sell", "Ban")} {item.SellPrice}", 16, TextAnchor.MiddleLeft, FontStyle.Normal, true, 52f);
+                    CreateActionButton(sellRow, T("Sell", "Ban"), () => SellItem(item), 94f);
+                }
+
+                for (int i = 0; i < catalog.Equipment.Count; i++)
+                {
+                    EquipmentDefinition equipment = catalog.Equipment[i];
+                    if (equipment == null)
+                    {
+                        continue;
+                    }
+
+                    int count = InventoryService.Instance.GetEquipmentCount(equipment.EquipmentId);
+                    if (count <= 0)
+                    {
+                        continue;
+                    }
+
+                    if (!showedSellHeader)
+                    {
+                        AddHeader(T("Sell From Bag", "Ban tu tui do"));
+                        showedSellHeader = true;
+                    }
+
+                    RectTransform sellRow = CreateRow(70f);
+                    CreateText("SellEquipmentLabel", sellRow, $"{equipment.DisplayName} x{count}\n{T("Sell", "Ban")} {equipment.SellPrice}", 16, TextAnchor.MiddleLeft, FontStyle.Normal, true, 52f);
+                    CreateActionButton(sellRow, T("Sell", "Ban"), () => SellEquipment(equipment), 94f);
+                }
+
+                if (!showedSellHeader)
+                {
+                    AddInfoLine(T("Nothing in the bag can be sold yet.", "Chua co vat pham nao de ban."));
+                }
+            }
+
             RectTransform closeRow = CreateRow(62f);
             CreateActionButton(closeRow, T("Close Shop", "Đóng cửa hàng"), ClosePanels, 180f);
         }
 
+/*
+            Phase1ContentCatalog catalog = GetCatalog();
+            if (catalog != null && InventoryService.Instance != null)
+            {
+                bool hasSellableItems = false;
+                for (int i = 0; i < catalog.Items.Count; i++)
+                {
+                    ItemDefinition item = catalog.Items[i];
+                    if (item == null)
+                    {
+                        continue;
+                    }
+
+                    int count = InventoryService.Instance.GetItemCount(item.ItemId);
+                    if (count <= 0)
+                    {
+                        continue;
+                    }
+
+                    if (!hasSellableItems)
+                    {
+                        AddHeader(T("Sell Consumables", "Ban vat pham"));
+                        hasSellableItems = true;
+                    }
+
+                    RectTransform sellRow = CreateRow(70f);
+                    CreateText("SellItemLabel", sellRow, $"{item.DisplayName} x{count}\n{T("Sell", "Ban")} {item.SellPrice}", 16, TextAnchor.MiddleLeft, FontStyle.Normal, true, 52f);
+                    CreateActionButton(sellRow, T("Sell", "Ban"), () => SellItem(item), 94f);
+                }
+
+                bool hasSellableEquipment = false;
+                for (int i = 0; i < catalog.Equipment.Count; i++)
+                {
+                    EquipmentDefinition equipment = catalog.Equipment[i];
+                    if (equipment == null)
+                    {
+                        continue;
+                    }
+
+                    int count = InventoryService.Instance.GetEquipmentCount(equipment.EquipmentId);
+                    if (count <= 0)
+                    {
+                        continue;
+                    }
+
+                    if (!hasSellableEquipment)
+                    {
+                        AddHeader(T("Sell Equipment", "Ban trang bi"));
+                        hasSellableEquipment = true;
+                    }
+
+                    RectTransform sellRow = CreateRow(70f);
+                    CreateText("SellEquipmentLabel", sellRow, $"{equipment.DisplayName} x{count}\n{T("Sell", "Ban")} {equipment.SellPrice}", 16, TextAnchor.MiddleLeft, FontStyle.Normal, true, 52f);
+                    CreateActionButton(sellRow, T("Sell", "Ban"), () => SellEquipment(equipment), 94f);
+                }
+
+                if (!hasSellableItems && !hasSellableEquipment)
+                {
+                    AddInfoLine(T("Nothing in the bag can be sold yet.", "Chua co vat pham nao de ban."));
+                }
+            }
+
+            RectTransform closeRow = CreateRow(62f);
+            CreateActionButton(closeRow, T("Close Shop", "ÄÃ³ng cá»­a hÃ ng"), ClosePanels, 180f);
+        }
+
+*/
+        private void BuildSleepPanel()
+        {
+            if (_activeInn == null)
+            {
+                AddInfoLine(T("Rest is unavailable here.", "Khong the nghi tai day."));
+                return;
+            }
+
+            AddHeader(T("Rest Until Morning", "Nghi den sang"));
+            AddInfoLine(string.Format(
+                T("Wake time: {0:00}:{1:00}", "Gio thuc day: {0:00}:{1:00}"),
+                _activeInn.WakeHour,
+                _activeInn.WakeMinute));
+            AddInfoLine(T(
+                "Sleeping restores the party, advances the day, and refreshes shop stock and schedules.",
+                "Ngu hoi phuc doi hinh, sang ngay moi, va lam moi cua hang cung lich sinh hoat."));
+
+            RectTransform row = CreateRow(62f);
+            CreateActionButton(row, T("Sleep", "Ngu"), ConfirmSleep, 140f);
+            CreateActionButton(row, T("Cancel", "Huy"), ClosePanels, 140f);
+        }
+
         private void BuildHelpPanel()
         {
+            AddRouteGuidanceSection();
             AddHeader(T("Controls", "Điều khiển"));
             AddInfoLine(T("Tab: Toggle UI mode / cursor", "Tab: Bật/tắt chế độ UI / chuột"));
             AddInfoLine("I: " + T("Inventory", "Túi đồ"));
@@ -632,6 +1081,95 @@ namespace TPS.Runtime.UI
             AddInfoLine(T("Use UI mode when trading, equipping, saving, or checking quests.", "Hãy dùng UI mode khi mua bán, trang bị, lưu hoặc xem nhiệm vụ."));
             AddInfoLine(T("If the weather changes, watch NPC shelter spots and the district readout.", "Khi thời tiết đổi, hãy nhìn NPC trú mưa và biến đổi ở từng khu."));
             AddInfoLine(T("Travel anchors should drop you on safe ground; if not, the spawn fallback will correct it.", "Travel anchor sẽ cố đặt bạn xuống mặt đất an toàn; nếu không, spawn fallback sẽ tự sửa."));
+        }
+
+        private void BuildBattlePanel()
+        {
+            BattleWorldBridge bridge = BattleWorldBridge.Instance;
+            if (bridge == null || !bridge.HasActiveEncounter)
+            {
+                AddInfoLine(T("Battle state unavailable.", "KhÃ´ng cÃ³ tráº¡ng thÃ¡i chiáº¿n Ä‘áº¥u."));
+                return;
+            }
+
+            AddInfoLine(bridge.EncounterTitle);
+            AddInfoLine(bridge.CurrentActorLabel);
+
+            AddHeader(T("Turn Order", "Thá»© tá»± lÆ°á»£t"));
+            foreach (string line in bridge.GetTurnOrderLabels())
+            {
+                AddInfoLine(line);
+            }
+
+            AddHeader(T("Party", "Äá»™i hÃ¬nh"));
+            foreach (string line in bridge.GetPartyStatusLines())
+            {
+                AddInfoLine(line);
+            }
+
+            AddHeader(T("Enemies", "Káº» Ä‘á»‹ch"));
+            foreach (string line in bridge.GetEnemyStatusLines())
+            {
+                AddInfoLine(line);
+            }
+
+            AddHeader(T("Targets", "Má»¥c tiÃªu"));
+            RectTransform enemyTargetRow = CreateRow(54f);
+            CreateText("EnemyTargetLabel", enemyTargetRow, $"{T("Enemy", "Äá»‹ch")}: {bridge.GetEnemyTargetLabel()}", 16, TextAnchor.MiddleLeft, FontStyle.Normal, false);
+            CreateActionButton(enemyTargetRow, "<", () => { bridge.CycleEnemyTarget(-1); RebuildContent(); }, 44f);
+            CreateActionButton(enemyTargetRow, ">", () => { bridge.CycleEnemyTarget(1); RebuildContent(); }, 44f);
+
+            RectTransform allyTargetRow = CreateRow(54f);
+            CreateText("AllyTargetLabel", allyTargetRow, $"{T("Ally", "Äá»“ng minh")}: {bridge.GetAllyTargetLabel()}", 16, TextAnchor.MiddleLeft, FontStyle.Normal, false);
+            CreateActionButton(allyTargetRow, "<", () => { bridge.CycleAllyTarget(-1); RebuildContent(); }, 44f);
+            CreateActionButton(allyTargetRow, ">", () => { bridge.CycleAllyTarget(1); RebuildContent(); }, 44f);
+
+            AddHeader(T("Actions", "HÃ nh Ä‘á»™ng"));
+            IReadOnlyList<BattleWorldBridge.BattleActionView> actions = bridge.GetAvailableActions();
+            if (actions.Count == 0)
+            {
+                AddInfoLine(T("Waiting for the next battle update...", "Dang cho cap nhat tran dau..."));
+            }
+            for (int i = 0; i < actions.Count; i++)
+            {
+                BattleWorldBridge.BattleActionView action = actions[i];
+                RectTransform row = CreateRow(72f);
+                CreateText("BattleActionLabel", row, $"{action.Label}\n{action.Detail}", 16, TextAnchor.MiddleLeft, FontStyle.Normal, true, 56f);
+                Button button = CreateActionButton(row, action.CanUse ? T("Confirm", "XÃ¡c nháº­n") : T("Unavailable", "ChÆ°a dÃ¹ng Ä‘Æ°á»£c"), () =>
+                {
+                    bridge.ExecuteActionFromUi(action);
+                    RebuildContent();
+                }, 130f);
+                button.interactable = action.CanUse;
+            }
+
+            AddHeader(T("Battle Feed", "Nháº­t kÃ½ giao tranh"));
+            foreach (string line in bridge.GetCombatLogLines())
+            {
+                AddInfoLine(line);
+            }
+        }
+
+        private void BuildBattleEndPanel()
+        {
+            BattleWorldBridge bridge = BattleWorldBridge.Instance;
+            if (bridge == null)
+            {
+                AddInfoLine(T("Battle already closed.", "Tráº­n Ä‘áº¥u Ä‘Ã£ Ä‘Ã³ng."));
+                return;
+            }
+
+            AddHeader(bridge.ResultTitle);
+            AddInfoLine(bridge.RewardSummary);
+            AddInfoLine($"{T("Returning to", "Quay vá»")}: {bridge.ReturnSceneName}");
+            RectTransform row = CreateRow(62f);
+            CreateActionButton(row, T("Return To World", "Quay vá» tháº¿ giá»›i"), bridge.ReturnToWorldFromUi, 220f);
+
+            AddHeader(T("Battle Feed", "Nháº­t kÃ½ giao tranh"));
+            foreach (string line in bridge.GetCombatLogLines())
+            {
+                AddInfoLine(line);
+            }
         }
 
         private RectTransform CreateRow(float preferredHeight = 62f)
@@ -675,7 +1213,7 @@ namespace TPS.Runtime.UI
             layout.childControlWidth = false;
             layout.childForceExpandHeight = true;
             layout.childForceExpandWidth = false;
-            CreateText("SelectedLabel", row, $"{T("Selected", "Đang chọn")}: {_selectedMemberId}", 16, TextAnchor.MiddleLeft, FontStyle.Bold);
+            CreateText("SelectedLabel", row, $"{T("Selected", "Selected")}: {_selectedMemberId}", 16, TextAnchor.MiddleLeft, FontStyle.Bold);
 
             List<string> members = PartyService.Instance.GetActiveMemberIds();
             for (int i = 0; i < members.Count; i++)
@@ -684,10 +1222,10 @@ namespace TPS.Runtime.UI
                 CreateActionButton(row, $"{i + 1}:{memberId}", () =>
                 {
                     _selectedMemberId = memberId;
-                Notify($"{T("Selected", "Đang chọn")} {memberId}.");
-                RebuildContent();
-            }, 104f);
-        }
+                    Notify($"{T("Selected", "Selected")} {memberId}.");
+                    RebuildContent();
+                }, 104f);
+            }
         }
 
         private CharacterStatSnapshot GetSelectedSnapshot()
@@ -775,6 +1313,43 @@ namespace TPS.Runtime.UI
             }
         }
 
+        private void SetMemberSlot(string memberId, int slot)
+        {
+            if (PartyService.Instance == null || string.IsNullOrWhiteSpace(memberId))
+            {
+                return;
+            }
+
+            if (PartyService.Instance.SetMemberActiveSlot(memberId, slot))
+            {
+                _selectedMemberId = memberId;
+                Notify($"{memberId} assigned to slot {slot + 1}.");
+                RebuildContent();
+            }
+            else
+            {
+                Notify($"{memberId} could not be assigned to slot {slot + 1}.");
+            }
+        }
+
+        private void BenchMember(string memberId)
+        {
+            if (PartyService.Instance == null || string.IsNullOrWhiteSpace(memberId))
+            {
+                return;
+            }
+
+            if (PartyService.Instance.BenchMember(memberId))
+            {
+                Notify($"{memberId} moved to reserve.");
+                RebuildContent();
+            }
+            else
+            {
+                Notify($"{memberId} cannot be benched (keep at least one active member).");
+            }
+        }
+
         private void UnequipSelected()
         {
             if (PartyService.Instance == null)
@@ -837,6 +1412,8 @@ namespace TPS.Runtime.UI
                 return;
             }
 
+            _activeMerchant = null;
+            _activeInn = null;
             SaveLoadManager.Instance.SaveGame();
             Notify(T("Game saved.", "Đã lưu game."));
         }
@@ -848,6 +1425,7 @@ namespace TPS.Runtime.UI
                 return;
             }
 
+            PrepareForSceneTransition(T("Loading game...", "Đang tải game..."));
             SaveLoadManager.Instance.LoadGame();
             Notify(T("Game loaded.", "Đã tải game."));
         }
@@ -860,8 +1438,58 @@ namespace TPS.Runtime.UI
             }
         }
 
+        private void ConfirmSleep()
+        {
+            InnAnchor inn = _activeInn;
+            _activeInn = null;
+            _activeMerchant = null;
+            _activePanel = PanelType.None;
+            RuntimeUiInputState.RestoreGameplayFocus();
+            RefreshVisibility();
+
+            if (inn != null)
+            {
+                inn.SleepNow();
+            }
+        }
+
+        private void HandleRuntimeReset()
+        {
+            _activeMerchant = null;
+            _activeInn = null;
+            _battleWasActive = false;
+            BattleWorldBridge bridge = BattleWorldBridge.Instance;
+            if (bridge != null && bridge.HasActiveEncounter)
+            {
+                _activePanel = bridge.IsBattleEnded ? PanelType.BattleEnd : PanelType.Battle;
+                RuntimeUiInputState.SetUiFocused(true);
+            }
+            else
+            {
+                _activePanel = PanelType.None;
+                RuntimeUiInputState.RestoreGameplayFocus();
+            }
+
+            if (_activePanel != PanelType.None)
+            {
+                RebuildContent();
+            }
+
+            RefreshVisibility();
+        }
+
+        private void HandleActiveSceneChanged(Scene previousScene, Scene nextScene)
+        {
+            HandleRuntimeReset();
+        }
+
         private string GetPanelTitle(PanelType panel)
         {
+            if (panel == PanelType.Sleep)
+            {
+                return T("Rest", "Nghi ngo");
+            }
+
             switch (panel)
             {
                 case PanelType.Inventory:
@@ -875,10 +1503,13 @@ namespace TPS.Runtime.UI
                 case PanelType.System:
                     return T("System", "Hệ thống");
                 case PanelType.Shop:
-                    MerchantAnchor merchant = GetActiveMerchant();
-                    return merchant != null && merchant.ShopDefinition != null ? merchant.ShopDefinition.DisplayName : "Shop";
+                    return _activeMerchant != null && _activeMerchant.ShopDefinition != null ? _activeMerchant.ShopDefinition.DisplayName : "Shop";
                 case PanelType.Help:
                     return T("Help", "Trợ giúp");
+                case PanelType.Battle:
+                    return T("Battle", "Chiến đấu");
+                case PanelType.BattleEnd:
+                    return T("Battle Summary", "Tổng kết trận đấu");
                 default:
                     return T("Runtime Menu", "Menu Runtime");
             }
@@ -886,7 +1517,7 @@ namespace TPS.Runtime.UI
 
         private MerchantAnchor GetActiveMerchant()
         {
-            return Phase1RuntimeHUD.Instance != null ? Phase1RuntimeHUD.Instance.ActiveMerchant : null;
+            return _activeMerchant;
         }
 
         private Phase1ContentCatalog GetCatalog()
@@ -1015,6 +1646,14 @@ namespace TPS.Runtime.UI
                 return;
             }
 
+            if (IsBattlePanelActive())
+            {
+                _hintText.text = T(
+                    "Battle mode: choose targets and actions in the panel. Esc opens system. Tab returns to the battle view.",
+                    "Battle mode: chọn mục tiêu và hành động trong panel. Esc mở system. Tab quay về battle view.");
+                return;
+            }
+
             _hintText.text = IsMenuVisible
                 ? T("Esc closes the current panel. Tab returns to gameplay. F5/F9 save and load.", "Esc đóng panel hiện tại. Tab quay lại gameplay. F5/F9 để lưu và tải.")
                 : T("Tab opens playtest UI. I/C/J/K open panels directly. E is for world interaction.", "Tab mở UI test. I/C/J/K mở panel trực tiếp. E dùng để tương tác ngoài world.");
@@ -1024,6 +1663,12 @@ namespace TPS.Runtime.UI
         {
             AudioListener.volume = GetVolume(MasterVolumeKey, 0.9f);
             Screen.fullScreen = PlayerPrefs.GetInt(FullscreenKey, Screen.fullScreen ? 1 : 0) == 1;
+            int storedWidth = PlayerPrefs.GetInt(ResolutionWidthKey, Screen.width);
+            int storedHeight = PlayerPrefs.GetInt(ResolutionHeightKey, Screen.height);
+            if (storedWidth > 0 && storedHeight > 0)
+            {
+                Screen.SetResolution(storedWidth, storedHeight, Screen.fullScreen);
+            }
             int qualityLevel = Mathf.Clamp(PlayerPrefs.GetInt("TPS.Runtime.Quality", QualitySettings.GetQualityLevel()), 0, Mathf.Max(0, QualitySettings.names.Length - 1));
             if (QualitySettings.names.Length > 0)
             {
@@ -1085,6 +1730,21 @@ namespace TPS.Runtime.UI
             RebuildContent();
         }
 
+        private void ApplyResolution(int width, int height)
+        {
+            if (width <= 0 || height <= 0)
+            {
+                return;
+            }
+
+            Screen.SetResolution(width, height, Screen.fullScreen);
+            PlayerPrefs.SetInt(ResolutionWidthKey, width);
+            PlayerPrefs.SetInt(ResolutionHeightKey, height);
+            PlayerPrefs.Save();
+            Notify($"{T("Resolution", "Độ phân giải")} {width}x{height}");
+            RebuildContent();
+        }
+
         private static void ClearChildren(RectTransform root)
         {
             if (root == null)
@@ -1096,6 +1756,11 @@ namespace TPS.Runtime.UI
             {
                 Destroy(root.GetChild(i).gameObject);
             }
+        }
+
+        private bool IsBattlePanelActive()
+        {
+            return _activePanel == PanelType.Battle || _activePanel == PanelType.BattleEnd;
         }
     }
 }

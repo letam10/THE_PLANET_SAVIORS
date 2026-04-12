@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9be69c9f613aff04fb101ab14e61c9e1, type: 3}
+  m_Name: QST_SecureTideRoute
+  m_EditorClassIdentifier: TPS.Runtime::TPS.Runtime.Quest.QuestDefinition
+  _questId: quest_secure_tide_route
+  _title: Secure the Tide Route
+  _summary: Prepare in Aster Harbor, report to Mira in Gullwatch, then clear Tide
+    Caverns and reopen the coastal route.
+  _objectives:
+  - ObjectiveId: defeat_tide_matriarch
+    Description: Travel to Gullwatch, speak with Mira at the beacon frame, follow
+      the spray markers into Tide Caverns, and defeat the Matriarch beyond the flooded
+      chambers.
+    CompletionConditions:
+      Mode: 0
+      Conditions:
+      - Type: 5
+        StartHour: 0
+        EndHour: 0
+        StateKey: 
+        ExpectedBool: 1
+        ExpectedWeather: 0
+        QuestId: 
+        ExpectedQuestStatus: 0
+        DialogueFlagId: 
+        EncounterId: enc_tide_caverns_boss
+        InventoryDefinitionId: 
+        MinimumCount: 0
+        PartyMemberId: 
+        ZoneId: 
+        ZoneFactId: 
+        MinimumCurrency: 0
+      _sharedDefinition: {fileID: 0}
+  _completionReward: {fileID: 11400000, guid: 61d9e245aec962f42b8fcb9a68178f76, type: 2}
+  _recruitedMemberReward: {fileID: 0}

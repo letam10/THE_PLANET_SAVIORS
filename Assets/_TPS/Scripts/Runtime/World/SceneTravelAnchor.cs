@@ -35,7 +35,11 @@ namespace TPS.Runtime.World
                 PlayerSpawnSystem.Instance.SetPendingSpawnId(_targetSpawnId);
             }
 
-            if (Phase1RuntimeHUD.Instance != null)
+            if (RuntimeMenuCanvasController.Instance != null)
+            {
+                RuntimeMenuCanvasController.Instance.PrepareForSceneTransition($"Traveling to {_targetSceneName}...");
+            }
+            else if (Phase1RuntimeHUD.Instance != null)
             {
                 Phase1RuntimeHUD.Instance.CloseShop();
                 Phase1RuntimeHUD.Instance.ShowMessage($"Traveling to {_targetSceneName}...");
