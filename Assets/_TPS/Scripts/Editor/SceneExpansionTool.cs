@@ -25,7 +25,6 @@ namespace TPS.Editor
 
         private static void CheckTriggerFile()
         {
-            Debug.Log("Checking trigger file in Update...");
             string triggerPath = "Assets/_TPS/Scripts/Editor/.scene_expand_pending";
             if (File.Exists(triggerPath))
             {
