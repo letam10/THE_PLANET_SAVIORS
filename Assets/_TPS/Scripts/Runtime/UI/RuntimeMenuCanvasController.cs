@@ -116,7 +116,6 @@ namespace TPS.Runtime.UI
             SyncBattlePanelState();
             SyncMerchantPanelState();
             HandleHotkeys();
-            RefreshCurrentPanelIfNeeded();
         }
 
         public void ToggleMerchantShop(MerchantAnchor merchant)
@@ -446,7 +445,7 @@ namespace TPS.Runtime.UI
             }
         }
 
-        private void RefreshCurrentPanelIfNeeded()
+        public void ForceRebuild()
         {
             if (_activePanel == PanelType.None)
             {
@@ -454,13 +453,32 @@ namespace TPS.Runtime.UI
                 return;
             }
 
-            if (UnityEngine.Time.unscaledTime - _lastRefreshAt < 0.15f)
+            GameObject currentSelected = null;
+            if (_eventSystem != null)
             {
-                return;
+                currentSelected = _eventSystem.currentSelectedGameObject;
             }
+            string selectedName = currentSelected != null ? currentSelected.name : null;
 
             _lastRefreshAt = UnityEngine.Time.unscaledTime;
             RebuildContent();
+
+            if (!string.IsNullOrEmpty(selectedName) && _eventSystem != null && _contentColumn != null)
+            {
+                Transform newSelected = _contentColumn.Find(selectedName);
+                if (newSelected != null)
+                {
+                    _eventSystem.SetSelectedGameObject(newSelected.gameObject);
+                }
+                else
+                {
+                    // If the exact object is gone, try to focus the first child
+                    if (_contentColumn.childCount > 0)
+                    {
+                        _eventSystem.SetSelectedGameObject(_contentColumn.GetChild(0).gameObject);
+                    }
+                }
+            }
         }
 
         private void OpenPanel(PanelType panel)
@@ -835,10 +853,6 @@ namespace TPS.Runtime.UI
             AddHeader(T("Session", "Phiên chơi"));
             AddInfoLine($"{T("Mode", "Chế độ")}: {RuntimeUiInputState.CurrentMode}");
             AddInfoLine($"{T("Scene", "Màn")}: {SceneManager.GetActiveScene().name}");
-            AddInfoLine($"{T("Language", "Ngôn ngữ")}: {(IsVietnamese ? "Vietnamese" : "English")}");
-            AddInfoLine($"{T("Graphics", "Đồ họa")}: {GetQualityName()} | {T("Fullscreen", "Toàn màn hình")}: {(Screen.fullScreen ? T("On", "Bật") : T("Off", "Tắt"))}");
-            AddInfoLine($"{T("Resolution", "Độ phân giải")}: {Screen.width}x{Screen.height}");
-            AddInfoLine($"{T("Audio", "Âm thanh")}: Master {Mathf.RoundToInt(GetVolume(MasterVolumeKey) * 100f)} | Music {Mathf.RoundToInt(GetVolume(MusicVolumeKey) * 100f)} | SFX {Mathf.RoundToInt(GetVolume(SfxVolumeKey) * 100f)}");
 
             RectTransform languageRow = CreateRow(62f);
             CreateText("LanguageLabel", languageRow, T("Language", "Ngôn ngữ"), 16, TextAnchor.MiddleLeft, FontStyle.Bold, false);
@@ -858,14 +872,24 @@ namespace TPS.Runtime.UI
             CreateActionButton(resolutionRow, "1600x900", () => ApplyResolution(1600, 900), 102f);
             CreateActionButton(resolutionRow, "1920x1080", () => ApplyResolution(1920, 1080), 110f);
 
-            RectTransform audioRow = CreateRow(62f);
-            CreateText("AudioLabel", audioRow, T("Audio", "Âm thanh"), 16, TextAnchor.MiddleLeft, FontStyle.Bold, false);
-            CreateActionButton(audioRow, "Master -", () => AdjustVolume(MasterVolumeKey, -0.1f, "Master"), 94f);
-            CreateActionButton(audioRow, "Master +", () => AdjustVolume(MasterVolumeKey, 0.1f, "Master"), 94f);
-            CreateActionButton(audioRow, "Music -", () => AdjustVolume(MusicVolumeKey, -0.1f, "Music"), 90f);
-            CreateActionButton(audioRow, "Music +", () => AdjustVolume(MusicVolumeKey, 0.1f, "Music"), 90f);
-            CreateActionButton(audioRow, "SFX -", () => AdjustVolume(SfxVolumeKey, -0.1f, "SFX"), 82f);
-            CreateActionButton(audioRow, "SFX +", () => AdjustVolume(SfxVolumeKey, 0.1f, "SFX"), 82f);
+            AddHeader(T("Audio", "Âm thanh"));
+            RectTransform audioMasterRow = CreateRow(40f);
+            CreateText("AudioMasterLabel", audioMasterRow, T("Master Volume", "Âm lượng tổng"), 16, TextAnchor.MiddleLeft, FontStyle.Normal, false, 32f);
+            CreateSlider(audioMasterRow, 400f, 0f, 1f, GetVolume(MasterVolumeKey), v => SetVolumeDirect(MasterVolumeKey, v, "Master"));
+
+            RectTransform audioMusicRow = CreateRow(40f);
+            CreateText("AudioMusicLabel", audioMusicRow, T("Music Volume", "Nhạc nền"), 16, TextAnchor.MiddleLeft, FontStyle.Normal, false, 32f);
+            CreateSlider(audioMusicRow, 400f, 0f, 1f, GetVolume(MusicVolumeKey), v => SetVolumeDirect(MusicVolumeKey, v, "Music"));
+
+            RectTransform audioSfxRow = CreateRow(40f);
+            CreateText("AudioSfxLabel", audioSfxRow, T("SFX Volume", "Hiệu ứng"), 16, TextAnchor.MiddleLeft, FontStyle.Normal, false, 32f);
+            CreateSlider(audioSfxRow, 400f, 0f, 1f, GetVolume(SfxVolumeKey), v => SetVolumeDirect(SfxVolumeKey, v, "SFX"));
+
+            AddHeader(T("Controls", "Điều khiển"));
+            AddInfoLine(T("Tab: Toggle UI mode / cursor", "Tab: Bật/tắt chế độ UI / chuột") + "  |  E: " + T("Interact", "Tương tác"));
+            AddInfoLine("I: " + T("Inventory", "Túi đồ") + "  |  K: " + T("Equipment", "Trang bị") + "  |  C: " + T("Character", "Nhân vật"));
+            AddInfoLine("J: " + T("Quest Log", "Nhật ký nhiệm vụ") + "  |  P or Esc: " + T("System / Close", "Hệ thống / Đóng"));
+            AddInfoLine(T("F5: Save", "F5: Lưu") + "  |  " + T("F9: Load", "F9: Tải"));
 
             RectTransform actionRow = CreateRow(62f);
             if (battleActive)
@@ -878,6 +902,16 @@ namespace TPS.Runtime.UI
                 CreateActionButton(actionRow, T("Load Game", "Tải game"), LoadGame, 140f);
             }
             CreateActionButton(actionRow, T("Return", "Quay lại"), ClosePanels, 140f);
+        }
+
+        private void SetVolumeDirect(string key, float volume, string labelName)
+        {
+            PlayerPrefs.SetFloat(key, volume);
+            PlayerPrefs.Save();
+            if (key == MasterVolumeKey)
+            {
+                AudioListener.volume = volume;
+            }
         }
 
         private void BuildShopPanel()
@@ -1068,15 +1102,6 @@ namespace TPS.Runtime.UI
         private void BuildHelpPanel()
         {
             AddRouteGuidanceSection();
-            AddHeader(T("Controls", "Điều khiển"));
-            AddInfoLine(T("Tab: Toggle UI mode / cursor", "Tab: Bật/tắt chế độ UI / chuột"));
-            AddInfoLine("I: " + T("Inventory", "Túi đồ"));
-            AddInfoLine("K: " + T("Equipment", "Trang bị"));
-            AddInfoLine("C: " + T("Character", "Nhân vật"));
-            AddInfoLine("J: " + T("Quest Log", "Nhật ký nhiệm vụ"));
-            AddInfoLine(T("P or Esc: System / Close", "P hoặc Esc: Hệ thống / Đóng"));
-            AddInfoLine(T("F5: Save | F9: Load", "F5: Lưu | F9: Tải"));
-            AddInfoLine(T("E: Interact in gameplay mode", "E: Tương tác khi ở gameplay mode"));
             AddHeader(T("Tips", "Gợi ý"));
             AddInfoLine(T("Use UI mode when trading, equipping, saving, or checking quests.", "Hãy dùng UI mode khi mua bán, trang bị, lưu hoặc xem nhiệm vụ."));
             AddInfoLine(T("If the weather changes, watch NPC shelter spots and the district readout.", "Khi thời tiết đổi, hãy nhìn NPC trú mưa và biến đổi ở từng khu."));
@@ -1743,6 +1768,60 @@ namespace TPS.Runtime.UI
             PlayerPrefs.Save();
             Notify($"{T("Resolution", "Độ phân giải")} {width}x{height}");
             RebuildContent();
+        }
+
+        private Slider CreateSlider(RectTransform parent, float width, float min, float max, float value, UnityEngine.Events.UnityAction<float> onValueChanged)
+        {
+            GameObject sliderGo = new GameObject("Slider", typeof(RectTransform), typeof(LayoutElement), typeof(Slider));
+            sliderGo.transform.SetParent(parent, false);
+            LayoutElement layout = sliderGo.GetComponent<LayoutElement>();
+            layout.preferredWidth = width;
+            layout.preferredHeight = 24f;
+            
+            GameObject bgGo = new GameObject("Background", typeof(RectTransform), typeof(Image));
+            bgGo.transform.SetParent(sliderGo.transform, false);
+            RectTransform bgRect = bgGo.GetComponent<RectTransform>();
+            bgRect.anchorMin = new Vector2(0, 0.25f);
+            bgRect.anchorMax = new Vector2(1, 0.75f);
+            bgRect.sizeDelta = Vector2.zero;
+            bgGo.GetComponent<Image>().color = new Color(0.1f, 0.15f, 0.2f, 1f);
+
+            GameObject fillAreaGo = new GameObject("Fill Area", typeof(RectTransform));
+            fillAreaGo.transform.SetParent(sliderGo.transform, false);
+            RectTransform fillAreaRect = fillAreaGo.GetComponent<RectTransform>();
+            fillAreaRect.anchorMin = new Vector2(0, 0.25f);
+            fillAreaRect.anchorMax = new Vector2(1, 0.75f);
+            fillAreaRect.sizeDelta = new Vector2(-10, 0);
+
+            GameObject fillGo = new GameObject("Fill", typeof(RectTransform), typeof(Image));
+            fillGo.transform.SetParent(fillAreaGo.transform, false);
+            RectTransform fillRect = fillGo.GetComponent<RectTransform>();
+            fillRect.sizeDelta = Vector2.zero;
+            fillGo.GetComponent<Image>().color = new Color(0.33f, 0.46f, 0.61f, 1f);
+
+            GameObject handleAreaGo = new GameObject("Handle Slide Area", typeof(RectTransform));
+            handleAreaGo.transform.SetParent(sliderGo.transform, false);
+            RectTransform handleAreaRect = handleAreaGo.GetComponent<RectTransform>();
+            handleAreaRect.anchorMin = new Vector2(0, 0);
+            handleAreaRect.anchorMax = new Vector2(1, 1);
+            handleAreaRect.sizeDelta = new Vector2(-20, 0);
+
+            GameObject handleGo = new GameObject("Handle", typeof(RectTransform), typeof(Image));
+            handleGo.transform.SetParent(handleAreaGo.transform, false);
+            RectTransform handleRect = handleGo.GetComponent<RectTransform>();
+            handleRect.sizeDelta = new Vector2(20, 0);
+            handleGo.GetComponent<Image>().color = new Color(0.95f, 0.96f, 0.98f, 1f);
+
+            Slider slider = sliderGo.GetComponent<Slider>();
+            slider.fillRect = fillRect;
+            slider.handleRect = handleRect;
+            slider.direction = Slider.Direction.LeftToRight;
+            slider.minValue = min;
+            slider.maxValue = max;
+            slider.value = value;
+            slider.onValueChanged.AddListener(onValueChanged);
+
+            return slider;
         }
 
         private static void ClearChildren(RectTransform root)
