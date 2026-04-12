@@ -105,36 +105,7 @@ namespace TPS.Runtime.Combat
             ToggleWorldControls(true);
         }
 
-        private void OnGUI()
-        {
-            if (!_debugOnGuiFallback)
-            {
-                return;
-            }
 
-            if (_context == null || _context.EncounterDefinition == null)
-            {
-                return;
-            }
-
-            DrawBattleSummary();
-
-            if (RuntimeMenuCanvasController.Instance != null)
-            {
-                return;
-            }
-
-            if (_battleEnded)
-            {
-                DrawBattleEndPanel();
-                return;
-            }
-
-            if (_awaitingPlayerInput && _currentActor != null)
-            {
-                DrawPlayerTurnPanel(_currentActor);
-            }
-        }
 
         private void Update()
         {
@@ -269,6 +240,10 @@ namespace TPS.Runtime.Combat
             {
                 ResetTargetSelection();
                 _awaitingPlayerInput = true;
+                if (RuntimeMenuCanvasController.Instance != null)
+                {
+                    RuntimeMenuCanvasController.Instance.ForceRebuild();
+                }
             }
             else
             {
@@ -570,6 +545,11 @@ namespace TPS.Runtime.Combat
         {
             _battleEnded = true;
             _awaitingPlayerInput = false;
+            
+            if (RuntimeMenuCanvasController.Instance != null)
+            {
+                RuntimeMenuCanvasController.Instance.ForceRebuild();
+            }
 
             _battleResult = new BattleResult
             {
@@ -619,86 +599,6 @@ namespace TPS.Runtime.Combat
             AppendLog(resultLabel);
         }
 
-        private void DrawBattleSummary()
-        {
-            float width = 360f;
-            GUI.Box(new Rect(10f, 10f, width, 220f), $"Battle: {_context.EncounterDefinition.DisplayName}");
-
-            float y = 40f;
-            GUI.Label(new Rect(20f, y, width - 20f, 20f), "Party");
-            y += 20f;
-            for (int i = 0; i < _partyUnits.Count; i++)
-            {
-                BattleUnitState unit = _partyUnits[i];
-                GUI.Label(new Rect(20f, y, width - 20f, 20f), $"{unit.DisplayName} HP {unit.CurrentHP}/{unit.Stats.MaxHP} MP {unit.CurrentMP}/{unit.Stats.MaxMP}");
-                y += 20f;
-            }
-
-            y += 10f;
-            GUI.Label(new Rect(20f, y, width - 20f, 20f), "Enemies");
-            y += 20f;
-            for (int i = 0; i < _enemyUnits.Count; i++)
-            {
-                BattleUnitState unit = _enemyUnits[i];
-                GUI.Label(new Rect(20f, y, width - 20f, 20f), $"{unit.DisplayName} HP {unit.CurrentHP}/{unit.Stats.MaxHP}");
-                y += 20f;
-            }
-
-            GUI.Box(new Rect(Screen.width - 390f, 10f, 380f, 220f), string.Join("\n", _combatLog));
-        }
-
-        private void DrawPlayerTurnPanel(BattleUnitState actor)
-        {
-            float width = 320f;
-            float height = 220f;
-            float x = (Screen.width - width) * 0.5f;
-            float y = Screen.height - height - 20f;
-            GUI.Box(new Rect(x, y, width, height), $"{actor.DisplayName} Turn");
-
-            if (GUI.Button(new Rect(x + 20f, y + 35f, width - 40f, 28f), "Attack"))
-            {
-                ExecutePlayerAttack();
-            }
-
-            float buttonY = y + 70f;
-            for (int i = 0; i < actor.Skills.Count && i < 3; i++)
-            {
-                SkillDefinition skill = actor.Skills[i];
-                string label = $"{skill.DisplayName} ({skill.ResourceCost} MP)";
-                bool canUse = skill.ResourceType != ResourceType.MP || actor.CurrentMP >= skill.ResourceCost;
-                GUI.enabled = canUse;
-                if (GUI.Button(new Rect(x + 20f, buttonY, width - 40f, 28f), label))
-                {
-                    ExecutePlayerSkill(skill);
-                }
-                buttonY += 32f;
-                GUI.enabled = true;
-            }
-
-            if (GUI.Button(new Rect(x + 20f, y + height - 50f, width - 40f, 28f), "Use Best Consumable"))
-            {
-                ExecutePlayerItem();
-            }
-        }
-
-        private void DrawBattleEndPanel()
-        {
-            float width = 340f;
-            float height = 140f;
-            float x = (Screen.width - width) * 0.5f;
-            float y = (Screen.height - height) * 0.5f;
-            GUI.Box(new Rect(x, y, width, height), _battleResult.Victory ? "Victory" : "Defeat");
-            GUI.Label(new Rect(x + 20f, y + 35f, width - 40f, 40f), _battleResult.RewardSummary);
-
-            if (GUI.Button(new Rect(x + 20f, y + height - 45f, width - 40f, 28f), "Return To World") && !_returnTriggered)
-            {
-                _returnTriggered = true;
-                if (SceneLoader.Instance != null)
-                {
-                    SceneLoader.Instance.StartCoroutine(ReturnToWorldRoutine());
-                }
-            }
-        }
 
         private IEnumerator ReturnToWorldRoutine()
         {
