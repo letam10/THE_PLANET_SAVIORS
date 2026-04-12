@@ -112,17 +112,17 @@ namespace TPS.Runtime.Combat
                 return;
             }
 
-            if (RuntimeMenuCanvasController.Instance != null)
-            {
-                return;
-            }
-
             if (_context == null || _context.EncounterDefinition == null)
             {
                 return;
             }
 
             DrawBattleSummary();
+
+            if (RuntimeMenuCanvasController.Instance != null)
+            {
+                return;
+            }
 
             if (_battleEnded)
             {
@@ -260,7 +260,7 @@ namespace TPS.Runtime.Combat
                     return;
                 }
 
-                AdvanceTurn();
+                StartCoroutine(DelayNextTurnRoutine());
                 return;
             }
 
@@ -274,6 +274,12 @@ namespace TPS.Runtime.Combat
             {
                 ExecuteEnemyTurn(_currentActor);
             }
+        }
+
+        private IEnumerator DelayNextTurnRoutine()
+        {
+            yield return new WaitForSeconds(0.8f);
+            AdvanceTurn();
         }
 
         private void BuildTurnOrder()
@@ -421,7 +427,7 @@ namespace TPS.Runtime.Combat
             ReduceStatusDurations(_currentActor);
             if (!CheckBattleEnd())
             {
-                AdvanceTurn();
+                StartCoroutine(DelayNextTurnRoutine());
             }
         }
 
