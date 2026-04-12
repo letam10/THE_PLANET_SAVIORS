@@ -1,4 +1,9 @@
 # THE_PLANET_SAVIORS — Codex workflow
+## 0. LƯU Ý
+- Luôn trả lời bằng tiếng Việt
+- Luôn sử dụng MCP tools để chỉnh sửa scene, prefab, component
+- Luôn kiểm tra lỗi trước khi commit
+- Luôn mở Skill mỗi khi làm bất cứ thứ gì, đường đẫn truy cập Skill: D:\AI\antigravity-skills\
 
 ## 1. Mandatory Workflow & Planning
 - For any non-trivial task, start by producing a plan as a markdown table.
