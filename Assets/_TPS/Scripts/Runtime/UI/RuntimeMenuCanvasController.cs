@@ -116,7 +116,6 @@ namespace TPS.Runtime.UI
             SyncBattlePanelState();
             SyncMerchantPanelState();
             HandleHotkeys();
-            RefreshCurrentPanelIfNeeded();
         }
 
         public void ToggleMerchantShop(MerchantAnchor merchant)
@@ -446,7 +445,7 @@ namespace TPS.Runtime.UI
             }
         }
 
-        private void RefreshCurrentPanelIfNeeded()
+        public void ForceRebuild()
         {
             if (_activePanel == PanelType.None)
             {
@@ -454,13 +453,32 @@ namespace TPS.Runtime.UI
                 return;
             }
 
-            if (UnityEngine.Time.unscaledTime - _lastRefreshAt < 0.15f)
+            GameObject currentSelected = null;
+            if (_eventSystem != null)
             {
-                return;
+                currentSelected = _eventSystem.currentSelectedGameObject;
             }
+            string selectedName = currentSelected != null ? currentSelected.name : null;
 
             _lastRefreshAt = UnityEngine.Time.unscaledTime;
             RebuildContent();
+
+            if (!string.IsNullOrEmpty(selectedName) && _eventSystem != null && _contentColumn != null)
+            {
+                Transform newSelected = _contentColumn.Find(selectedName);
+                if (newSelected != null)
+                {
+                    _eventSystem.SetSelectedGameObject(newSelected.gameObject);
+                }
+                else
+                {
+                    // If the exact object is gone, try to focus the first child
+                    if (_contentColumn.childCount > 0)
+                    {
+                        _eventSystem.SetSelectedGameObject(_contentColumn.GetChild(0).gameObject);
+                    }
+                }
+            }
         }
 
         private void OpenPanel(PanelType panel)
