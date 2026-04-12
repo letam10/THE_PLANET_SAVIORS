@@ -5,6 +5,15 @@
 - Luôn kiểm tra lỗi trước khi commit
 - Luôn mở Skill mỗi khi làm bất cứ thứ gì, đường đẫn truy cập Skill: D:\AI\antigravity-skills\
 
+## 0.1 Browser Input Workflow (Must Follow)
+Áp dụng cho mọi ô nhập dữ liệu trên trình duyệt:
+1. **Click/Focus** vào ô nhập liệu.
+2. **Đợi 2-3 giây** để trình duyệt ổn định.
+3. **Nhập nội dung**.
+4. **Đợi 1 giây**.
+5. **Kiểm tra hiển thị** (Snapshot).
+6. **Nhấn gửi**.
+
 ## 1. Mandatory Workflow & Planning
 - For any non-trivial task, start by producing a plan as a markdown table.
 - The plan must include: Goal, Files to change, Unity Assets to modify (Prefabs/Scenes), Risks, Validation steps, Commit message.
