@@ -60,6 +60,7 @@ namespace TPS.Runtime.Combat
         private bool _returnTriggered;
         private int _selectedEnemyTargetIndex;
         private int _selectedAllyTargetIndex;
+        [SerializeField] private bool _debugOnGuiFallback;
         private const string AutoWinFileName = ".phase1_battle_autowin.txt";
 
         public static BattleWorldBridge Instance { get; private set; }
@@ -106,6 +107,11 @@ namespace TPS.Runtime.Combat
 
         private void OnGUI()
         {
+            if (!_debugOnGuiFallback)
+            {
+                return;
+            }
+
             if (RuntimeMenuCanvasController.Instance != null)
             {
                 return;
@@ -320,13 +326,13 @@ namespace TPS.Runtime.Combat
 
         private void ExecutePlayerItem()
         {
-            if (InventoryService.Instance == null || Phase1RuntimeHUD.Instance == null)
+            if (InventoryService.Instance == null)
             {
                 AppendLog("Consumables are unavailable.");
                 return;
             }
 
-            ItemDefinition item = Phase1RuntimeHUD.Instance.FindFirstUsableConsumable();
+            ItemDefinition item = FindFirstUsableConsumable();
             if (item == null || !InventoryService.Instance.RemoveItem(item, 1))
             {
                 AppendLog("No usable consumable available.");
@@ -830,7 +836,7 @@ namespace TPS.Runtime.Combat
                 });
             }
 
-            ItemDefinition bestConsumable = Phase1RuntimeHUD.Instance != null ? Phase1RuntimeHUD.Instance.FindFirstUsableConsumable() : null;
+            ItemDefinition bestConsumable = FindFirstUsableConsumable();
             _cachedActions.Add(new BattleActionView
             {
                 Label = bestConsumable != null ? $"Use {bestConsumable.DisplayName}" : "Use Consumable",
@@ -1088,6 +1094,31 @@ namespace TPS.Runtime.Combat
         private static string GetTargetDisplayName(BattleUnitState target)
         {
             return target != null ? target.DisplayName : "-";
+        }
+
+        private static ItemDefinition FindFirstUsableConsumable()
+        {
+            if (InventoryService.Instance == null || Phase1RuntimeHUD.Instance == null || Phase1RuntimeHUD.Instance.ContentCatalog == null)
+            {
+                return null;
+            }
+
+            IReadOnlyList<ItemDefinition> items = Phase1RuntimeHUD.Instance.ContentCatalog.Items;
+            for (int i = 0; i < items.Count; i++)
+            {
+                ItemDefinition item = items[i];
+                if (item == null || (item.RestoreHP <= 0 && item.RestoreMP <= 0))
+                {
+                    continue;
+                }
+
+                if (InventoryService.Instance.GetItemCount(item.ItemId) > 0)
+                {
+                    return item;
+                }
+            }
+
+            return null;
         }
     }
 }

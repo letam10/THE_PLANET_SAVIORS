@@ -363,6 +363,10 @@ namespace TPS.Editor
                 {
                     BuildGullwatchFocusedPass(worldRoot.transform);
                 }
+                else if (sceneName == "ZN_Settlement_RedCedar")
+                {
+                    BuildRedCedarFocusedPass(worldRoot.transform);
+                }
                 EditorSceneManager.MarkSceneDirty(scene);
                 EditorSceneManager.SaveScene(scene);
             }
@@ -386,6 +390,10 @@ namespace TPS.Editor
                 if (sceneName == "DG_TideCaverns")
                 {
                     BuildTideCavernsFocusedPass(worldRoot.transform);
+                }
+                else if (sceneName == "DG_QuarryRuins")
+                {
+                    BuildQuarryRuinsFocusedPass(worldRoot.transform);
                 }
                 EditorSceneManager.MarkSceneDirty(scene);
                 EditorSceneManager.SaveScene(scene);
@@ -565,8 +573,12 @@ namespace TPS.Editor
             BuildPrimitiveSlot(districts.transform, "DIST_MarketArcade", PrimitiveType.Cube, new Vector3(0f, 0.3f, 12f), new Vector3(20f, 0.4f, 6f), "Expanded market frontage.");
             BuildPrimitiveSlot(districts.transform, "DIST_EastHarbor", PrimitiveType.Cube, new Vector3(21f, 0.2f, 4f), new Vector3(10f, 0.35f, 12f), "Expanded dock district.");
             BuildPrimitiveSlot(districts.transform, "DIST_WestResidential", PrimitiveType.Cube, new Vector3(-20f, 0.2f, 3f), new Vector3(14f, 0.35f, 15f), "Expanded residential district.");
+            BuildPrimitiveSlot(districts.transform, "DIST_FarWestWard", PrimitiveType.Cube, new Vector3(-33f, 0.2f, 2f), new Vector3(12f, 0.35f, 17f), "Additional west ward expansion.");
+            BuildPrimitiveSlot(districts.transform, "DIST_FarEastPier", PrimitiveType.Cube, new Vector3(33f, 0.2f, 3f), new Vector3(12f, 0.35f, 17f), "Additional east pier expansion.");
             BuildPrimitiveSlot(frontier.transform, "DIST_NorthRoad", PrimitiveType.Cube, new Vector3(0f, 0.2f, 18f), new Vector3(7f, 0.3f, 8f), "Northern road and lookout.");
             BuildPrimitiveSlot(frontier.transform, "DIST_SouthRoad", PrimitiveType.Cube, new Vector3(0f, 0.2f, -16f), new Vector3(8f, 0.3f, 9f), "Southern encounter fringe.");
+            BuildPrimitiveSlot(frontier.transform, "DIST_FarNorthOutpost", PrimitiveType.Cube, new Vector3(0f, 0.2f, 29f), new Vector3(10f, 0.3f, 9f), "Far north outpost approach.");
+            BuildPrimitiveSlot(frontier.transform, "DIST_FarSouthGate", PrimitiveType.Cube, new Vector3(0f, 0.2f, -28f), new Vector3(10f, 0.3f, 10f), "Far south gate approach.");
 
             BuildHouseRow(districts.transform, "ROW_NorthMarket", new Vector3(-8f, 0f, 13.5f), 5, 3.6f, new Vector3(3f, 3f, 2.8f));
             BuildHouseRow(districts.transform, "ROW_WestResidential", new Vector3(-21f, 0f, 9.5f), 5, 4f, new Vector3(3.2f, 3f, 3.4f));
@@ -574,16 +586,28 @@ namespace TPS.Editor
             BuildHouseRow(districts.transform, "ROW_EastHarbor_Sheds", new Vector3(19f, 0f, 10.5f), 4, 3.8f, new Vector3(3.6f, 2.6f, 2.8f));
             BuildHouseRow(districts.transform, "ROW_MarketSouth", new Vector3(-6f, 0f, 8.5f), 4, 4f, new Vector3(2.8f, 2.8f, 2.4f));
             BuildHouseRow(districts.transform, "ROW_DockStorefronts", new Vector3(16.5f, 0f, 1f), 3, 4.1f, new Vector3(3.4f, 3f, 3f));
+            BuildHouseRow(districts.transform, "ROW_FarWest", new Vector3(-35f, 0f, 10.5f), 6, 4f, new Vector3(3.1f, 2.8f, 3f));
+            BuildHouseRow(districts.transform, "ROW_FarWestSouth", new Vector3(-35f, 0f, -2.2f), 5, 4f, new Vector3(3f, 2.7f, 2.8f));
+            BuildHouseRow(districts.transform, "ROW_FarEast", new Vector3(30.5f, 0f, 10.8f), 6, 4f, new Vector3(3.2f, 2.8f, 3f));
+            BuildHouseRow(districts.transform, "ROW_FarEastSouth", new Vector3(30.5f, 0f, -2f), 5, 4f, new Vector3(3f, 2.7f, 2.8f));
             BuildHouseRow(frontier.transform, "ROW_NorthLookout", new Vector3(-4.5f, 0f, 18.8f), 3, 4.2f, new Vector3(2.8f, 2.8f, 2.6f));
             BuildHouseRow(frontier.transform, "ROW_SouthGate", new Vector3(-4f, 0f, -17.8f), 3, 4f, new Vector3(2.6f, 2.6f, 2.8f));
+            BuildHouseRow(frontier.transform, "ROW_FarNorthOutpost", new Vector3(-5f, 0f, 29.5f), 4, 3.8f, new Vector3(2.8f, 2.6f, 2.8f));
+            BuildHouseRow(frontier.transform, "ROW_FarSouthOutpost", new Vector3(-5f, 0f, -29.5f), 4, 3.8f, new Vector3(2.8f, 2.6f, 2.8f));
 
             BuildCrateLine(props.transform, "PRP_MarketCarts", new Vector3(3f, 0f, 10.5f), 6, 1.1f);
             BuildCrateLine(props.transform, "PRP_DockCargoLong", new Vector3(18f, 0f, 6f), 6, 1f);
             BuildFenceLine(props.transform, "PRP_WestBlocks", new Vector3(-23f, 0f, -4.2f), 9, 1.6f);
             BuildFenceLine(props.transform, "PRP_EastDocksRail", new Vector3(23f, 0f, -3f), 9, 1.4f);
+            BuildFenceLine(props.transform, "PRP_FarWestFence", new Vector3(-36f, 0f, -6f), 10, 1.5f);
+            BuildFenceLine(props.transform, "PRP_FarEastFence", new Vector3(30f, 0f, -6f), 10, 1.5f);
             BuildLandmarkCluster(props.transform, "LMK_MarketTower", new Vector3(-1f, 0f, 16.5f));
             BuildLandmarkCluster(props.transform, "LMK_WestBell", new Vector3(-24f, 0f, 7f));
             BuildLandmarkCluster(props.transform, "LMK_DockMast", new Vector3(24f, 0f, 8f));
+            BuildLandmarkCluster(props.transform, "LMK_FarWestObelisk", new Vector3(-35f, 0f, 8f));
+            BuildLandmarkCluster(props.transform, "LMK_FarEastObelisk", new Vector3(35f, 0f, 8f));
+            BuildLandmarkCluster(props.transform, "LMK_FarNorthGate", new Vector3(0f, 0f, 32f));
+            BuildLandmarkCluster(props.transform, "LMK_FarSouthGate", new Vector3(0f, 0f, -32f));
 
             BuildAmbientPair(ambient.transform, "AMB_NorthMarketPair", new Vector3(0.5f, 0f, 14.2f));
             BuildAmbientPair(ambient.transform, "AMB_WestFamily", new Vector3(-18.5f, 0f, 6.8f));
@@ -591,6 +615,12 @@ namespace TPS.Editor
             BuildAmbientSolo(ambient.transform, "AMB_GateWatcher", new Vector3(-0.8f, 0f, -14.2f));
             BuildAmbientCreature(ambient.transform, "AMB_BirdNorth", new Vector3(1.5f, 1.8f, 16.2f));
             BuildAmbientCreature(ambient.transform, "AMB_DogSouth", new Vector3(-6.5f, 0f, -12.6f));
+            BuildAmbientPair(ambient.transform, "AMB_FarWestPair", new Vector3(-31f, 0f, 4.6f));
+            BuildAmbientPair(ambient.transform, "AMB_FarEastPair", new Vector3(31f, 0f, 4.4f));
+            BuildAmbientSolo(ambient.transform, "AMB_FarNorthGuard", new Vector3(0f, 0f, 27f));
+            BuildAmbientSolo(ambient.transform, "AMB_FarSouthScout", new Vector3(0f, 0f, -26.5f));
+            BuildAmbientCreature(ambient.transform, "AMB_FarWestAnimal", new Vector3(-34f, 0f, -3.8f));
+            BuildAmbientCreature(ambient.transform, "AMB_FarEastAnimal", new Vector3(34f, 0f, -3.8f));
 
             BuildLandmarkCluster(travel.transform, "LMK_GullwatchRoad", new Vector3(-24f, 0f, 14f));
             BuildLandmarkCluster(travel.transform, "LMK_RedCedarRoad", new Vector3(-24f, 0f, -12f));
@@ -624,25 +654,43 @@ namespace TPS.Editor
             GameObject props = EnsureManagedNode(root.transform, "ENV_Props", districtName.ToLowerInvariant());
             GameObject ambient = EnsureManagedNode(root.transform, "ENV_Ambient", districtName.ToLowerInvariant());
 
-            BuildPrimitiveSlot(blockout.transform, "PAD_Main", PrimitiveType.Cube, new Vector3(0f, 0.2f, 0f), new Vector3(20f, 0.35f, 22f), description);
-            BuildPrimitiveSlot(blockout.transform, "PATH_Center", PrimitiveType.Cube, new Vector3(0f, 0.3f, 0f), new Vector3(4f, 0.12f, 19f), "Main route through settlement.");
-            BuildPrimitiveSlot(blockout.transform, "PAD_SideYard_West", PrimitiveType.Cube, new Vector3(-8.5f, 0.22f, 7f), new Vector3(7f, 0.22f, 7f), "West hamlet yard.");
-            BuildPrimitiveSlot(blockout.transform, "PAD_SideYard_East", PrimitiveType.Cube, new Vector3(8.5f, 0.22f, 2f), new Vector3(7f, 0.22f, 8f), "East hamlet yard.");
+            BuildPrimitiveSlot(blockout.transform, "PAD_Main", PrimitiveType.Cube, new Vector3(0f, 0.2f, 0f), new Vector3(34f, 0.35f, 32f), $"{description} (expanded x2).");
+            BuildPrimitiveSlot(blockout.transform, "PATH_Center", PrimitiveType.Cube, new Vector3(0f, 0.3f, 0f), new Vector3(4.5f, 0.12f, 27f), "Main route through settlement.");
+            BuildPrimitiveSlot(blockout.transform, "PATH_WestLoop", PrimitiveType.Cube, new Vector3(-12f, 0.3f, 0f), new Vector3(3.6f, 0.12f, 24f), "West loop route.");
+            BuildPrimitiveSlot(blockout.transform, "PATH_EastLoop", PrimitiveType.Cube, new Vector3(12f, 0.3f, 0f), new Vector3(3.6f, 0.12f, 24f), "East loop route.");
+            BuildPrimitiveSlot(blockout.transform, "PAD_SideYard_West", PrimitiveType.Cube, new Vector3(-11.5f, 0.22f, 8f), new Vector3(12f, 0.22f, 10f), "West hamlet yard.");
+            BuildPrimitiveSlot(blockout.transform, "PAD_SideYard_East", PrimitiveType.Cube, new Vector3(11.5f, 0.22f, 3f), new Vector3(12f, 0.22f, 11f), "East hamlet yard.");
+            BuildPrimitiveSlot(blockout.transform, "PAD_NorthEdge", PrimitiveType.Cube, new Vector3(0f, 0.22f, 13.5f), new Vector3(20f, 0.22f, 6f), "North edge frontage.");
+            BuildPrimitiveSlot(blockout.transform, "PAD_SouthEdge", PrimitiveType.Cube, new Vector3(0f, 0.22f, -13.5f), new Vector3(20f, 0.22f, 6f), "South edge frontage.");
             BuildHouseRow(buildings.transform, "ROW_A", new Vector3(-7f, 0f, 6f), 3, 5f, new Vector3(3.2f, 3f, 3f));
             BuildHouseRow(buildings.transform, "ROW_B", new Vector3(6f, 0f, 3f), 3, 5f, new Vector3(3f, 2.8f, 3f));
             BuildHouseRow(buildings.transform, "ROW_C_Back", new Vector3(-5.5f, 0f, -5f), 3, 5.2f, new Vector3(2.8f, 2.6f, 2.8f));
+            BuildHouseRow(buildings.transform, "ROW_D_West", new Vector3(-15f, 0f, 10f), 4, 4.3f, new Vector3(3f, 2.8f, 3f));
+            BuildHouseRow(buildings.transform, "ROW_E_East", new Vector3(9f, 0f, 9f), 4, 4.2f, new Vector3(3f, 2.8f, 3f));
+            BuildHouseRow(buildings.transform, "ROW_F_South", new Vector3(-12f, 0f, -10.5f), 5, 4.2f, new Vector3(2.8f, 2.6f, 2.8f));
+            BuildHouseRow(buildings.transform, "ROW_G_North", new Vector3(-10f, 0f, 13f), 5, 4.2f, new Vector3(2.8f, 2.6f, 2.8f));
             BuildCrateLine(props.transform, "PRP_Crates", new Vector3(6f, 0f, -4f), 4, 1f);
             BuildCrateLine(props.transform, "PRP_Crates_Back", new Vector3(-3f, 0f, -6f), 3, 0.95f);
+            BuildCrateLine(props.transform, "PRP_Crates_North", new Vector3(-6f, 0f, 12f), 6, 0.95f);
+            BuildCrateLine(props.transform, "PRP_Crates_East", new Vector3(12f, 0f, 4f), 5, 1f);
             BuildFenceLine(props.transform, "PRP_Fence", new Vector3(-9f, 0f, -5f), 8, 1.3f);
             BuildFenceLine(props.transform, "PRP_Fence_Edge", new Vector3(4.5f, 0f, 9f), 6, 1.3f);
+            BuildFenceLine(props.transform, "PRP_Fence_North", new Vector3(-10f, 0f, 15.5f), 10, 1.35f);
+            BuildFenceLine(props.transform, "PRP_Fence_South", new Vector3(-10f, 0f, -15.5f), 10, 1.35f);
             BuildLandmarkCluster(props.transform, "LMK_SettlementBeacon", new Vector3(0f, 0f, 10.5f));
             BuildLandmarkCluster(props.transform, "LMK_RoadMarker", new Vector3(-10.5f, 0f, 0.5f));
+            BuildLandmarkCluster(props.transform, "LMK_NorthMarker", new Vector3(0f, 0f, 16f));
+            BuildLandmarkCluster(props.transform, "LMK_SouthMarker", new Vector3(0f, 0f, -16f));
             BuildAmbientPair(ambient.transform, "AMB_TownPair", new Vector3(1f, 0f, 2f));
             BuildAmbientSolo(ambient.transform, "AMB_Lookout", new Vector3(7f, 0f, 7f));
             BuildAmbientCreature(ambient.transform, "AMB_Creature", new Vector3(-5f, 0f, -3f));
             BuildAmbientSolo(ambient.transform, "AMB_Worker", new Vector3(-7f, 0f, 7.5f));
             BuildAmbientPair(ambient.transform, "AMB_ShelterPair", new Vector3(5.5f, 0f, -4.5f));
             BuildAmbientCreature(ambient.transform, "AMB_Bird", new Vector3(2f, 1.6f, 8.4f));
+            BuildAmbientPair(ambient.transform, "AMB_NorthPair", new Vector3(-1.5f, 0f, 12.4f));
+            BuildAmbientPair(ambient.transform, "AMB_SouthPair", new Vector3(0.8f, 0f, -12.8f));
+            BuildAmbientSolo(ambient.transform, "AMB_GuardNorth", new Vector3(-8f, 0f, 13.5f));
+            BuildAmbientSolo(ambient.transform, "AMB_GuardSouth", new Vector3(8f, 0f, -13.5f));
         }
 
         private static void BuildGullwatchFocusedPass(Transform worldRoot)
@@ -681,6 +729,27 @@ namespace TPS.Editor
             EnsureConditionalActivator(dormantBeacon, "gullwatch", "tide_route_secured", true, true);
         }
 
+        private static void BuildRedCedarFocusedPass(Transform worldRoot)
+        {
+            GameObject root = EnsureManagedNode(worldRoot, "ENV_RedCedarFocus", "redcedar_focus");
+            GameObject lanes = EnsureManagedNode(root.transform, "ENV_Lanes", "redcedar_focus");
+            GameObject props = EnsureManagedNode(root.transform, "ENV_Props", "redcedar_focus");
+            GameObject ambient = EnsureManagedNode(root.transform, "ENV_Ambient", "redcedar_focus");
+            GameObject interiors = EnsureManagedNode(root.transform, "ENV_Interiors", "redcedar_focus");
+
+            BuildPrimitiveSlot(lanes.transform, "PAD_RidgeRoad", PrimitiveType.Cube, new Vector3(-5.5f, 0.12f, 8.5f), new Vector3(10f, 0.12f, 4.8f), "Ridge road approach.");
+            BuildPrimitiveSlot(lanes.transform, "PAD_CenterLane", PrimitiveType.Cube, new Vector3(0f, 0.12f, 0f), new Vector3(4f, 0.12f, 17f), "Central settlement lane.");
+            BuildLandmarkCluster(props.transform, "LMK_CedarTotem", new Vector3(-9f, 0f, 8.2f));
+            BuildLandmarkCluster(props.transform, "LMK_RoadLantern", new Vector3(9f, 0f, -8.2f));
+            BuildFenceLine(props.transform, "PRP_RidgeFence", new Vector3(-12.5f, 0f, 9.6f), 9, 1.3f);
+            BuildCrateLine(props.transform, "PRP_TimberStacks", new Vector3(7.5f, 0f, 5.5f), 5, 1f);
+            BuildAmbientPair(ambient.transform, "AMB_TimberWorkers", new Vector3(6f, 0f, 5f));
+            BuildAmbientSolo(ambient.transform, "AMB_RidgeWatcher", new Vector3(-8.8f, 0f, 9.2f));
+            BuildAmbientCreature(ambient.transform, "AMB_CedarBirds", new Vector3(-4f, 1.7f, 11.5f));
+
+            BuildFocusedInteriorRoom(interiors.transform, "INT_RedCedarTimberHall", new Vector3(26f, 0f, 12f), new Vector3(8.5f, 3.4f, 8f), new Vector3(5.2f, 0f, 5.8f));
+        }
+
         private static void BuildDungeonGenerated(Transform worldRoot, string districtName)
         {
             GameObject root = EnsureManagedNode(worldRoot, "ENV_Generated", districtName.ToLowerInvariant());
@@ -691,23 +760,39 @@ namespace TPS.Editor
             BuildPrimitiveSlot(blockout.transform, "ROOM_Entrance", PrimitiveType.Cube, new Vector3(0f, 0.2f, -8f), new Vector3(10f, 0.3f, 7f), "Dungeon entrance room.");
             BuildPrimitiveSlot(blockout.transform, "ROOM_Mid", PrimitiveType.Cube, new Vector3(0f, 0.2f, 0f), new Vector3(8f, 0.3f, 8f), "Dungeon mid room.");
             BuildPrimitiveSlot(blockout.transform, "ROOM_Boss", PrimitiveType.Cube, new Vector3(0f, 0.2f, 9f), new Vector3(12f, 0.3f, 9f), "Dungeon endpoint room.");
+            BuildPrimitiveSlot(blockout.transform, "ROOM_WestWing", PrimitiveType.Cube, new Vector3(-10.5f, 0.2f, 0.5f), new Vector3(8f, 0.3f, 8f), "West wing room.");
+            BuildPrimitiveSlot(blockout.transform, "ROOM_EastWing", PrimitiveType.Cube, new Vector3(10.5f, 0.2f, 2f), new Vector3(8f, 0.3f, 8f), "East wing room.");
+            BuildPrimitiveSlot(blockout.transform, "ROOM_BackChamber", PrimitiveType.Cube, new Vector3(0f, 0.2f, 18f), new Vector3(10f, 0.3f, 7f), "Back chamber extension.");
             BuildPrimitiveSlot(blockout.transform, "PATH_Connector_A", PrimitiveType.Cube, new Vector3(0f, 0.25f, -4f), new Vector3(3f, 0.12f, 3.5f), "Connector path.");
             BuildPrimitiveSlot(blockout.transform, "PATH_Connector_B", PrimitiveType.Cube, new Vector3(0f, 0.25f, 5f), new Vector3(3f, 0.12f, 3.5f), "Connector path.");
+            BuildPrimitiveSlot(blockout.transform, "PATH_WestWing", PrimitiveType.Cube, new Vector3(-5f, 0.25f, 0f), new Vector3(7f, 0.12f, 3.2f), "Connector to west wing.");
+            BuildPrimitiveSlot(blockout.transform, "PATH_EastWing", PrimitiveType.Cube, new Vector3(5f, 0.25f, 1f), new Vector3(7f, 0.12f, 3.2f), "Connector to east wing.");
+            BuildPrimitiveSlot(blockout.transform, "PATH_BackChamber", PrimitiveType.Cube, new Vector3(0f, 0.25f, 13.6f), new Vector3(3f, 0.12f, 6f), "Connector to back chamber.");
             BuildPrimitiveSlot(blockout.transform, "WALL_EntranceWest", PrimitiveType.Cube, new Vector3(-5.2f, 2.4f, -8f), new Vector3(0.8f, 4.8f, 7.8f), "Entrance west wall.");
             BuildPrimitiveSlot(blockout.transform, "WALL_EntranceEast", PrimitiveType.Cube, new Vector3(5.2f, 2.4f, -8f), new Vector3(0.8f, 4.8f, 7.8f), "Entrance east wall.");
             BuildPrimitiveSlot(blockout.transform, "WALL_MidWest", PrimitiveType.Cube, new Vector3(-4.2f, 2.4f, 0f), new Vector3(0.8f, 4.8f, 8.6f), "Mid west wall.");
             BuildPrimitiveSlot(blockout.transform, "WALL_MidEast", PrimitiveType.Cube, new Vector3(4.2f, 2.4f, 0f), new Vector3(0.8f, 4.8f, 8.6f), "Mid east wall.");
             BuildPrimitiveSlot(blockout.transform, "WALL_BossWest", PrimitiveType.Cube, new Vector3(-6.1f, 2.6f, 9f), new Vector3(0.8f, 5.2f, 9.4f), "Boss west wall.");
             BuildPrimitiveSlot(blockout.transform, "WALL_BossEast", PrimitiveType.Cube, new Vector3(6.1f, 2.6f, 9f), new Vector3(0.8f, 5.2f, 9.4f), "Boss east wall.");
+            BuildPrimitiveSlot(blockout.transform, "WALL_BackWest", PrimitiveType.Cube, new Vector3(-5.2f, 2.6f, 18f), new Vector3(0.8f, 5.2f, 7.4f), "Back chamber west wall.");
+            BuildPrimitiveSlot(blockout.transform, "WALL_BackEast", PrimitiveType.Cube, new Vector3(5.2f, 2.6f, 18f), new Vector3(0.8f, 5.2f, 7.4f), "Back chamber east wall.");
 
             BuildLandmarkCluster(props.transform, "PRP_EntranceLandmark", new Vector3(3.5f, 0f, -9f));
             BuildLandmarkCluster(props.transform, "PRP_MidLandmark", new Vector3(-3.5f, 0f, 0f));
             BuildLandmarkCluster(props.transform, "PRP_BossLandmark", new Vector3(0f, 0f, 10.5f));
+            BuildLandmarkCluster(props.transform, "PRP_WestWingLandmark", new Vector3(-10.5f, 0f, 2.5f));
+            BuildLandmarkCluster(props.transform, "PRP_EastWingLandmark", new Vector3(10.5f, 0f, 3f));
+            BuildLandmarkCluster(props.transform, "PRP_BackChamberLandmark", new Vector3(0f, 0f, 20.5f));
             BuildCrateLine(props.transform, "PRP_EntranceDebris", new Vector3(-3.5f, 0f, -10.5f), 4, 1f);
             BuildCrateLine(props.transform, "PRP_MidDebris", new Vector3(1.8f, 0f, -1.6f), 3, 1f);
+            BuildCrateLine(props.transform, "PRP_WingDebris_West", new Vector3(-12.5f, 0f, -0.8f), 4, 1f);
+            BuildCrateLine(props.transform, "PRP_WingDebris_East", new Vector3(8.5f, 0f, -0.4f), 4, 1f);
             BuildFenceLine(props.transform, "PRP_BossSpikes_Left", new Vector3(-4f, 0f, 11.8f), 4, 1.1f);
             BuildFenceLine(props.transform, "PRP_BossSpikes_Right", new Vector3(0.5f, 0f, 11.8f), 4, 1.1f);
+            BuildFenceLine(props.transform, "PRP_BackChamberSpikes_Left", new Vector3(-3.8f, 0f, 20.8f), 4, 1.1f);
+            BuildFenceLine(props.transform, "PRP_BackChamberSpikes_Right", new Vector3(0.8f, 0f, 20.8f), 4, 1.1f);
             BuildPrimitiveSlot(debug.transform, "DBG_RoomMarker", PrimitiveType.Cylinder, new Vector3(0f, 1.4f, 9f), new Vector3(0.4f, 2.8f, 0.4f), "Boss room readability marker.");
+            BuildPrimitiveSlot(debug.transform, "DBG_BackRoomMarker", PrimitiveType.Cylinder, new Vector3(0f, 1.4f, 18.4f), new Vector3(0.4f, 2.8f, 0.4f), "Back chamber readability marker.");
         }
 
         private static void BuildTideCavernsFocusedPass(Transform worldRoot)
@@ -726,6 +811,24 @@ namespace TPS.Editor
             BuildLandmarkCluster(props.transform, "LMK_MatriarchNest", new Vector3(0f, 0f, 12.2f));
             BuildAmbientCreature(ambient.transform, "AMB_TideDriftA", new Vector3(-2.5f, 0.2f, -5.2f));
             BuildAmbientCreature(ambient.transform, "AMB_TideDriftB", new Vector3(2.8f, 0.2f, 4.4f));
+        }
+
+        private static void BuildQuarryRuinsFocusedPass(Transform worldRoot)
+        {
+            GameObject root = EnsureManagedNode(worldRoot, "ENV_QuarryFocus", "quarry_focus");
+            GameObject lanes = EnsureManagedNode(root.transform, "ENV_Lanes", "quarry_focus");
+            GameObject props = EnsureManagedNode(root.transform, "ENV_Props", "quarry_focus");
+            GameObject ambient = EnsureManagedNode(root.transform, "ENV_Ambient", "quarry_focus");
+
+            BuildPrimitiveSlot(lanes.transform, "PAD_QuarryEntry", PrimitiveType.Cube, new Vector3(0f, 0.12f, -9.2f), new Vector3(6.2f, 0.12f, 5f), "Clear quarry entrance lane.");
+            BuildPrimitiveSlot(lanes.transform, "PAD_QuarryCore", PrimitiveType.Cube, new Vector3(0f, 0.12f, 2.2f), new Vector3(7f, 0.12f, 5.4f), "Core quarry traversal lane.");
+            BuildPrimitiveSlot(lanes.transform, "PAD_QuarryBoss", PrimitiveType.Cube, new Vector3(0f, 0.12f, 11.8f), new Vector3(7.2f, 0.12f, 5f), "Boss lead-in lane.");
+            BuildLandmarkCluster(props.transform, "LMK_QuarryLift", new Vector3(-9.5f, 0f, 1.4f));
+            BuildLandmarkCluster(props.transform, "LMK_QuarryPylon", new Vector3(9.5f, 0f, 9.2f));
+            BuildCrateLine(props.transform, "PRP_QuarryStoneStacks", new Vector3(-7.4f, 0f, -2.6f), 6, 0.95f);
+            BuildFenceLine(props.transform, "PRP_QuarryBarrier", new Vector3(5.8f, 0f, 10.6f), 7, 1.1f);
+            BuildAmbientCreature(ambient.transform, "AMB_QuarryCritterA", new Vector3(-3.2f, 0.2f, 0.4f));
+            BuildAmbientCreature(ambient.transform, "AMB_QuarryCritterB", new Vector3(3.4f, 0.2f, 8.8f));
         }
 
         private static void BuildBattleBlockout(Transform container)
@@ -826,6 +929,8 @@ namespace TPS.Editor
             GameObject actorB = CreatePrimitiveVisual(slot.transform, "GEN_B", PrimitiveType.Capsule, new Vector3(0.45f, 1f, 0f), new Vector3(0.8f, 1f, 0.8f), GetGenerationId(parent), "Ambient actor");
             SetGeneratedColliderEnabled(actorA, false);
             SetGeneratedColliderEnabled(actorB, false);
+            EnsureAmbientMotion(actorA, 0.05f, 1.5f, 18f);
+            EnsureAmbientMotion(actorB, 0.05f, 1.75f, -16f);
         }
 
         private static void BuildAmbientSolo(Transform parent, string name, Vector3 position)
@@ -835,6 +940,7 @@ namespace TPS.Editor
             ClearManagedChildren(slot.transform, GetGenerationId(parent));
             GameObject actor = CreatePrimitiveVisual(slot.transform, "GEN_A", PrimitiveType.Capsule, new Vector3(0f, 1f, 0f), new Vector3(0.8f, 1f, 0.8f), GetGenerationId(parent), "Ambient actor");
             SetGeneratedColliderEnabled(actor, false);
+            EnsureAmbientMotion(actor, 0.035f, 1.25f, 10f);
         }
 
         private static void BuildAmbientCreature(Transform parent, string name, Vector3 position)
@@ -844,6 +950,36 @@ namespace TPS.Editor
             ClearManagedChildren(slot.transform, GetGenerationId(parent));
             GameObject creature = CreatePrimitiveVisual(slot.transform, "GEN_Creature", PrimitiveType.Sphere, Vector3.zero, new Vector3(0.45f, 0.3f, 0.45f), GetGenerationId(parent), "Ambient creature");
             SetGeneratedColliderEnabled(creature, false);
+            EnsureAmbientMotion(creature, 0.02f, 2.4f, 26f);
+        }
+
+        private static void EnsureAmbientMotion(GameObject target, float bobAmplitude, float bobFrequency, float yawSpeed)
+        {
+            if (target == null)
+            {
+                return;
+            }
+
+            Type motionType = Type.GetType("TPS.Runtime.World.PlaceholderAmbientMotion, TPS.Runtime");
+            if (motionType == null)
+            {
+                return;
+            }
+
+            Component motion = target.GetComponent(motionType);
+            if (motion == null)
+            {
+                motion = target.AddComponent(motionType);
+            }
+
+            SerializedObject so = new SerializedObject(motion);
+            so.FindProperty("_bobAmplitude").floatValue = bobAmplitude;
+            so.FindProperty("_bobFrequency").floatValue = bobFrequency;
+            so.FindProperty("_yawSpeed").floatValue = yawSpeed;
+            so.FindProperty("_enableBob").boolValue = true;
+            so.FindProperty("_enableYaw").boolValue = true;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(motion);
         }
 
         private static void BuildFocusedInteriorRoom(Transform container, string name, Vector3 interiorPosition, Vector3 roomSize, Vector3 exteriorDoorPosition)

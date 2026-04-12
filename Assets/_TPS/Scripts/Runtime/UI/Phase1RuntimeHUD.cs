@@ -28,6 +28,7 @@ namespace TPS.Runtime.UI
         public static Phase1RuntimeHUD Instance { get; private set; }
 
         [SerializeField] private Phase1ContentCatalog _contentCatalog;
+        [SerializeField] private bool _enableLegacyFallbackPanels;
 
         private MerchantAnchor _activeMerchant;
         private string _lastMessage = "";
@@ -76,7 +77,7 @@ namespace TPS.Runtime.UI
 
         private void Update()
         {
-            if (RuntimeMenuCanvasController.Instance != null)
+            if (RuntimeMenuCanvasController.Instance != null || !_enableLegacyFallbackPanels)
             {
                 return;
             }
@@ -232,8 +233,7 @@ namespace TPS.Runtime.UI
 
             if (!inBattle)
             {
-                bool useCanvasMenus = RuntimeMenuCanvasController.Instance != null;
-                if (!useCanvasMenus)
+                if (_enableLegacyFallbackPanels && RuntimeMenuCanvasController.Instance == null)
                 {
                     DrawActiveWorldPanel();
                     if (_activeMerchant != null)

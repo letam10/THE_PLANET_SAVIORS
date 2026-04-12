@@ -37,6 +37,8 @@ namespace TPS.Runtime.UI
         private const string MusicVolumeKey = "TPS.Runtime.Audio.Music";
         private const string SfxVolumeKey = "TPS.Runtime.Audio.Sfx";
         private const string FullscreenKey = "TPS.Runtime.Display.Fullscreen";
+        private const string ResolutionWidthKey = "TPS.Runtime.Display.Width";
+        private const string ResolutionHeightKey = "TPS.Runtime.Display.Height";
         private const string TideRouteQuestId = "quest_secure_tide_route";
         private const string DockSuppliesZoneId = "aster_harbor";
         private const string DockSuppliesFactId = "dock_supplies_secured";
@@ -65,6 +67,7 @@ namespace TPS.Runtime.UI
         private MerchantAnchor _activeMerchant;
         private InnAnchor _activeInn;
         private float _lastRefreshAt = -1f;
+        private bool _battleWasActive;
 
         public bool IsMenuVisible => _activePanel != PanelType.None;
         public MerchantAnchor ActiveMerchant => _activeMerchant;
@@ -162,6 +165,7 @@ namespace TPS.Runtime.UI
         {
             _activeMerchant = null;
             _activeInn = null;
+            _battleWasActive = false;
 
             if (!IsBattlePanelActive())
             {
@@ -414,16 +418,26 @@ namespace TPS.Runtime.UI
             {
                 RuntimeUiInputState.SetUiFocused(true);
                 PanelType desired = bridge.IsBattleEnded ? PanelType.BattleEnd : PanelType.Battle;
-                if (_activePanel != desired && _activePanel != PanelType.System && _activePanel != PanelType.Help)
+                if (!_battleWasActive)
+                {
+                    _activeMerchant = null;
+                    _activeInn = null;
+                    _activePanel = desired;
+                    RebuildContent();
+                    RefreshVisibility();
+                }
+                else if (_activePanel != desired && _activePanel != PanelType.System && _activePanel != PanelType.Help)
                 {
                     _activePanel = desired;
                     RebuildContent();
                     RefreshVisibility();
                 }
 
+                _battleWasActive = true;
                 return;
             }
 
+            _battleWasActive = false;
             if (_activePanel == PanelType.Battle || _activePanel == PanelType.BattleEnd)
             {
                 _activePanel = PanelType.None;
@@ -714,6 +728,28 @@ namespace TPS.Runtime.UI
                     }
                 }
             }
+
+            AddHeader(T("Party Formation", "Party formation"));
+            List<string> recruited = PartyService.Instance.GetRecruitedMemberIds();
+            if (recruited.Count == 0)
+            {
+                AddInfoLine(T("No recruited members.", "No recruited members."));
+                return;
+            }
+
+            for (int i = 0; i < recruited.Count; i++)
+            {
+                string memberId = recruited[i];
+                CharacterStatSnapshot memberSnapshot = PartyService.Instance.GetMemberSnapshot(memberId);
+                string displayName = memberSnapshot != null ? memberSnapshot.DisplayName : memberId;
+                bool isActive = PartyService.Instance.GetActiveMemberIds().Contains(memberId);
+                RectTransform row = CreateRow(62f);
+                CreateText("PartyMemberLabel", row, $"{displayName} ({memberId}) {(isActive ? "[Active]" : "[Bench]")}", 15, TextAnchor.MiddleLeft, FontStyle.Normal, false);
+                CreateActionButton(row, "Slot 1", () => SetMemberSlot(memberId, 0), 80f);
+                CreateActionButton(row, "Slot 2", () => SetMemberSlot(memberId, 1), 80f);
+                CreateActionButton(row, "Slot 3", () => SetMemberSlot(memberId, 2), 80f);
+                CreateActionButton(row, T("Bench", "Bench"), () => BenchMember(memberId), 86f);
+            }
         }
 
         private void BuildQuestPanel()
@@ -801,6 +837,7 @@ namespace TPS.Runtime.UI
             AddInfoLine($"{T("Scene", "Màn")}: {SceneManager.GetActiveScene().name}");
             AddInfoLine($"{T("Language", "Ngôn ngữ")}: {(IsVietnamese ? "Vietnamese" : "English")}");
             AddInfoLine($"{T("Graphics", "Đồ họa")}: {GetQualityName()} | {T("Fullscreen", "Toàn màn hình")}: {(Screen.fullScreen ? T("On", "Bật") : T("Off", "Tắt"))}");
+            AddInfoLine($"{T("Resolution", "Độ phân giải")}: {Screen.width}x{Screen.height}");
             AddInfoLine($"{T("Audio", "Âm thanh")}: Master {Mathf.RoundToInt(GetVolume(MasterVolumeKey) * 100f)} | Music {Mathf.RoundToInt(GetVolume(MusicVolumeKey) * 100f)} | SFX {Mathf.RoundToInt(GetVolume(SfxVolumeKey) * 100f)}");
 
             RectTransform languageRow = CreateRow(62f);
@@ -814,6 +851,12 @@ namespace TPS.Runtime.UI
             CreateActionButton(graphicsRow, "Medium", () => SetQualityPreset(Mathf.Min(1, QualitySettings.names.Length - 1)), 96f);
             CreateActionButton(graphicsRow, "High", () => SetQualityPreset(Mathf.Min(2, QualitySettings.names.Length - 1)), 86f);
             CreateActionButton(graphicsRow, T("Fullscreen", "Toàn màn hình"), ToggleFullscreen, 118f);
+
+            RectTransform resolutionRow = CreateRow(62f);
+            CreateText("ResolutionLabel", resolutionRow, T("Resolution", "Độ phân giải"), 16, TextAnchor.MiddleLeft, FontStyle.Bold, false);
+            CreateActionButton(resolutionRow, "1280x720", () => ApplyResolution(1280, 720), 102f);
+            CreateActionButton(resolutionRow, "1600x900", () => ApplyResolution(1600, 900), 102f);
+            CreateActionButton(resolutionRow, "1920x1080", () => ApplyResolution(1920, 1080), 110f);
 
             RectTransform audioRow = CreateRow(62f);
             CreateText("AudioLabel", audioRow, T("Audio", "Âm thanh"), 16, TextAnchor.MiddleLeft, FontStyle.Bold, false);
@@ -1170,7 +1213,7 @@ namespace TPS.Runtime.UI
             layout.childControlWidth = false;
             layout.childForceExpandHeight = true;
             layout.childForceExpandWidth = false;
-            CreateText("SelectedLabel", row, $"{T("Selected", "Đang chọn")}: {_selectedMemberId}", 16, TextAnchor.MiddleLeft, FontStyle.Bold);
+            CreateText("SelectedLabel", row, $"{T("Selected", "Selected")}: {_selectedMemberId}", 16, TextAnchor.MiddleLeft, FontStyle.Bold);
 
             List<string> members = PartyService.Instance.GetActiveMemberIds();
             for (int i = 0; i < members.Count; i++)
@@ -1179,10 +1222,10 @@ namespace TPS.Runtime.UI
                 CreateActionButton(row, $"{i + 1}:{memberId}", () =>
                 {
                     _selectedMemberId = memberId;
-                Notify($"{T("Selected", "Đang chọn")} {memberId}.");
-                RebuildContent();
-            }, 104f);
-        }
+                    Notify($"{T("Selected", "Selected")} {memberId}.");
+                    RebuildContent();
+                }, 104f);
+            }
         }
 
         private CharacterStatSnapshot GetSelectedSnapshot()
@@ -1270,6 +1313,43 @@ namespace TPS.Runtime.UI
             }
         }
 
+        private void SetMemberSlot(string memberId, int slot)
+        {
+            if (PartyService.Instance == null || string.IsNullOrWhiteSpace(memberId))
+            {
+                return;
+            }
+
+            if (PartyService.Instance.SetMemberActiveSlot(memberId, slot))
+            {
+                _selectedMemberId = memberId;
+                Notify($"{memberId} assigned to slot {slot + 1}.");
+                RebuildContent();
+            }
+            else
+            {
+                Notify($"{memberId} could not be assigned to slot {slot + 1}.");
+            }
+        }
+
+        private void BenchMember(string memberId)
+        {
+            if (PartyService.Instance == null || string.IsNullOrWhiteSpace(memberId))
+            {
+                return;
+            }
+
+            if (PartyService.Instance.BenchMember(memberId))
+            {
+                Notify($"{memberId} moved to reserve.");
+                RebuildContent();
+            }
+            else
+            {
+                Notify($"{memberId} cannot be benched (keep at least one active member).");
+            }
+        }
+
         private void UnequipSelected()
         {
             if (PartyService.Instance == null)
@@ -1332,6 +1412,8 @@ namespace TPS.Runtime.UI
                 return;
             }
 
+            _activeMerchant = null;
+            _activeInn = null;
             SaveLoadManager.Instance.SaveGame();
             Notify(T("Game saved.", "Đã lưu game."));
         }
@@ -1343,6 +1425,7 @@ namespace TPS.Runtime.UI
                 return;
             }
 
+            PrepareForSceneTransition(T("Loading game...", "Đang tải game..."));
             SaveLoadManager.Instance.LoadGame();
             Notify(T("Game loaded.", "Đã tải game."));
         }
@@ -1374,6 +1457,7 @@ namespace TPS.Runtime.UI
         {
             _activeMerchant = null;
             _activeInn = null;
+            _battleWasActive = false;
             BattleWorldBridge bridge = BattleWorldBridge.Instance;
             if (bridge != null && bridge.HasActiveEncounter)
             {
@@ -1579,6 +1663,12 @@ namespace TPS.Runtime.UI
         {
             AudioListener.volume = GetVolume(MasterVolumeKey, 0.9f);
             Screen.fullScreen = PlayerPrefs.GetInt(FullscreenKey, Screen.fullScreen ? 1 : 0) == 1;
+            int storedWidth = PlayerPrefs.GetInt(ResolutionWidthKey, Screen.width);
+            int storedHeight = PlayerPrefs.GetInt(ResolutionHeightKey, Screen.height);
+            if (storedWidth > 0 && storedHeight > 0)
+            {
+                Screen.SetResolution(storedWidth, storedHeight, Screen.fullScreen);
+            }
             int qualityLevel = Mathf.Clamp(PlayerPrefs.GetInt("TPS.Runtime.Quality", QualitySettings.GetQualityLevel()), 0, Mathf.Max(0, QualitySettings.names.Length - 1));
             if (QualitySettings.names.Length > 0)
             {
@@ -1637,6 +1727,21 @@ namespace TPS.Runtime.UI
             PlayerPrefs.SetInt(FullscreenKey, Screen.fullScreen ? 1 : 0);
             PlayerPrefs.Save();
             Notify(Screen.fullScreen ? T("Fullscreen enabled.", "Đã bật toàn màn hình.") : T("Fullscreen disabled.", "Đã tắt toàn màn hình."));
+            RebuildContent();
+        }
+
+        private void ApplyResolution(int width, int height)
+        {
+            if (width <= 0 || height <= 0)
+            {
+                return;
+            }
+
+            Screen.SetResolution(width, height, Screen.fullScreen);
+            PlayerPrefs.SetInt(ResolutionWidthKey, width);
+            PlayerPrefs.SetInt(ResolutionHeightKey, height);
+            PlayerPrefs.Save();
+            Notify($"{T("Resolution", "Độ phân giải")} {width}x{height}");
             RebuildContent();
         }
 

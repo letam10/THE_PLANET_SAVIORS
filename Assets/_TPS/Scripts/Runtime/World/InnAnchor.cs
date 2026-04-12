@@ -1,6 +1,7 @@
 using TPS.Runtime.Combat;
 using TPS.Runtime.Core;
 using TPS.Runtime.Interaction;
+using TPS.Runtime.Spawn;
 using TPS.Runtime.Time;
 using TPS.Runtime.UI;
 using UnityEngine;
@@ -50,6 +51,11 @@ namespace TPS.Runtime.World
 
             WorldClock.Instance.SleepUntilNextDay(_wakeHour, _wakeMinute);
             RuntimeUiInputState.RestoreGameplayFocus();
+
+            if (PlayerSpawnSystem.Instance != null)
+            {
+                PlayerSpawnSystem.Instance.EnsurePlayerOnValidGround("Default");
+            }
 
             if (Phase1RuntimeHUD.Instance != null)
             {

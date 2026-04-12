@@ -1,0 +1,69 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1c6c7aa788ab4a3db77a63ffdd7d6e8b, type: 3}
+  m_Name: ExternalAssetSourceManifest
+  m_EditorClassIdentifier: Assembly-CSharp-Editor::TPS.Editor.ExternalAssetSourceManifest
+  _entries:
+  - _enabled: 1
+    _id: audio_example_ogg
+    _downloadUrl: https://upload.wikimedia.org/wikipedia/commons/c/c8/Example.ogg
+    _sourcePageUrl: https://commons.wikimedia.org/wiki/File:Example.ogg
+    _destinationAssetPath: Assets/_TPS/Audio/External/SFX/SFX_Example.ogg
+    _license: CC BY-SA 3.0
+    _author: Wikimedia contributors
+    _attribution: Example.ogg from Wikimedia Commons (CC BY-SA 3.0).
+    _notes: Reference placeholder dialogue/click sound.
+  - _enabled: 1
+    _id: audio_silence_wav
+    _downloadUrl: https://raw.githubusercontent.com/anars/blank-audio/master/1-second-of-silence.wav
+    _sourcePageUrl: https://github.com/anars/blank-audio
+    _destinationAssetPath: Assets/_TPS/Audio/External/SFX/SFX_Silence_1s.wav
+    _license: MIT
+    _author: anars/blank-audio contributors
+    _attribution: 1-second-of-silence.wav from anars/blank-audio (MIT).
+    _notes: Utility test clip for audio pipeline validation.
+  - _enabled: 1
+    _id: texture_png_demo
+    _downloadUrl: https://upload.wikimedia.org/wikipedia/commons/4/47/PNG_transparency_demonstration_1.png
+    _sourcePageUrl: https://commons.wikimedia.org/wiki/File:PNG_transparency_demonstration_1.png
+    _destinationAssetPath: Assets/_TPS/Art/External/Textures/TEX_Demo_Png.png
+    _license: CC BY 3.0
+    _author: Wikimedia contributors
+    _attribution: PNG transparency demo image from Wikimedia Commons (CC BY 3.0).
+    _notes: Placeholder UI/environment texture.
+  - _enabled: 1
+    _id: texture_jpg_demo
+    _downloadUrl: https://upload.wikimedia.org/wikipedia/commons/a/a9/Example.jpg
+    _sourcePageUrl: https://commons.wikimedia.org/wiki/File:Example.jpg
+    _destinationAssetPath: Assets/_TPS/Art/External/Textures/TEX_Demo_Jpg.jpg
+    _license: CC BY-SA 3.0
+    _author: Wikimedia contributors
+    _attribution: Example.jpg from Wikimedia Commons (CC BY-SA 3.0).
+    _notes: Placeholder texture for signage/material testing.
+  - _enabled: 1
+    _id: model_obj_cube
+    _downloadUrl: https://raw.githubusercontent.com/alecjacobson/common-3d-test-models/master/data/cube.obj
+    _sourcePageUrl: https://github.com/alecjacobson/common-3d-test-models
+    _destinationAssetPath: Assets/_TPS/Art/External/Models/MDL_TestCube.obj
+    _license: MIT
+    _author: alecjacobson/common-3d-test-models contributors
+    _attribution: cube.obj from common-3d-test-models (MIT).
+    _notes: Replace-safe geometry placeholder.
+  - _enabled: 0
+    _id: model_glb_duck_optional
+    _downloadUrl: https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/Duck/glTF-Binary/Duck.glb
+    _sourcePageUrl: https://github.com/KhronosGroup/glTF-Sample-Assets
+    _destinationAssetPath: Assets/_TPS/Art/External/Models/MDL_Duck.glb
+    _license: CC BY 4.0
+    _author: Khronos glTF Sample Assets contributors
+    _attribution: Duck.glb from Khronos glTF Sample Assets (CC BY 4.0).
+    _notes: Optional. Enable only if project has a working .glb importer.

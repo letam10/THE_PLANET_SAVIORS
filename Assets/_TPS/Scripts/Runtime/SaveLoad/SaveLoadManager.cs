@@ -171,6 +171,11 @@ namespace TPS.Runtime.SaveLoad
                 StateResolver.Instance.ResolveAll();
             }
 
+            if (PlayerSpawnSystem.Instance != null)
+            {
+                PlayerSpawnSystem.Instance.EnsurePlayerOnValidGround("Default");
+            }
+
             RuntimeUiInputState.RestoreGameplayFocus();
             Debug.Log("[SaveLoad] Load Sequence Complete.");
         }

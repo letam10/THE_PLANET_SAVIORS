@@ -226,6 +226,71 @@ namespace TPS.Runtime.Spawn
             CacheSafeTransform(position, rotation);
         }
 
+        public void TeleportPlayerSafe(Vector3 desiredPosition, Quaternion desiredRotation, string fallbackSpawnId = null)
+        {
+            EnsurePlayerInstance();
+            Scene activeScene = SceneManager.GetActiveScene();
+            if (activeScene.IsValid() &&
+                activeScene.isLoaded &&
+                TryResolveSafeTransform(activeScene, desiredPosition, desiredRotation, out Vector3 safePosition, out Quaternion safeRotation))
+            {
+                TeleportPlayerInternal(safePosition, safeRotation);
+                CacheSafeTransform(safePosition, safeRotation);
+                return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(fallbackSpawnId))
+            {
+                SpawnPoint fallback = FindSpawnPointInScene(activeScene, fallbackSpawnId);
+                if (fallback != null)
+                {
+                    TeleportPlayerInternal(fallback.transform.position, fallback.transform.rotation);
+                    CacheSafeTransform(fallback.transform.position, fallback.transform.rotation);
+                    return;
+                }
+            }
+
+            TeleportPlayerInternal(desiredPosition, desiredRotation);
+            CacheSafeTransform(desiredPosition, desiredRotation);
+        }
+
+        public bool EnsurePlayerOnValidGround(string fallbackSpawnId = null)
+        {
+            if (_playerInstance == null)
+            {
+                return false;
+            }
+
+            Scene activeScene = SceneManager.GetActiveScene();
+            Vector3 currentPosition = _playerInstance.transform.position;
+            Quaternion currentRotation = _playerInstance.transform.rotation;
+            if (activeScene.IsValid() &&
+                activeScene.isLoaded &&
+                TryResolveSafeTransform(activeScene, currentPosition, currentRotation, out Vector3 safePosition, out Quaternion safeRotation))
+            {
+                if (Vector3.Distance(currentPosition, safePosition) > 0.05f || Quaternion.Angle(currentRotation, safeRotation) > 1f)
+                {
+                    TeleportPlayerInternal(safePosition, safeRotation);
+                }
+
+                CacheSafeTransform(safePosition, safeRotation);
+                return true;
+            }
+
+            if (!string.IsNullOrWhiteSpace(fallbackSpawnId))
+            {
+                SpawnPoint fallback = FindSpawnPointInScene(activeScene, fallbackSpawnId);
+                if (fallback != null)
+                {
+                    TeleportPlayerInternal(fallback.transform.position, fallback.transform.rotation);
+                    CacheSafeTransform(fallback.transform.position, fallback.transform.rotation);
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         public bool TryGetPlayerTransform(out Vector3 position, out Quaternion rotation)
         {
             if (_playerInstance != null)

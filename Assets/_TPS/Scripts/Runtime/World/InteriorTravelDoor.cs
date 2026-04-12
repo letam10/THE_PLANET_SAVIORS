@@ -51,7 +51,7 @@ namespace TPS.Runtime.World
             _isOpen = !_isOpen;
             if (_targetMarker != null && PlayerSpawnSystem.Instance != null)
             {
-                PlayerSpawnSystem.Instance.TeleportPlayerExact(_targetMarker.position, _targetMarker.rotation);
+                PlayerSpawnSystem.Instance.TeleportPlayerSafe(_targetMarker.position, _targetMarker.rotation, "Default");
                 if (Phase1RuntimeHUD.Instance != null)
                 {
                     Phase1RuntimeHUD.Instance.ShowMessage($"Moved through {_doorId}.");
