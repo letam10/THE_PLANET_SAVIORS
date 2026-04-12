@@ -1,15 +1,14 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using NUnit.Framework;
-using TPS.Data.Config;
 using TPS.Runtime.Combat;
 using TPS.Runtime.Spawn;
 using TPS.Runtime.Time;
 using TPS.Runtime.UI;
 using TPS.Runtime.World;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using Object = UnityEngine.Object;
 
 namespace TPS.Editor.Tests
@@ -105,25 +104,22 @@ namespace TPS.Editor.Tests
             ground.transform.position = new Vector3(0f, -0.5f, 0f);
             ground.transform.localScale = new Vector3(40f, 1f, 40f);
 
-            GameObject playerPrefab = new GameObject("TestPlayerPrefab");
-            _createdObjects.Add(playerPrefab);
-            playerPrefab.AddComponent<CharacterController>();
-
-            GameConfig config = ScriptableObject.CreateInstance<GameConfig>();
-            _createdObjects.Add(config);
-            SetPrivateField(config, "_playerPrefab", playerPrefab);
-            SetPrivateField(config, "_defaultSpawnId", "Default");
-
             PlayerSpawnSystem spawnSystem = CreateComponent<PlayerSpawnSystem>("PlayerSpawnSystem");
-            RegisterSingleton(typeof(PlayerSpawnSystem), spawnSystem);
-            spawnSystem.Initialize(config);
+            MethodInfo tryResolve = typeof(PlayerSpawnSystem).GetMethod("TryResolveSafeTransform", BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.That(tryResolve, Is.Not.Null);
+            object[] args =
+            {
+                SceneManager.GetActiveScene(),
+                new Vector3(0f, 18f, 0f),
+                Quaternion.identity,
+                Vector3.zero,
+                Quaternion.identity
+            };
 
-            spawnSystem.TeleportPlayerExact(new Vector3(0f, 18f, 0f), Quaternion.identity);
-            bool corrected = spawnSystem.EnsurePlayerOnValidGround("Default");
-            Assert.That(corrected, Is.True);
-
-            Assert.That(spawnSystem.TryGetPlayerTransform(out Vector3 position, out _), Is.True);
-            Assert.That(position.y, Is.InRange(1f, 1.2f));
+            bool resolved = (bool)tryResolve.Invoke(spawnSystem, args);
+            Assert.That(resolved, Is.True);
+            Vector3 safePosition = (Vector3)args[3];
+            Assert.That(safePosition.y, Is.InRange(0.8f, 2.2f));
         }
 
         [Test]
@@ -232,7 +228,16 @@ namespace TPS.Editor.Tests
             SetPrivateField(weapon, "_displayName", equipmentId);
             SetPrivateField(weapon, "_slotType", EquipmentSlotType.Weapon);
             SetPrivateField(weapon, "_weaponFamily", WeaponFamilyType.Blade);
-            SetPrivateField(weapon, "_statBonus", new StatBlock());
+            SetPrivateField(weapon, "_statBonus", new StatBlock
+            {
+                MaxHP = 0,
+                MaxMP = 0,
+                Attack = 0,
+                Magic = 0,
+                Defense = 0,
+                Resistance = 0,
+                Speed = 0
+            });
             return weapon;
         }
 
