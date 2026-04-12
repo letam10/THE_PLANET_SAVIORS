@@ -94,8 +94,9 @@ namespace TPS.Editor
         {
             ExternalAssetSourceManifest manifest = CreateOrRefreshManifest();
             WriteSourcesDoc(manifest);
+            WriteAttributionJson(manifest);
             AssetDatabase.Refresh();
-            Debug.Log($"[TPSExternalAssets] Updated {SourcesDocPath}");
+            Debug.Log($"[TPSExternalAssets] Updated {SourcesDocPath} and attribution JSON.");
         }
 
         internal static ExternalAssetSourceManifest CreateOrRefreshManifest()
@@ -344,6 +345,22 @@ namespace TPS.Editor
         private static string EscapePipe(string value)
         {
             return string.IsNullOrWhiteSpace(value) ? "-" : value.Replace("|", "\\|");
+        }
+
+        private static void WriteAttributionJson(ExternalAssetSourceManifest manifest)
+        {
+            string jsonPath = ToAbsolutePath(SourcesDocPath.Replace(".md", ".json"));
+            Directory.CreateDirectory(Path.GetDirectoryName(jsonPath) ?? Application.dataPath);
+            
+            var entries = manifest != null ? manifest.Entries : new List<ExternalAssetSourceEntry>();
+            string json = JsonUtility.ToJson(new SerializationWrapper { entries = entries }, true);
+            File.WriteAllText(jsonPath, json);
+        }
+
+        [Serializable]
+        private class SerializationWrapper
+        {
+            public List<ExternalAssetSourceEntry> entries;
         }
     }
 }
