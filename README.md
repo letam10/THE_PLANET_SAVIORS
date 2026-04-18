@@ -42,12 +42,25 @@ Included inside the Editor context (`TPS.Editor`):
 
 ---
 
-## 🛠 Production Workflow
+## 🛠 Production Workflow & Mandatory Rules
 
-TPS utilizes a rapid, modular pipeline for asset acquisition and code integration:
+TPS utilizes a strict, modular pipeline for code integration, asset acquisition, and agent-driven development.
 
-1. **Asset Downloader (`AssetDownloader.cs`)**: A custom Editor tool leveraging headless HTTP requests to fetch CC0/Open Source 3D models, audio, and textures. All sourced assets are cataloged in `SOURCES.md` for licensing compliance.
-2. **Strict SCM Workflow (`codex/*` branches)**: Development follows the Codex checkpoint model. Iterations are made in isolated branches, staged thoughtfully (including `.meta` integrity), and validated against component serialization checks before checkpoint commits.
+### 1. Mandatory Development Workflow
+- **Planning First:** Any non-trivial task requires a markdown planning table (Goal, Files to change, Risks, Validation, Commit message) prior to execution, waiting for user approval.
+- **Codex Checkpoint Model:** Development must occur on `codex/*` branches. Work is broken into small, logical checkpoints. 
+- **Commit & Integrity:** 
+  - Validate code (zero compiler errors) before any commit. 
+  - **CRITICAL:** Always stage corresponding `.meta` files alongside modified assets/scripts.
+  - **NEVER** commit `.unity` or `.prefab` files if only C# scripts were modified, to prevent accidental serialization conflicts.
+
+### 2. Architecture Constraints
+- **Project Structure & Namespaces:** Code must reside under `Assets/_TPS/Scripts/...` and use the `TPS.[Module]` namespace convention (e.g., `TPS.Runtime.Core`). Do not edit `Library`, `PackageCache`, etc.
+- **Data vs State:** `ScriptableObjects` (SOs) are strictly templates (Read-Only at runtime). True runtime states reside in POCO classes managed via `GameStateManager`.
+- **Event Architecture:** `GameEventBus` is strictly for cross-domain/macro events (e.g., `OnHourChanged`). Local mechanics should use explicit direct references (`[SerializeField]`) or C# Actions.
+
+### 3. Asset Management
+- **Asset Downloader (`AssetDownloader.cs`)**: Custom Editor tool to fetch CC0/Open Source assets. Must catalog in `SOURCES.md`.
 
 ---
 

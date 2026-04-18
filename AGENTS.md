@@ -3,7 +3,6 @@
 - Luôn trả lời bằng tiếng Việt
 - Luôn sử dụng MCP tools để chỉnh sửa scene, prefab, component
 - Luôn kiểm tra lỗi trước khi commit
-- Luôn mở Skill mỗi khi làm bất cứ thứ gì, đường đẫn truy cập Skill: D:\AI\antigravity-skills\
 
 ## 0.1 Browser Input Workflow (Must Follow)
 Áp dụng cho mọi ô nhập dữ liệu trên trình duyệt:
