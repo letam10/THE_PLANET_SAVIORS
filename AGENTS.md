@@ -1,61 +1,55 @@
 # THE_PLANET_SAVIORS — Codex workflow
 
-## 0. LƯU Ý
-- Luôn giao tiếp bằng tiếng Việt.
-- Luôn sử dụng MCP tools để chỉnh sửa scene, prefab, component trong Unity thay vì sửa file văn bản thuần túy.
-- Luôn kiểm tra lỗi biên dịch (Compiler errors) trước khi commit.
+## 0. LƯU Ý CỐT LÕI
+- **Ngôn ngữ:** Luôn trả lời và giao tiếp bằng tiếng Việt.
+- **Công cụ:** Luôn sử dụng MCP tools để chỉnh sửa scene, prefab, component thay vì sửa file text thủ công.
+- **An toàn:** Luôn kiểm tra lỗi biên dịch trước khi thực hiện commit.
 
-## 0.1 Browser Input Workflow (Must Follow)
-Áp dụng cho mọi ô nhập dữ liệu trên trình duyệt:
+## 0.1 Browser Input Workflow (Quy trình tương tác Web)
+Áp dụng nghiêm ngặt cho mọi ô nhập dữ liệu trên trình duyệt:
 1. **Click/Focus** vào ô nhập liệu.
 2. **Đợi 2-3 giây** để trình duyệt ổn định.
 3. **Nhập nội dung**.
 4. **Đợi 1 giây**.
-5. **Kiểm tra hiển thị** (Snapshot).
+5. **Kiểm tra hiển thị** bằng cách chụp ảnh màn hình (Snapshot).
 6. **Nhấn gửi**.
 
-## 1. Mandatory Workflow & Planning
-- For any non-trivial task, start by producing a plan as a markdown table.
-- The plan must include: Goal, Files to change, Unity Assets to modify (Prefabs/Scenes), Risks, Validation steps, Commit message.
-- After producing the plan, stop and wait for explicit user approval.
-- Always work on the current worktree branch, never on `main`. Prefer the branch pattern: `codex/<task-name>`.
-- Break work into small checkpoints (roughly 1 to 5 related files or one completed subtask).
-- After each checkpoint:
-  1. Review the current git diff.
-  2. Stage the files for that checkpoint. **CRITICAL: Always stage the corresponding `.meta` files alongside any modified, added, or deleted assets/scripts.**
-  3. Create one checkpoint commit.
-  4. Continue to the next checkpoint.
+## 1. Mandatory Workflow & Planning (Quy trình Bắt buộc)
+- Đối với mọi tác vụ phức tạp, **phải lập kế hoạch dưới dạng bảng Markdown** (theo format ở mục 5).
+- Sau khi xuất bảng kế hoạch, **dừng lại và chờ người dùng phê duyệt** (explicit user approval) mới được làm tiếp.
+- **Quy tắc Nhánh (Branch):** Luôn làm việc trên branch hiện tại. **Tuyệt đối KHÔNG thao tác trực tiếp trên `main`**. Ưu tiên đặt tên nhánh theo cú pháp: `codex/<task-name>`.
+- **Chia nhỏ công việc (Checkpoints):** 1. Review git diff hiện tại.
+  2. Stage các file liên quan. **QUAN TRỌNG: Luôn stage file `.meta` đi kèm với file assets/scripts bị thay đổi.**
+  3. Tạo một commit cho checkpoint đó.
+  4. Chuyển sang checkpoint tiếp theo.
 
-## 2. Unity & Architecture Execution Rules (TPS Specific)
-- **Folder Structure:** Keep all gameplay/runtime code strictly under `Assets/_TPS/Scripts/...` and content under `Assets/_TPS/Data/...`. Do not edit `Library`, `Temp`, `Logs`, or `PackageCache`.
-- **Namespaces:** Always use the `TPS.[Module]` namespace convention (e.g., `TPS.Runtime.Combat`, `TPS.Runtime.Core`).
-- **Data-Driven Constraints:** 
-  - **ScriptableObjects (SOs)** are templates (Read-only at runtime). **NEVER** write runtime state changes into SOs.
-  - **Runtime State** must be stored in POCO classes (e.g., `SaveData` instances) and managed via `GameStateManager` or specific runtime controllers.
-- **Event Communication:** Use `GameEventBus` ONLY for cross-domain/macro events (e.g., `OnHourChanged`, `OnWeatherChanged`). Use direct references (`[SerializeField]`) or C# actions for local/internal mechanics.
-- **Tooling:** Use Unity MCP tools for Scene, GameObject, Component, and Editor operations whenever possible instead of manual file editing.
+## 2. Unity & Architecture Execution Rules (Quy tắc Dự án TPS)
+- **Cấu trúc thư mục:** Mã nguồn (code) lưu nghiêm ngặt tại `Assets/_TPS/Scripts/...` và dữ liệu (content) tại `Assets/_TPS/Data/...`. **Tuyệt đối không chỉnh sửa** `Library`, `Temp`, `Logs`, hoặc `PackageCache`.
+- **Namespaces:** Bắt buộc dùng chuẩn `TPS.[Module]` (vd: `TPS.Runtime.Combat`).
+- **Data-Driven (Dữ liệu điều khiển):**
+  - **ScriptableObjects (SOs)** chỉ là bản mẫu (Read-only khi chạy). **KHÔNG BAO GIỜ** ghi trạng thái runtime vào SOs.
+  - **Runtime State** phải lưu trong các lớp POCO (vd: `SaveData`) và quản lý qua `GameStateManager`.
+- **Events:** Dùng `GameEventBus` CHỈ cho các sự kiện vĩ mô (macro events). Dùng tham chiếu trực tiếp (`[SerializeField]`) hoặc C# actions cho logic nội bộ.
 
-## 3. Commit Policy
-- Do not wait until the very end to make a single giant commit.
-- Prefer small conventional commits.
-- Suggested prefixes: `feat:`, `fix:`, `refactor:`, `docs:`, `test:`, `chore:`, `ui:`.
-- If a diff is too broad, split it before committing.
-- **NEVER** commit scenes (`.unity`) or prefabs (`.prefab`) if the task only required code changes, to avoid accidental serialization conflicts.
+## 3. Commit Policy (Chính sách Commit)
+- **Không dồn code:** Tránh tạo một commit khổng lồ vào cuối ngày. Ưu tiên các commit nhỏ, rõ ràng.
+- **Tiền tố chuẩn:** Sử dụng `feat:`, `fix:`, `refactor:`, `docs:`, `test:`, `chore:`, `ui:`.
+- Nếu diff quá lớn, hãy tách ra trước khi commit.
+- **BẢO VỆ DỮ LIỆU:** **KHÔNG BAO GIỜ** commit scenes (`.unity`) hoặc prefabs (`.prefab`) nếu tác vụ chỉ yêu cầu sửa code C#, nhằm tránh xung đột tuần tự hóa (serialization conflicts).
+- **Không tự ý tạo PR** hoặc merge vào `main` trừ khi được yêu cầu.
 
-## 4. Validation Before Commit
-- If code changed, run the smallest relevant validation before each checkpoint commit (e.g., check for compiler errors).
-- For Unity tasks, prefer narrow validation first, not a full project rebuild.
-- **Unity specific checks:**
-  - Ensure no new compiler errors or warnings in the Unity Console.
-  - Ensure no broken serialized references (`Missing (Mono Script)` or `Null Reference`) in touched scenes/prefabs.
-- If validation fails, fix the issue first or stop and report the failure clearly before committing.
-- Do not merge to `main`. Do not create a PR unless explicitly asked.
+## 4. Validation Before Commit (Kiểm tra trước khi Commit)
+- Nếu có thay đổi code, chạy các bước kiểm tra (validation) nhỏ gọn nhất có thể trước mỗi checkpoint. Ưu tiên kiểm tra hẹp thay vì rebuild toàn bộ dự án.
+- **Kiểm tra đặc thù Unity:**
+  - Đảm bảo không có lỗi biên dịch (compiler errors/warnings) mới trong Unity Console.
+  - Đảm bảo không có tham chiếu bị gãy (`Missing (Mono Script)` hoặc `Null Reference`) trong các scene/prefab vừa đụng tới.
+- Nếu kiểm tra thất bại: **Phải sửa lỗi trước** hoặc dừng lại và báo cáo rõ ràng cho người dùng, KHÔNG được commit mã lỗi.
 
-## 5. Planning Table Format
+## 5. Planning Table Format (Định dạng Bảng Kế Hoạch)
 | Section | Content |
 |---|---|
-| Goal | ... |
-| Files & Assets to change | (Include .cs, .prefab, .asset, and .meta files) |
-| Risks | (e.g., Save/Load compatibility, Prefab overrides, Event coupling) |
-| Validation | (e.g., "Compile without errors, check Inspector references") |
-| Commit message | ... |
+| Goal | Mục tiêu của tác vụ |
+| Files & Assets to change | Bao gồm các file .cs, .prefab, .asset, và .meta sẽ bị ảnh hưởng |
+| Risks | Các rủi ro (vd: Lỗi Save/Load, Override Prefab, Xung đột Event) |
+| Validation | Các bước kiểm tra (vd: "Biên dịch không lỗi, kiểm tra tham chiếu Inspector") |
+| Commit message | Nội dung commit dự kiến |
